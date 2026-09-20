@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-006 — Second reviewed AI portrait batch (2026-09-20)
+
+- Added five fictional adult women and five fictional adult men with distinct generated portraits and complete discovery metadata.
+- Advanced the original dataset to 10 women and 10 men; 40 of each remain before the original 50/50 target is complete.
+- Recorded the expanded representation target: 10 women and 10 men for each of 11 requested backgrounds, totaling 220 additional reviewed profiles after the original target.
+- Preserved the visible `PROTOTYPE PROFILE · NOT A REAL PERSON` disclosure on every discovery card.
+
+Next: continue the original 50/50 set in reviewed batches, then build the 11-background expansion with explicit dataset validation and preference-aware filtering.
+
 ## CP-005 — First reviewed AI portrait batch (2026-09-20)
 
 - Began the requested 50-women/50-men synthetic profile dataset without duplicating faces or implying they are real users.
