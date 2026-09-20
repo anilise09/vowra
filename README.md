@@ -6,7 +6,7 @@ The launch name is intentionally undecided until trademark, domain, and store-na
 
 ## Status
 
-CP-001 is complete: research, safety/product contracts, Android/iOS Flutter scaffolding, and the first offline prototype slice. See `CHECKPOINTS.md`, `docs/COMPETITIVE_RESEARCH.md`, `docs/PRODUCT_PLAN.md`, `docs/ROADMAP.md`, and `docs/SECURITY_AND_SAFETY.md`.
+CP-002 is complete: research and safety/product contracts, Android/iOS Flutter scaffolding, the offline discovery shell, and validated memory-only profile creation. See `CHECKPOINTS.md`, `docs/COMPETITIVE_RESEARCH.md`, `docs/PRODUCT_PLAN.md`, `docs/ROADMAP.md`, and `docs/SECURITY_AND_SAFETY.md`.
 
 ## Intended stack
 

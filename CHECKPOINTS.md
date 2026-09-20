@@ -1,5 +1,16 @@
 # Checkpoints
 
+## CP-002 — Validated local profile creation (2026-09-20)
+
+- Added a profile domain model with bounded display-name and bio validation and an explicit 18–99 adult age rule.
+- Added relationship intent, interests, coarse-distance visibility, and match-level call-readiness preferences.
+- Added a prototype-only memory repository; identity data is not written to disk or uploaded.
+- Replaced the Profile placeholder with a complete responsive editor and clear prototype-retention disclosure.
+- End-to-end testing exposed a lazy-list lifecycle flaw that could dispose off-screen fields before save and skip their validators. The form now keeps every field mounted, so age validation cannot depend on scroll position.
+- Five unit/widget tests pass, Flutter analysis is clean, and the Android debug APK builds.
+
+Next: implement explicit match, conversation, block, unmatch, and mutual call-readiness state machines with synthetic fixtures and authorization-style invariant tests.
+
 ## CP-001 — Research, safety contract, and Flutter foundation (2026-09-20)
 
 - Researched Tinder, Bumble, Hinge, and Pure using official feature, subscription, calling, and safety documentation.
@@ -11,4 +22,3 @@
 - iOS files are generated but cannot be compiled or signed on Windows; real iPhone validation requires macOS/Xcode later.
 
 Next: separate the prototype into feature/domain/data layers, implement profile creation with synthetic local persistence, then build match/chat/call-readiness state machines before any backend or real-user data.
-

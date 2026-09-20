@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'data/profile_repository.dart';
+import 'domain/user_profile.dart';
+
 void main() => runApp(const EmberApp());
 
 class EmberApp extends StatelessWidget {
@@ -128,6 +131,8 @@ class DiscoveryScreen extends StatefulWidget {
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   int profileIndex = 0;
+  final ProfileRepository profileRepository = MemoryProfileRepository();
+  UserProfile? userProfile;
   static const profiles = [
     DemoProfile(
       'Maya',
@@ -161,10 +166,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         title: 'Your conversations',
         message: 'Messaging opens only after a mutual match.',
       ),
-      const EmptyTab(
-        icon: Icons.person_outline,
-        title: 'Build your profile',
-        message: 'Profile editing arrives in the next vertical slice.',
+      ProfileEditor(
+        initialProfile: userProfile,
+        onSaved: (profile) {
+          profileRepository.save(profile);
+          setState(() => userProfile = profileRepository.load());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile saved on this device session only.'),
+            ),
+          );
+        },
       ),
     ];
     return Scaffold(
@@ -206,6 +218,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             label: 'Chats',
           ),
           NavigationDestination(
+            key: Key('profile-tab'),
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'Profile',
@@ -333,6 +346,199 @@ class DemoProfile {
   final String distanceBand;
   final String bio;
   final List<String> interests;
+}
+
+class ProfileEditor extends StatefulWidget {
+  const ProfileEditor({
+    super.key,
+    required this.initialProfile,
+    required this.onSaved,
+  });
+
+  final UserProfile? initialProfile;
+  final ValueChanged<UserProfile> onSaved;
+
+  @override
+  State<ProfileEditor> createState() => _ProfileEditorState();
+}
+
+class _ProfileEditorState extends State<ProfileEditor> {
+  static const availableInterests = [
+    'Arts',
+    'Books',
+    'Cooking',
+    'Fitness',
+    'Music',
+    'Outdoors',
+    'Travel',
+  ];
+  final formKey = GlobalKey<FormState>();
+  late final TextEditingController nameController;
+  late final TextEditingController ageController;
+  late final TextEditingController bioController;
+  late RelationshipIntent intent;
+  late Set<String> interests;
+  late bool showDistanceBand;
+  late bool callReadyByDefault;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = widget.initialProfile;
+    nameController = TextEditingController(text: profile?.displayName ?? '');
+    ageController = TextEditingController(text: profile?.age.toString() ?? '');
+    bioController = TextEditingController(text: profile?.bio ?? '');
+    intent = profile?.intent ?? RelationshipIntent.openToLongTerm;
+    interests = {...?profile?.interests};
+    showDistanceBand = profile?.showDistanceBand ?? true;
+    callReadyByDefault = profile?.callReadyByDefault ?? false;
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    ageController.dispose();
+    bioController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Form(
+    key: formKey,
+    child: SingleChildScrollView(
+      key: const Key('profile-scroll'),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Your profile',
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Prototype data stays in memory and disappears when the app closes.',
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            key: const Key('profile-name'),
+            controller: nameController,
+            maxLength: 40,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Display name'),
+            validator: (value) => UserProfile.validateName(value ?? ''),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            key: const Key('profile-age'),
+            controller: ageController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Age'),
+            validator: (value) => UserProfile.validateAge(value ?? ''),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<RelationshipIntent>(
+            key: const Key('profile-intent'),
+            initialValue: intent,
+            decoration: const InputDecoration(
+              labelText: 'What are you looking for?',
+            ),
+            items: RelationshipIntent.values
+                .map(
+                  (value) =>
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                )
+                .toList(),
+            onChanged: (value) => setState(() => intent = value ?? intent),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            key: const Key('profile-bio'),
+            controller: bioController,
+            maxLength: 300,
+            minLines: 3,
+            maxLines: 5,
+            decoration: const InputDecoration(
+              labelText: 'About you',
+              hintText: 'What would you enjoy talking about?',
+            ),
+            validator: (value) => UserProfile.validateBio(value ?? ''),
+          ),
+          const SizedBox(height: 10),
+          Text('Interests', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            children: availableInterests
+                .map(
+                  (value) => FilterChip(
+                    label: Text(value),
+                    selected: interests.contains(value),
+                    onSelected: (selected) => setState(
+                      () => selected
+                          ? interests.add(value)
+                          : interests.remove(value),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          if (interests.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 6),
+              child: Text(
+                'Choose at least one interest.',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Show a coarse distance band'),
+            subtitle: const Text('Exact location is never displayed.'),
+            value: showDistanceBand,
+            onChanged: (value) => setState(() => showDistanceBand = value),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Open to calls by default'),
+            subtitle: const Text(
+              'Calls still require a match, mutual readiness, and acceptance.',
+            ),
+            value: callReadyByDefault,
+            onChanged: (value) => setState(() => callReadyByDefault = value),
+          ),
+          const SizedBox(height: 14),
+          FilledButton(
+            key: const Key('save-profile'),
+            onPressed: _save,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Text('Save profile'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  void _save() {
+    if (!(formKey.currentState?.validate() ?? false) || interests.isEmpty) {
+      return;
+    }
+    widget.onSaved(
+      UserProfile(
+        displayName: nameController.text.trim(),
+        age: int.parse(ageController.text.trim()),
+        intent: intent,
+        bio: bioController.text.trim(),
+        interests: interests.toList()..sort(),
+        showDistanceBand: showDistanceBand,
+        callReadyByDefault: callReadyByDefault,
+      ),
+    );
+  }
 }
 
 class EmptyTab extends StatelessWidget {

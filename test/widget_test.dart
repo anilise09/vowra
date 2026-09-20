@@ -48,4 +48,59 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('validates and saves a local prototype profile', (tester) async {
+    await tester.pumpWidget(const EmberApp());
+    await tester.tap(find.byKey(const Key('adult-checkbox')));
+    await tester.tap(find.byKey(const Key('rules-checkbox')));
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('continue-button')));
+    await tester.tap(find.byKey(const Key('continue-button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('profile-tab')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('profile-name')), 'Alex');
+    await tester.enterText(find.byKey(const Key('profile-age')), '17');
+    await tester.enterText(
+      find.byKey(const Key('profile-bio')),
+      'I enjoy good books, thoughtful conversations, and cooking.',
+    );
+    await tester.scrollUntilVisible(
+      find.text('Books'),
+      180,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('profile-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.text('Books'));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('save-profile')),
+      220,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('profile-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.byKey(const Key('save-profile')));
+    await tester.pump();
+    expect(find.text('Project Ember is only for adults 18+.'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('profile-age')), '28');
+    await tester.dragFrom(const Offset(400, 450), const Offset(0, -400));
+    await tester.pump();
+    await tester.dragFrom(const Offset(400, 450), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-profile')));
+    await tester.pump();
+    expect(
+      find.text('Profile saved on this device session only.'),
+      findsOneWidget,
+    );
+  });
 }
