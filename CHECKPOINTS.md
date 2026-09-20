@@ -1,5 +1,16 @@
 # Checkpoints
 
+## CP-005 — First reviewed AI portrait batch (2026-09-20)
+
+- Began the requested 50-women/50-men synthetic profile dataset without duplicating faces or implying they are real users.
+- Generated, reviewed, and bundled distinct portraits for five women and five men; retained Jordan as an additional inclusive portrait outside the requested count.
+- Added ten complete discovery profiles with varied adult ages, relationship intents, coarse distance bands, biographies, interests, and portrait semantics.
+- Discovery still displays `PROTOTYPE PROFILE · NOT A REAL PERSON` above every profile.
+- Dataset progress and the reusable generation/review contract are recorded in `docs/PROTOTYPE_PROFILE_DATASET.md`; 45 women and 45 men remain and are explicitly not claimed complete.
+- Twelve tests pass, Flutter analysis is clean, and the Android debug APK builds with the bundled assets.
+
+Next: continue reviewed portrait batches until the 50/50 target is met, then add automated dataset count/unique-asset tests and a gender/preference-aware synthetic discovery filter.
+
 ## CP-004 — Bounded local messaging and anti-spam rules (2026-09-20)
 
 - Added a message domain model and memory-only repository scoped by match ID.

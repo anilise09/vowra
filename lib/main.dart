@@ -170,14 +170,88 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Sunday markets, tiny concerts, and ambitious pasta experiments.',
       ['Kindness', 'Live music', 'Cooking'],
+      'assets/profiles/maya.png',
     ),
     DemoProfile(
-      'Jordan',
-      31,
+      'Elena',
+      32,
+      'Long-term relationship',
+      '5–10 km away',
+      'Bookshop regular, neighborhood explorer, and enthusiastic brunch host.',
+      ['Books', 'Cooking', 'Arts'],
+      'assets/profiles/elena.png',
+    ),
+    DemoProfile(
+      'Amina',
+      27,
+      'Open to long-term',
+      '2–5 km away',
+      'Plant lover, weekend cyclist, and always looking for a new gallery.',
+      ['Outdoors', 'Fitness', 'Arts'],
+      'assets/profiles/amina.png',
+    ),
+    DemoProfile(
+      'Sofia',
+      35,
+      'Long-term relationship',
+      '10–20 km away',
+      'Farmers markets, live jazz, and dinners that run pleasantly late.',
+      ['Music', 'Cooking', 'Travel'],
+      'assets/profiles/sofia.png',
+    ),
+    DemoProfile(
+      'Mei',
+      30,
       'Open to long-term',
       '5–10 km away',
-      'Climber, reader, and the friend who plans the whole road trip.',
-      ['Outdoors', 'Books', 'Travel'],
+      'Museum afternoons, design books, and finding the best noodles in town.',
+      ['Arts', 'Books', 'Travel'],
+      'assets/profiles/mei.png',
+    ),
+    DemoProfile(
+      'Marcus',
+      30,
+      'Long-term relationship',
+      '2–5 km away',
+      'Coffee walks, pickup basketball, and cooking for friends.',
+      ['Fitness', 'Cooking', 'Music'],
+      'assets/profiles/marcus.png',
+    ),
+    DemoProfile(
+      'Daniel',
+      34,
+      'Open to long-term',
+      '5–10 km away',
+      'Record collector, amateur photographer, and reliable road-trip DJ.',
+      ['Music', 'Arts', 'Travel'],
+      'assets/profiles/daniel.png',
+    ),
+    DemoProfile(
+      'Arjun',
+      29,
+      'Long-term relationship',
+      '10–20 km away',
+      'Runner, home cook, and the person who reads every museum label.',
+      ['Fitness', 'Cooking', 'Arts'],
+      'assets/profiles/arjun.png',
+    ),
+    DemoProfile(
+      'Ethan',
+      36,
+      'Open to long-term',
+      '5–10 km away',
+      'Community gardener, history reader, and beginner bread baker.',
+      ['Outdoors', 'Books', 'Cooking'],
+      'assets/profiles/ethan.png',
+    ),
+    DemoProfile(
+      'Minjun',
+      31,
+      'Long-term relationship',
+      '2–5 km away',
+      'City walks, independent films, and planning the next hiking weekend.',
+      ['Arts', 'Outdoors', 'Travel'],
+      'assets/profiles/minjun.png',
     ),
   ];
 
@@ -283,19 +357,14 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                height: 290,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFF5B4C6), Color(0xFFFCE3C3)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  size: 150,
-                  color: Colors.white70,
+              SizedBox(
+                height: 380,
+                child: Image.asset(
+                  profile.assetPath,
+                  key: ValueKey(profile.assetPath),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  semanticLabel: 'Synthetic portrait of ${profile.name}',
                 ),
               ),
               Padding(
@@ -389,6 +458,7 @@ class DemoProfile {
     this.distanceBand,
     this.bio,
     this.interests,
+    this.assetPath,
   );
   final String name;
   final int age;
@@ -396,6 +466,7 @@ class DemoProfile {
   final String distanceBand;
   final String bio;
   final List<String> interests;
+  final String assetPath;
 }
 
 class MatchTab extends StatelessWidget {
