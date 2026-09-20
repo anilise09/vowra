@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data/profile_repository.dart';
+import 'domain/match_connection.dart';
 import 'domain/user_profile.dart';
 
 void main() => runApp(const EmberApp());
@@ -133,6 +134,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int profileIndex = 0;
   final ProfileRepository profileRepository = MemoryProfileRepository();
   UserProfile? userProfile;
+  MatchConnection connection = const MatchConnection(
+    matchId: 'synthetic-match-1',
+    peerName: 'Maya',
+    peerCallReady: true,
+  );
   static const profiles = [
     DemoProfile(
       'Maya',
@@ -156,15 +162,18 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget build(BuildContext context) {
     final pages = [
       _discover(context),
-      const EmptyTab(
-        icon: Icons.favorite_outline,
-        title: 'No matches yet',
-        message: 'Mutual likes will appear here.',
+      MatchTab(
+        connection: connection,
+        onOpenChat: () => setState(() => selectedIndex = 2),
       ),
-      const EmptyTab(
-        icon: Icons.chat_bubble_outline,
-        title: 'Your conversations',
-        message: 'Messaging opens only after a mutual match.',
+      ChatTab(
+        connection: connection,
+        onCallReadinessChanged: (value) => setState(
+          () => connection = connection.setCurrentUserCallReady(value),
+        ),
+        onReport: () => setState(() => connection = connection.report()),
+        onUnmatch: () => setState(() => connection = connection.unmatch()),
+        onBlock: () => setState(() => connection = connection.block()),
       ),
       ProfileEditor(
         initialProfile: userProfile,
@@ -213,6 +222,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             label: 'Matches',
           ),
           NavigationDestination(
+            key: Key('chat-tab'),
             icon: Icon(Icons.chat_bubble_outline),
             selectedIcon: Icon(Icons.chat_bubble),
             label: 'Chats',
@@ -346,6 +356,238 @@ class DemoProfile {
   final String distanceBand;
   final String bio;
   final List<String> interests;
+}
+
+class MatchTab extends StatelessWidget {
+  const MatchTab({
+    super.key,
+    required this.connection,
+    required this.onOpenChat,
+  });
+
+  final MatchConnection connection;
+  final VoidCallback onOpenChat;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!connection.isActive) {
+      return const EmptyTab(
+        icon: Icons.favorite_outline,
+        title: 'No active matches',
+        message: 'Blocked and unmatched people cannot contact you.',
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text(
+          'Your matches',
+          style: Theme.of(context).textTheme.headlineSmall
+              ?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 6),
+        const Text('Synthetic prototype match — not a real person.'),
+        const SizedBox(height: 18),
+        Card(
+          child: ListTile(
+            leading: const CircleAvatar(child: Icon(Icons.person)),
+            title: Text(connection.peerName),
+            subtitle: Text(
+              connection.peerCallReady
+                  ? 'Matched · open to a call'
+                  : 'Matched · text first',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: onOpenChat,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ChatTab extends StatelessWidget {
+  const ChatTab({
+    super.key,
+    required this.connection,
+    required this.onCallReadinessChanged,
+    required this.onReport,
+    required this.onUnmatch,
+    required this.onBlock,
+  });
+
+  final MatchConnection connection;
+  final ValueChanged<bool> onCallReadinessChanged;
+  final VoidCallback onReport;
+  final VoidCallback onUnmatch;
+  final VoidCallback onBlock;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!connection.isActive) {
+      final blocked = connection.status == ConnectionStatus.blocked;
+      return EmptyTab(
+        icon: blocked ? Icons.block : Icons.heart_broken_outlined,
+        title: blocked ? 'Blocked' : 'Conversation closed',
+        message: blocked
+            ? '${connection.peerName} can no longer message or call you.'
+            : 'You unmatched. Messaging and calling are disabled.',
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+      children: [
+        Row(
+          children: [
+            const CircleAvatar(child: Icon(Icons.person)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    connection.peerName,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const Text('Synthetic prototype conversation'),
+                ],
+              ),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'Conversation safety actions',
+              onSelected: (value) => _confirmAction(context, value),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'report', child: Text('Report privately')),
+                PopupMenuItem(value: 'unmatch', child: Text('Unmatch')),
+                PopupMenuItem(value: 'block', child: Text('Block')),
+              ],
+            ),
+          ],
+        ),
+        if (connection.reported)
+          const Card(
+            color: Color(0xFFFFF1D6),
+            child: ListTile(
+              leading: Icon(Icons.flag_outlined),
+              title: Text('Report saved for review'),
+              subtitle: Text('The other person is not notified.'),
+            ),
+          ),
+        const SizedBox(height: 18),
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(14),
+              child: Text('Hi! What is your ideal Sunday?'),
+            ),
+          ),
+        ),
+        const Align(
+          alignment: Alignment.centerRight,
+          child: Card(
+            color: Color(0xFFFFD9E3),
+            child: Padding(
+              padding: EdgeInsets.all(14),
+              child: Text('Coffee, a long walk, and cooking something new.'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Call readiness',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'No surprise calls. Both people opt in, and every call still requires acceptance.',
+                ),
+                SwitchListTile(
+                  key: const Key('call-ready-switch'),
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('I am open to a call'),
+                  value: connection.currentUserCallReady,
+                  onChanged: onCallReadinessChanged,
+                ),
+                Text(
+                  connection.peerCallReady
+                      ? '${connection.peerName} is also open to a call.'
+                      : '${connection.peerName} has not opted in.',
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  key: const Key('request-video-call'),
+                  onPressed: connection.canRequestCall
+                      ? () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Prototype only: no camera, microphone, or network connection was opened.',
+                            ),
+                          ),
+                        )
+                      : null,
+                  icon: const Icon(Icons.videocam_outlined),
+                  label: const Text('Request video call'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          enabled: connection.canMessage,
+          decoration: const InputDecoration(
+            labelText: 'Message',
+            suffixIcon: Icon(Icons.send),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmAction(BuildContext context, String action) async {
+    if (action == 'report') {
+      onReport();
+      return;
+    }
+    final verb = action == 'block' ? 'Block' : 'Unmatch';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('$verb ${connection.peerName}?'),
+        content: Text(
+          action == 'block'
+              ? 'They will immediately lose access to this conversation and cannot call you.'
+              : 'This closes the conversation and disables messages and calls.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: Key('confirm-$action'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(verb),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      return;
+    }
+    if (action == 'block') {
+      onBlock();
+    } else {
+      onUnmatch();
+    }
+  }
 }
 
 class ProfileEditor extends StatefulWidget {

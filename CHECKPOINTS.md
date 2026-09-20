@@ -1,5 +1,17 @@
 # Checkpoints
 
+## CP-003 — Match, conversation, and call-consent invariants (2026-09-20)
+
+- Added an explicit match state machine with active, unmatched, and blocked states.
+- Messaging requires an active match. Video-call requests require an active match plus both people's call-readiness opt-in.
+- Block and unmatch are terminal for contact and clear both readiness flags; later UI actions cannot silently reactivate them.
+- Reporting preserves a private evidence flag without notifying the synthetic peer or automatically forcing a block.
+- Replaced Matches and Chats placeholders with a clearly synthetic match, sample conversation, mutual-readiness controls, private reporting, and confirmed block/unmatch actions.
+- The call button performs no camera, microphone, token, or network action; it states this explicitly.
+- Nine unit/widget tests pass, Flutter analysis is clean, and the Android debug APK builds.
+
+Next: extract feature widgets from `main.dart`, add a bounded message composer/repository and deterministic anti-spam rules, then model report reasons and evidence capture without storing unnecessary conversation content.
+
 ## CP-002 — Validated local profile creation (2026-09-20)
 
 - Added a profile domain model with bounded display-name and bio validation and an explicit 18–99 adult age rule.

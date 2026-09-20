@@ -103,4 +103,42 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('video calls require mutual readiness and block closes contact', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const EmberApp());
+    await tester.tap(find.byKey(const Key('adult-checkbox')));
+    await tester.tap(find.byKey(const Key('rules-checkbox')));
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('continue-button')));
+    await tester.tap(find.byKey(const Key('continue-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chat-tab')));
+    await tester.pumpAndSettle();
+
+    FilledButton callButton() => tester.widget<FilledButton>(
+      find.byKey(const Key('request-video-call')),
+    );
+    expect(callButton().onPressed, isNull);
+    await tester.tap(find.byKey(const Key('call-ready-switch')));
+    await tester.pump();
+    expect(callButton().onPressed, isNotNull);
+    await tester.tap(find.byKey(const Key('request-video-call')));
+    await tester.pump();
+    expect(find.textContaining('no camera, microphone'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Conversation safety actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Block'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-block')));
+    await tester.pumpAndSettle();
+    expect(find.text('Blocked'), findsOneWidget);
+    expect(
+      find.textContaining('can no longer message or call'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('request-video-call')), findsNothing);
+  });
 }
