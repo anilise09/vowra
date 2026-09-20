@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'data/message_repository.dart';
 import 'data/profile_repository.dart';
+import 'domain/chat_message.dart';
 import 'domain/match_connection.dart';
 import 'domain/user_profile.dart';
 
@@ -133,12 +135,33 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   int profileIndex = 0;
   final ProfileRepository profileRepository = MemoryProfileRepository();
+  final MemoryMessageRepository messageRepository = MemoryMessageRepository();
   UserProfile? userProfile;
   MatchConnection connection = const MatchConnection(
     matchId: 'synthetic-match-1',
     peerName: 'Maya',
     peerCallReady: true,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    messageRepository.seed(connection.matchId, [
+      ChatMessage(
+        id: 'seed-peer',
+        author: MessageAuthor.peer,
+        text: 'Hi! What is your ideal Sunday?',
+        sentAt: DateTime.utc(2026, 9, 20, 12),
+      ),
+      ChatMessage(
+        id: 'seed-user',
+        author: MessageAuthor.currentUser,
+        text: 'Coffee, a long walk, and cooking something new.',
+        sentAt: DateTime.utc(2026, 9, 20, 12, 1),
+      ),
+    ]);
+  }
+
   static const profiles = [
     DemoProfile(
       'Maya',
@@ -168,6 +191,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ),
       ChatTab(
         connection: connection,
+        messages: messageRepository.list(connection.matchId),
+        onSend: _sendMessage,
         onCallReadinessChanged: (value) => setState(
           () => connection = connection.setCurrentUserCallReady(value),
         ),
@@ -339,6 +364,21 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   void _nextProfile() => setState(() => profileIndex += 1);
+
+  void _sendMessage(String text) {
+    final result = messageRepository.send(
+      matchId: connection.matchId,
+      text: text,
+      connectionActive: connection.canMessage,
+    );
+    if (!result.accepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.error ?? 'Message was not sent.')),
+      );
+      return;
+    }
+    setState(() {});
+  }
 }
 
 class DemoProfile {
@@ -410,6 +450,8 @@ class ChatTab extends StatelessWidget {
   const ChatTab({
     super.key,
     required this.connection,
+    required this.messages,
+    required this.onSend,
     required this.onCallReadinessChanged,
     required this.onReport,
     required this.onUnmatch,
@@ -417,6 +459,8 @@ class ChatTab extends StatelessWidget {
   });
 
   final MatchConnection connection;
+  final List<ChatMessage> messages;
+  final ValueChanged<String> onSend;
   final ValueChanged<bool> onCallReadinessChanged;
   final VoidCallback onReport;
   final VoidCallback onUnmatch;
@@ -474,22 +518,19 @@ class ChatTab extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 18),
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(14),
-              child: Text('Hi! What is your ideal Sunday?'),
-            ),
-          ),
-        ),
-        const Align(
-          alignment: Alignment.centerRight,
-          child: Card(
-            color: Color(0xFFFFD9E3),
-            child: Padding(
-              padding: EdgeInsets.all(14),
-              child: Text('Coffee, a long walk, and cooking something new.'),
+        ...messages.map(
+          (message) => Align(
+            alignment: message.author == MessageAuthor.currentUser
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Card(
+              color: message.author == MessageAuthor.currentUser
+                  ? const Color(0xFFFFD9E3)
+                  : null,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Text(message.text),
+              ),
             ),
           ),
         ),
@@ -541,10 +582,15 @@ class ChatTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         TextField(
+          key: const Key('message-composer'),
           enabled: connection.canMessage,
+          maxLength: MessagePolicy.maxCharacters,
+          textInputAction: TextInputAction.send,
+          onSubmitted: onSend,
           decoration: const InputDecoration(
             labelText: 'Message',
-            suffixIcon: Icon(Icons.send),
+            helperText: 'Press send on the keyboard. Anti-spam limits apply.',
+            suffixIcon: Icon(Icons.send_outlined),
           ),
         ),
       ],

@@ -128,6 +128,20 @@ void main() {
     await tester.pump();
     expect(find.textContaining('no camera, microphone'), findsOneWidget);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('message-composer')),
+      180,
+    );
+    await tester.enterText(
+      find.byKey(const Key('message-composer')),
+      '  A new    bounded message  ',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pump();
+    expect(find.text('A new bounded message'), findsOneWidget);
+
+    await tester.dragFrom(const Offset(400, 180), const Offset(0, 800));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Conversation safety actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Block'));

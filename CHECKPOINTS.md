@@ -1,5 +1,17 @@
 # Checkpoints
 
+## CP-004 — Bounded local messaging and anti-spam rules (2026-09-20)
+
+- Added a message domain model and memory-only repository scoped by match ID.
+- Messages are trimmed, repeated horizontal whitespace is normalized, unsupported control characters and blank content are rejected, and public text is capped at 1,000 characters.
+- A connection must still be active at send time; blocked or unmatched conversations reject the write before storage.
+- Prototype throttling permits at most five current-user messages per rolling minute per match.
+- Retention is bounded to the latest 100 in-memory messages per conversation; app restart clears them.
+- Replaced hard-coded chat bubbles with repository-backed synthetic messages and wired the composer through the policy boundary.
+- Twelve unit/widget tests pass, Flutter analysis is clean, and the Android debug APK builds.
+
+Next: add structured report reasons, minimal evidence references and an audited moderation-state model; never silently attach an entire conversation or notify the reported account.
+
 ## CP-003 — Match, conversation, and call-consent invariants (2026-09-20)
 
 - Added an explicit match state machine with active, unmatched, and blocked states.
