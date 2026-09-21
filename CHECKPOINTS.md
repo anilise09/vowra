@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-014 — Original 50/50 profile target completed (2026-09-20)
+
+- Added the final five fictional adult women and five fictional adult men with distinct reviewed portraits and discovery metadata.
+- Completed the original dataset target at 50 women and 50 men; Jordan remains an additional inclusive portrait fixture outside those counts.
+- Verified every discovery portrait reference is unique and every referenced asset exists.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: begin the requested 11-background expansion, adding 10 women and 10 men for each background in reviewed, auditable batches.
+
 ## CP-013 — Ninth reviewed AI portrait batch (2026-09-20)
 
 - Added five fictional adult women and five fictional adult men with distinct reviewed portraits and discovery metadata.

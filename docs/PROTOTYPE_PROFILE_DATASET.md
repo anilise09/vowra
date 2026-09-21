@@ -4,10 +4,10 @@ Target: at least 50 fictional adult women and 50 fictional adult men, each with 
 
 ## Progress
 
-- Women complete: 45 / 50 — previous 40 plus Oksana, Isidora, Abena, Freyja, and Dalia
-- Men complete: 45 / 50 — previous 40 plus Luka, Nicolas, Kato, Mikkel, and Yacine
+- Women complete: 50 / 50 — previous 45 plus Irina, Awa, Anahit, Simone, and Margot
+- Men complete: 50 / 50 — previous 45 plus Stefan, Andres, Alain, Cian, and Zaid
 - Additional inclusive portrait: Jordan (not counted toward either requested set)
-- Remaining on the original target: 5 women and 5 men
+- Remaining on the original target: complete
 
 ## Expanded representation target
 
