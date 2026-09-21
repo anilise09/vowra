@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-016 — Indian expansion completed (2026-09-21)
+
+- Added five more fictional adult Indian women and five more fictional adult Indian men with explicit fixture background metadata.
+- Completed the Indian expansion target at 10 women and 10 men; overall expansion progress is 20 / 220.
+- Reviewed and bundled ten distinct portraits while preserving unique profile names, unique asset references, and visible prototype disclosure.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: begin the Pakistani expansion target in reviewed, auditable batches.
+
 ## CP-015 — Indian expansion half-batch (2026-09-21)
 
 - Began the requested 220-profile representation expansion with five fictional adult Indian women and five fictional adult Indian men.
