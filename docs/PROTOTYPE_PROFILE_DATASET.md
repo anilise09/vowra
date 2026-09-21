@@ -4,10 +4,10 @@ Target: at least 50 fictional adult women and 50 fictional adult men, each with 
 
 ## Progress
 
-- Women complete: 30 / 50 — previous 25 plus Noura, Elise, Adwoa, Rina, and Milena
-- Men complete: 30 / 50 — previous 25 plus Youssef, Henrik, Chinedu, Rafael, and Batu
+- Women complete: 35 / 50 — previous 30 plus Samira, Maeve, Lindiwe, Petra, and Noor
+- Men complete: 35 / 50 — previous 30 plus Karim, Marek, Tendai, Joao, and Ari
 - Additional inclusive portrait: Jordan (not counted toward either requested set)
-- Remaining on the original target: 20 women and 20 men
+- Remaining on the original target: 15 women and 15 men
 
 ## Expanded representation target
 
