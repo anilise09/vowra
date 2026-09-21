@@ -1,5 +1,13 @@
 # Checkpoints
 
+## CP-009 — Fifth reviewed AI portrait batch (2026-09-20)
+
+- Added five fictional adult women and five fictional adult men with distinct reviewed portraits and discovery metadata.
+- Advanced the original dataset to 25 women and 25 men; 25 of each remain.
+- Kept this batch outside the later 11-background expansion for auditable totals.
+
+Next: validate, deploy to the connected phone, and continue toward 50/50.
+
 ## CP-008 — Fourth reviewed AI portrait batch (2026-09-20)
 
 - Added five fictional adult women and five fictional adult men with distinct generated portraits and discovery metadata.
