@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-012 — Eighth reviewed AI portrait batch (2026-09-20)
+
+- Added five fictional adult women and five fictional adult men with distinct reviewed portraits and discovery metadata.
+- Advanced the original dataset to 40 women and 40 men; 10 of each remain.
+- Kept this batch separate from the later 11-background expansion for auditable totals.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: complete the final 10 women and 10 men in the original target, then begin the requested 11-background expansion.
+
 ## CP-009 — Fifth reviewed AI portrait batch (2026-09-20)
 
 - Added five fictional adult women and five fictional adult men with distinct reviewed portraits and discovery metadata.
