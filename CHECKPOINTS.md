@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-017 — Pakistani expansion half-batch (2026-09-21)
+
+- Added five fictional adult Pakistani women and five fictional adult Pakistani men with explicit fixture background metadata.
+- Reviewed and bundled ten distinct portraits while preserving unique profile names, unique asset references, and visible prototype disclosure.
+- Advanced overall representation-expansion progress to 30 / 220, with the Pakistani target at 5 / 10 women and 5 / 10 men.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: complete the remaining five Pakistani women and five Pakistani men, then proceed through the other requested backgrounds in auditable batches.
+
 ## CP-016 — Indian expansion completed (2026-09-21)
 
 - Added five more fictional adult Indian women and five more fictional adult Indian men with explicit fixture background metadata.
