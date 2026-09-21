@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-022 — Chinese expansion completed (2026-09-21)
+
+- Added five more fictional adult Chinese women and five more fictional adult Chinese men with explicit fixture background metadata.
+- Completed the Chinese expansion target at 10 women and 10 men; overall expansion progress is 80 / 220.
+- Reviewed and bundled ten distinct portraits while preserving unique profile names, unique asset references, and visible prototype disclosure.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: begin the Japanese expansion target in reviewed, auditable batches.
+
 ## CP-021 — Chinese expansion half-batch (2026-09-21)
 
 - Added five fictional adult Chinese women and five fictional adult Chinese men with explicit fixture background metadata.
