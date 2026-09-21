@@ -4,10 +4,10 @@ Target: at least 50 fictional adult women and 50 fictional adult men, each with 
 
 ## Progress
 
-- Women complete: 40 / 50 — previous 35 plus Nino, Marisol, Keza, Aino, and Rima
-- Men complete: 40 / 50 — previous 35 plus Diego, Dawit, Lars, Giorgi, and Sami
+- Women complete: 45 / 50 — previous 40 plus Oksana, Isidora, Abena, Freyja, and Dalia
+- Men complete: 45 / 50 — previous 40 plus Luka, Nicolas, Kato, Mikkel, and Yacine
 - Additional inclusive portrait: Jordan (not counted toward either requested set)
-- Remaining on the original target: 10 women and 10 men
+- Remaining on the original target: 5 women and 5 men
 
 ## Expanded representation target
 

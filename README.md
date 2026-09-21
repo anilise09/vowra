@@ -6,7 +6,7 @@ The launch name is intentionally undecided until trademark, domain, and store-na
 
 ## Status
 
-CP-012 is complete: eight reviewed AI portrait batches are bundled alongside the prior offline discovery, profile, match/chat/call-consent, and bounded messaging work. The original dataset is now at 40 women and 40 men; the expanded representation target has not started. See `docs/PROTOTYPE_PROFILE_DATASET.md` for exact counts, plus `CHECKPOINTS.md`, `docs/COMPETITIVE_RESEARCH.md`, `docs/PRODUCT_PLAN.md`, `docs/ROADMAP.md`, and `docs/SECURITY_AND_SAFETY.md`.
+CP-013 is complete: nine reviewed AI portrait batches are bundled alongside the prior offline discovery, profile, match/chat/call-consent, and bounded messaging work. The original dataset is now at 45 women and 45 men; the expanded representation target has not started. See `docs/PROTOTYPE_PROFILE_DATASET.md` for exact counts, plus `CHECKPOINTS.md`, `docs/COMPETITIVE_RESEARCH.md`, `docs/PRODUCT_PLAN.md`, `docs/ROADMAP.md`, and `docs/SECURITY_AND_SAFETY.md`.
 
 ## Intended stack
 
