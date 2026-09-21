@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-023 — Japanese expansion half-batch (2026-09-21)
+
+- Added five fictional adult Japanese women and five fictional adult Japanese men with explicit fixture background metadata.
+- Reviewed and bundled ten distinct portraits while preserving unique profile names, unique asset references, and visible prototype disclosure.
+- Advanced overall representation-expansion progress to 90 / 220, with the Japanese target at 5 / 10 women and 5 / 10 men.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: complete the remaining five Japanese women and five Japanese men, then proceed through the other requested backgrounds in auditable batches.
+
 ## CP-022 — Chinese expansion completed (2026-09-21)
 
 - Added five more fictional adult Chinese women and five more fictional adult Chinese men with explicit fixture background metadata.
