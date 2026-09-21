@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-018 — Pakistani expansion completed (2026-09-21)
+
+- Added five more fictional adult Pakistani women and five more fictional adult Pakistani men with explicit fixture background metadata.
+- Completed the Pakistani expansion target at 10 women and 10 men; overall expansion progress is 40 / 220.
+- Reviewed and bundled ten distinct portraits while preserving unique profile names, unique asset references, and visible prototype disclosure.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: begin the Bangladeshi expansion target in reviewed, auditable batches.
+
 ## CP-017 — Pakistani expansion half-batch (2026-09-21)
 
 - Added five fictional adult Pakistani women and five fictional adult Pakistani men with explicit fixture background metadata.
