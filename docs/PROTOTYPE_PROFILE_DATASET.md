@@ -13,14 +13,14 @@ Target: at least 50 fictional adult women and 50 fictional adult men, each with 
 
 After the original target, add 10 fictional adult women and 10 fictional adult men for each of these 11 backgrounds: Indian, Pakistani, Bangladeshi, Chinese, Japanese, Filipino, Korean, Mexican, Nepali, Sri Lankan, and South African. This adds 220 individually generated and reviewed profiles. Names, settings, interests, clothing, skin tones, and biographies must vary naturally within each group; nationality must not be inferred from appearance alone or reduced to stereotypes.
 
-Expansion progress: 100 / 220 profiles complete.
+Expansion progress: 110 / 220 profiles complete.
 
 - Indian: 10 / 10 women and 10 / 10 men — complete
 - Pakistani: 10 / 10 women and 10 / 10 men
 - Bangladeshi: 10 / 10 women and 10 / 10 men
 - Chinese: 10 / 10 women and 10 / 10 men — complete
 - Japanese: 10 / 10 women and 10 / 10 men — complete
-- Filipino: 0 / 10 women and 0 / 10 men
+- Filipino: 5 / 10 women and 5 / 10 men
 - Korean: 0 / 10 women and 0 / 10 men
 - Mexican: 0 / 10 women and 0 / 10 men
 - Nepali: 0 / 10 women and 0 / 10 men

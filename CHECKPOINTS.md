@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-025 — Filipino expansion half-batch (2026-09-21)
+
+- Added five fictional adult Filipino women and five fictional adult Filipino men with explicit fixture background metadata.
+- Reviewed and bundled ten distinct portraits while preserving unique profile names, unique asset references, and visible prototype disclosure.
+- Advanced overall representation-expansion progress to 110 / 220, with the Filipino target at 5 / 10 women and 5 / 10 men.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: complete the remaining five Filipino women and five Filipino men, then proceed through the other requested backgrounds in auditable batches.
+
 ## CP-024 — Japanese expansion completed (2026-09-21)
 
 - Added five more fictional adult Japanese women and five more fictional adult Japanese men with explicit fixture background metadata.
