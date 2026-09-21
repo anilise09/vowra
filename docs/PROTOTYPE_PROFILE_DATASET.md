@@ -4,10 +4,10 @@ Target: at least 50 fictional adult women and 50 fictional adult men, each with 
 
 ## Progress
 
-- Women complete: 10 / 50 — Maya, Elena, Amina, Sofia, Mei, Nadia, Grace, Valentina, Leila, Chloe
-- Men complete: 10 / 50 — Marcus, Daniel, Arjun, Ethan, Minjun, Jamal, Luca, Tomas, Andre, Noah
+- Women complete: 15 / 50 — Maya, Elena, Amina, Sofia, Mei, Nadia, Grace, Valentina, Leila, Chloe, Camila, Derya, Thuy, Selam, Amelie
+- Men complete: 15 / 50 — Marcus, Daniel, Arjun, Ethan, Minjun, Jamal, Luca, Tomas, Andre, Noah, Kwame, Ronan, Omar, Niran, Nikos
 - Additional inclusive portrait: Jordan (not counted toward either requested set)
-- Remaining on the original target: 40 women and 40 men
+- Remaining on the original target: 35 women and 35 men
 
 ## Expanded representation target
 
