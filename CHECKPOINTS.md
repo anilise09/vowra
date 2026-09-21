@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-020 — Bangladeshi expansion completed (2026-09-21)
+
+- Added five more fictional adult Bangladeshi women and five more fictional adult Bangladeshi men with explicit fixture background metadata.
+- Completed the Bangladeshi expansion target at 10 women and 10 men; overall expansion progress is 60 / 220.
+- Reviewed and bundled ten distinct portraits while preserving unique profile names, unique asset references, and visible prototype disclosure.
+- Built the debug APK while the Samsung phone was intentionally disconnected; phone installation remains pending, the AVD remained untouched, and full testing stayed deferred.
+
+Next: install this checkpoint on the Samsung phone when reconnected, then begin the Chinese expansion target in reviewed, auditable batches.
+
 ## CP-019 — Bangladeshi expansion half-batch (2026-09-21)
 
 - Added five fictional adult Bangladeshi women and five fictional adult Bangladeshi men with explicit fixture background metadata.
