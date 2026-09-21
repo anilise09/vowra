@@ -6,7 +6,7 @@ The launch name is intentionally undecided until trademark, domain, and store-na
 
 ## Status
 
-CP-014 is complete: the original profile target is complete at 50 fictional adult women and 50 fictional adult men, alongside the prior offline discovery, profile, match/chat/call-consent, and bounded messaging work. The expanded representation target has not started. See `docs/PROTOTYPE_PROFILE_DATASET.md` for exact counts, plus `CHECKPOINTS.md`, `docs/COMPETITIVE_RESEARCH.md`, `docs/PRODUCT_PLAN.md`, `docs/ROADMAP.md`, and `docs/SECURITY_AND_SAFETY.md`.
+CP-015 is complete: the original 50-women/50-men target is complete and the 220-profile representation expansion has begun with 5 Indian women and 5 Indian men. Expansion profiles carry explicit fixture background metadata in discovery. See `docs/PROTOTYPE_PROFILE_DATASET.md` for exact counts, plus `CHECKPOINTS.md`, `docs/COMPETITIVE_RESEARCH.md`, `docs/PRODUCT_PLAN.md`, `docs/ROADMAP.md`, and `docs/SECURITY_AND_SAFETY.md`.
 
 ## Intended stack
 

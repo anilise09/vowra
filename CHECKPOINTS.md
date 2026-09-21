@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-015 — Indian expansion half-batch (2026-09-21)
+
+- Began the requested 220-profile representation expansion with five fictional adult Indian women and five fictional adult Indian men.
+- Added explicit optional background metadata to synthetic discovery fixtures and displays it on expansion profiles instead of relying on appearance-based inference.
+- Reviewed and bundled ten distinct portraits; expansion progress is 10 / 220, with the Indian target at 5 / 10 women and 5 / 10 men.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: complete the remaining five Indian women and five Indian men, then proceed through the other requested backgrounds in auditable batches.
+
 ## CP-014 — Original 50/50 profile target completed (2026-09-20)
 
 - Added the final five fictional adult women and five fictional adult men with distinct reviewed portraits and discovery metadata.

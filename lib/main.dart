@@ -614,6 +614,56 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       'assets/profiles/elise_be.png',
     ),
     DemoProfile(
+      'Kavya',
+      28,
+      'Open to long-term',
+      '2–5 km away',
+      'Campus gardens, indie films, and experimental cooking.',
+      ['Outdoors', 'Arts', 'Cooking'],
+      'assets/profiles/ind_kavya.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Meera',
+      34,
+      'Long-term relationship',
+      '5–10 km away',
+      'Waterfront walks, novels, and hosting relaxed dinners.',
+      ['Outdoors', 'Books', 'Cooking'],
+      'assets/profiles/ind_meera.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Zoya',
+      31,
+      'Open to long-term',
+      '10–20 km away',
+      'Gallery courtyards, live music, and weekend travel.',
+      ['Arts', 'Music', 'Travel'],
+      'assets/profiles/ind_zoya.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Nandini',
+      37,
+      'Long-term relationship',
+      '5–10 km away',
+      'Botanical afternoons, architecture, and family recipes.',
+      ['Outdoors', 'Arts', 'Cooking'],
+      'assets/profiles/ind_nandini.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Rhea',
+      29,
+      'Open to long-term',
+      '2–5 km away',
+      'City parks, morning runs, and spontaneous road trips.',
+      ['Outdoors', 'Fitness', 'Travel'],
+      'assets/profiles/ind_rhea.png',
+      'Indian',
+    ),
+    DemoProfile(
       'Marcus',
       30,
       'Long-term relationship',
@@ -1063,6 +1113,56 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ['Outdoors', 'Arts', 'Travel'],
       'assets/profiles/omar_jo.png',
     ),
+    DemoProfile(
+      'Vihaan',
+      32,
+      'Long-term relationship',
+      '5–10 km away',
+      'Tree-lined walks, photography, and Sunday cooking.',
+      ['Outdoors', 'Arts', 'Cooking'],
+      'assets/profiles/ind_vihaan.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Kabir',
+      36,
+      'Open to long-term',
+      '10–20 km away',
+      'Lakeside paths, jazz playlists, and history books.',
+      ['Outdoors', 'Music', 'Books'],
+      'assets/profiles/ind_kabir.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Rohan',
+      29,
+      'Long-term relationship',
+      '2–5 km away',
+      'Garden runs, live shows, and weekend getaways.',
+      ['Fitness', 'Music', 'Travel'],
+      'assets/profiles/ind_rohan.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Dev',
+      38,
+      'Open to long-term',
+      '5–10 km away',
+      'Stone courtyards, architecture, and ambitious dinners.',
+      ['Outdoors', 'Arts', 'Cooking'],
+      'assets/profiles/ind_dev.png',
+      'Indian',
+    ),
+    DemoProfile(
+      'Imran',
+      33,
+      'Long-term relationship',
+      '10–20 km away',
+      'Riverside evenings, books, and planning the next trip.',
+      ['Outdoors', 'Books', 'Travel'],
+      'assets/profiles/ind_imran.png',
+      'Indian',
+    ),
   ];
 
   @override
@@ -1188,7 +1288,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 4),
-                    Text('${profile.intent} · ${profile.distanceBand}'),
+                    Text(
+                      profile.background == null
+                          ? '${profile.intent} · ${profile.distanceBand}'
+                          : '${profile.background} · ${profile.intent} · ${profile.distanceBand}',
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       profile.bio,
@@ -1268,8 +1372,9 @@ class DemoProfile {
     this.distanceBand,
     this.bio,
     this.interests,
-    this.assetPath,
-  );
+    this.assetPath, [
+    this.background,
+  ]);
   final String name;
   final int age;
   final String intent;
@@ -1277,6 +1382,7 @@ class DemoProfile {
   final String bio;
   final List<String> interests;
   final String assetPath;
+  final String? background;
 }
 
 class MatchTab extends StatelessWidget {
