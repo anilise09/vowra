@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-008 — Fourth reviewed AI portrait batch (2026-09-20)
+
+- Added five fictional adult women and five fictional adult men with distinct generated portraits and discovery metadata.
+- Rejected and regenerated one portrait containing readable background signage before bundling it.
+- Advanced the original dataset to 20 women and 20 men; 30 of each remain before the original 50/50 target is complete.
+- Kept this batch outside the later 11-background expansion so both progress totals remain auditable.
+
+Next: validate CP-008, deploy it to the connected phone, and continue reviewed portrait batches toward 50/50.
+
 ## CP-007 — Third reviewed AI portrait batch and phone deployment (2026-09-20)
 
 - Installed and launched CP-006 successfully on the connected Samsung SM-S928W before beginning new work.
