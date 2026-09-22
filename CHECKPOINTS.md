@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-030 — Mexican expansion completed (2026-09-21)
+
+- Added five more fictional adult Mexican women and five more fictional adult Mexican men with explicit fixture background metadata.
+- Completed the Mexican expansion target at 10 women and 10 men; overall expansion progress is 160 / 220.
+- Reviewed all ten new portraits as a deliberately varied set across age, skin tone, face shape, hair, build, eyewear, facial hair, clothing, and setting while preserving the adult, one-subject, no-text asset contract.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: begin the Nepali expansion target in reviewed, visually distinct batches.
+
 ## CP-029 — Mexican expansion half-batch (2026-09-21)
 
 - Added five fictional adult Mexican women and five fictional adult Mexican men with explicit fixture background metadata.
