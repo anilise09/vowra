@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-029 — Mexican expansion half-batch (2026-09-21)
+
+- Added five fictional adult Mexican women and five fictional adult Mexican men with explicit fixture background metadata.
+- Reviewed the batch as a deliberately varied set across age, skin tone, face shape, hair, build, eyewear, facial hair, clothing, and setting without relying on nationality stereotypes.
+- Advanced overall representation-expansion progress to 150 / 220, with the Mexican target at 5 / 10 women and 5 / 10 men.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: complete the remaining five Mexican women and five Mexican men.
+
 ## CP-028 — Korean expansion completed (2026-09-21)
 
 - Added five more fictional adult Korean women and five more fictional adult Korean men with explicit fixture background metadata.
