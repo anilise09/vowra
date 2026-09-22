@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-027 — Korean expansion half-batch (2026-09-21)
+
+- Added five fictional adult Korean women and five fictional adult Korean men with explicit fixture background metadata.
+- Reviewed the batch as a set for visual uniqueness, varying age, face shape, hair, build, eyewear, facial hair, clothing, and setting.
+- Advanced overall representation-expansion progress to 130 / 220, with the Korean target at 5 / 10 women and 5 / 10 men.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: complete the remaining five Korean women and five Korean men.
+
 ## CP-026 — Filipino expansion completed (2026-09-21)
 
 - Added five more fictional adult Filipino women and five more fictional adult Filipino men with explicit fixture background metadata.
