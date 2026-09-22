@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-026 — Filipino expansion completed (2026-09-21)
+
+- Added five more fictional adult Filipino women and five more fictional adult Filipino men with explicit fixture background metadata.
+- Completed the Filipino expansion target at 10 women and 10 men; overall expansion progress is 120 / 220.
+- Applied a stricter visual uniqueness review across both Filipino batches, varying age, face shape, hair, build, eyewear, facial hair, clothing, and setting while preserving the adult, one-subject, no-text asset contract.
+- Built the debug APK and installed it only on the connected Samsung phone; the AVD remained untouched and full testing stayed deferred.
+
+Next: begin the Korean expansion target in reviewed, visually distinct batches.
+
 ## CP-025 — Filipino expansion half-batch (2026-09-21)
 
 - Added five fictional adult Filipino women and five fictional adult Filipino men with explicit fixture background metadata.
