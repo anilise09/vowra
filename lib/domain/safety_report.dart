@@ -1,3 +1,14 @@
+enum LocalModerationState {
+  localPending('local_pending', 'Local pending review'),
+  readyForReview('ready_for_review', 'Ready for future review'),
+  reviewedNoAction('reviewed_no_action', 'Reviewed: no action'),
+  actioned('actioned', 'Action taken');
+
+  const LocalModerationState(this.backendKey, this.label);
+  final String backendKey;
+  final String label;
+}
+
 enum ReportReason {
   harassment('Harassment or hate'),
   impersonation('Impersonation'),
@@ -16,12 +27,14 @@ class SafetyReport {
     required this.reason,
     required this.createdAt,
     this.messageId,
+    this.moderationState = LocalModerationState.localPending,
   });
 
   final String matchId;
   final ReportReason reason;
   final DateTime createdAt;
   final String? messageId;
+  final LocalModerationState moderationState;
 }
 
 class DiscoveryProfileReport {
@@ -30,10 +43,12 @@ class DiscoveryProfileReport {
     required this.profileName,
     required this.reason,
     required this.createdAt,
+    this.moderationState = LocalModerationState.localPending,
   });
 
   final String profileAssetPath;
   final String profileName;
   final ReportReason reason;
   final DateTime createdAt;
+  final LocalModerationState moderationState;
 }

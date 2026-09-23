@@ -176,8 +176,8 @@ class DiscoveryDeck extends StatelessWidget {
                               title: Text(
                                 'Report recorded: ${profileReport.reason.label}',
                               ),
-                              subtitle: const Text(
-                                'Saved in this device session only. No review team is connected.',
+                              subtitle: Text(
+                                '${profileReport.moderationState.label}. Saved in this device session only. No review team is connected.',
                               ),
                             ),
                           ),
@@ -352,7 +352,7 @@ class DiscoveryDeck extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Report recorded on this device session only. No review team is connected.',
+            'Report recorded as local pending review on this device only.',
           ),
         ),
       );
@@ -420,7 +420,7 @@ class DiscoveryDeck extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Prototype only: this report stays in memory and is not sent to a review team.',
+                  'Prototype only: this starts as local pending review and is not sent to a review team.',
                 ),
               ],
             ),

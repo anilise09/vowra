@@ -123,8 +123,8 @@ class ChatTab extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.flag_outlined),
               title: Text('Report recorded: ${report!.reason.label}'),
-              subtitle: const Text(
-                'Saved in this device session only. No review team is connected. The other person is not notified.',
+              subtitle: Text(
+                '${report!.moderationState.label}. Saved in this device session only. No review team is connected. The other person is not notified.',
               ),
             ),
           ),
@@ -260,7 +260,7 @@ class ChatTab extends StatelessWidget {
                 ],
                 const SizedBox(height: 8),
                 const Text(
-                  'Prototype only: this report stays in memory and is not sent to a review team.',
+                  'Prototype only: this starts as local pending review and is not sent to a review team.',
                 ),
               ],
             ),

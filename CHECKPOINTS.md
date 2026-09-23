@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-038 - Local moderation state model (2026-09-22)
+
+- Added `LocalModerationState` to safety reports with stable backend-oriented keys: `local_pending`, `ready_for_review`, `reviewed_no_action`, and `actioned`. Conversation reports and discovery profile reports default to `local_pending`.
+- Updated chat and discovery report UI copy to show the local review state while still saying that reports stay on device and are not sent to a connected review team. The other person is not notified.
+- Normalized common mojibake punctuation in app strings touched during this pass so prototype separators and distance ranges render as intended.
+- Covered moderation-state defaults and backend keys with unit tests. Verified with `flutter analyze` (no issues), `flutter test` (24 passed), and `flutter build apk --debug` (built). Device testing, including the paired ASUS phone, was skipped for this checkpoint at the user's request because work is currently active there.
+
+Next: continue swipe/match architecture polish by introducing a local notification/event model for likes and mutual-like transitions without sending real notifications or creating fake user engagement. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-037 - Discovery swipe interaction model (2026-09-22)
 
 - Added local discovery swipe actions: swipe up likes and advances, swipe left rejects and excludes the profile from discovery, and swipe right advances without counting as a rejection. The visible action buttons now mirror the same Like, Reject, and Next behavior.
