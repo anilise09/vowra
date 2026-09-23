@@ -1,5 +1,15 @@
 # Checkpoints
 
+## CP-036 — Profile UI extraction and emulator smoke (2026-09-22)
+
+- Moved the profile editor into `lib/features/profile/profile_editor.dart`, preserving display-name, adult-age, bio, relationship-intent, interest, coarse-distance, and default call-readiness behavior.
+- `main.dart` now delegates discovery, match, chat, and profile UI to feature modules while keeping app state, synthetic fixture data, repositories, and top-level navigation wiring.
+- Verified with `flutter analyze` (no issues), `flutter test` (18 passed), and `flutter build apk --debug` (built).
+- Installed and launched the debug APK on the available Pixel-style emulator `emulator-5554`; confirmed the consent gate, discovery card, bottom tabs, and extracted profile editor were reachable. Logcat checks after launch/navigation showed no app `FATAL EXCEPTION`.
+- After initial ADB pairing retries returned a protocol fault, the ASUS wireless device came online as `10.0.0.246:37889` (`ASUS_I003DD`). Installed and launched the debug APK there, confirmed the consent gate, discovery card, bottom tabs, and extracted profile editor were reachable, and found no app `FATAL EXCEPTION` in the post-navigation logcat check.
+
+Next: add a small local moderation-state model that can later map cleanly to backend review states, then continue UI polish. Keep portrait generation deferred until the coding/UI phase is further along.
+
 ## CP-035 — Match and chat UI extraction (2026-09-22)
 
 - Moved the match list and conversation UI into `lib/features/matches/match_tabs.dart`, including the call-readiness panel, message composer, private report dialog, block confirmation, and unmatch confirmation.
