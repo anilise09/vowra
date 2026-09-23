@@ -4,6 +4,7 @@ import '../../domain/conversation_access_policy.dart';
 import '../../domain/demo_profile.dart';
 import '../../domain/discovery_interaction.dart';
 import '../../domain/discovery_preferences.dart';
+import '../../domain/local_like_event.dart';
 import '../../domain/safety_report.dart';
 import '../shared/empty_tab.dart';
 
@@ -16,6 +17,7 @@ class DiscoveryDeck extends StatelessWidget {
     required this.likedProfiles,
     required this.rejectedProfileAssets,
     required this.reports,
+    required this.likeEvents,
     required this.profileIndex,
     required this.onPreferencesChanged,
     required this.onSwipeAction,
@@ -29,6 +31,7 @@ class DiscoveryDeck extends StatelessWidget {
   final Map<String, LikedProfile> likedProfiles;
   final Set<String> rejectedProfileAssets;
   final Map<String, DiscoveryProfileReport> reports;
+  final List<LocalLikeEvent> likeEvents;
   final int profileIndex;
   final ValueChanged<DiscoveryPreferences> onPreferencesChanged;
   final void Function(DemoProfile profile, DiscoverySwipeAction action)
@@ -74,6 +77,10 @@ class DiscoveryDeck extends StatelessWidget {
             ),
           ],
         ),
+        if (likeEvents.isNotEmpty) ...[
+          _LocalActivityCard(events: likeEvents.take(3).toList()),
+          const SizedBox(height: 12),
+        ],
         const SizedBox(height: 12),
         if (profile == null)
           const Padding(
@@ -450,6 +457,42 @@ class DiscoveryDeck extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LocalActivityCard extends StatelessWidget {
+  const _LocalActivityCard({required this.events});
+
+  final List<LocalLikeEvent> events;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Local activity', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 6),
+          const Text(
+            'Prototype only: these are on-device event previews, not real notifications.',
+          ),
+          const SizedBox(height: 8),
+          for (final event in events)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.notifications_none, size: 18),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text(event.summary)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _SwipeGuide extends StatelessWidget {

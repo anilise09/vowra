@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-039 - Local like event previews (2026-09-22)
+
+- Added `LocalLikeEvent` with stable event keys for `outbound_like`, `notification_preview`, and `mutual_like`. Liking a profile records local event previews instead of sending a real notification or creating fake engagement.
+- Discovery now shows a compact Local activity card with the latest like events. The copy states that these are on-device previews, not real notifications.
+- Liking the existing synthetic match records a mutual-like event and shows product copy that mutual likes can connect and message in the free core.
+- Covered outbound notification preview and mutual-like events with unit/widget tests. Verified with `flutter analyze` (no issues), `flutter test` (26 passed), and `flutter build apk --debug` (built). Device testing, including the paired ASUS phone, was skipped for this checkpoint at the user's request because work is currently active there.
+
+Next: continue match architecture polish by separating synthetic match creation from the hardcoded starter match, while preserving free messaging for mutual likes and keeping block/report behavior immediate. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-038 - Local moderation state model (2026-09-22)
 
 - Added `LocalModerationState` to safety reports with stable backend-oriented keys: `local_pending`, `ready_for_review`, `reviewed_no_action`, and `actioned`. Conversation reports and discovery profile reports default to `local_pending`.

@@ -135,7 +135,20 @@ void main() {
 
     expect(find.text('Maya, 29'), findsNothing);
     expect(find.text('Elena, 32'), findsOneWidget);
-    expect(find.textContaining('Liked Maya'), findsOneWidget);
+    expect(find.textContaining('Mutual like with Maya'), findsOneWidget);
+
+    await tester.drag(find.byType(ListView), const Offset(0, 900));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Local activity'), findsOneWidget);
+    expect(
+      find.textContaining('Notification preview for Maya'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Mutual like with Maya can connect'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('swipe left rejects while swipe right only advances', (

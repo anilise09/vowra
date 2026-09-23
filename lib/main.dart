@@ -6,6 +6,7 @@ import 'domain/chat_message.dart';
 import 'domain/demo_profile.dart';
 import 'domain/discovery_interaction.dart';
 import 'domain/discovery_preferences.dart';
+import 'domain/local_like_event.dart';
 import 'domain/match_connection.dart';
 import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
@@ -145,6 +146,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final blockedProfileAssets = <String>{};
   final likedProfiles = <String, LikedProfile>{};
   final rejectedProfileAssets = <String>{};
+  final likeEvents = <LocalLikeEvent>[];
   final discoveryReports = <String, DiscoveryProfileReport>{};
   final ProfileRepository profileRepository = MemoryProfileRepository();
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
@@ -2771,6 +2773,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     likedProfiles: likedProfiles,
     rejectedProfileAssets: rejectedProfileAssets,
     reports: discoveryReports,
+    likeEvents: likeEvents,
     profileIndex: profileIndex,
     onPreferencesChanged: (updated) => setState(() {
       discoveryPreferences = updated;
@@ -2788,17 +2791,29 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   void _handleDiscoverySwipe(DemoProfile profile, DiscoverySwipeAction action) {
     switch (action) {
       case DiscoverySwipeAction.like:
+        final createdAt = DateTime.now().toUtc();
         setState(() {
           likedProfiles[profile.assetPath] = LikedProfile(
             profileAssetPath: profile.assetPath,
             profileName: profile.name,
-            createdAt: DateTime.now().toUtc(),
+            createdAt: createdAt,
+          );
+          likeEvents.insertAll(
+            0,
+            localLikeEventsFor(
+              profileAssetPath: profile.assetPath,
+              profileName: profile.name,
+              createdAt: createdAt,
+              mutualLike: profile.name == connection.peerName,
+            ),
           );
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Liked ${profile.name}. Prototype only: a real launch would notify them and wait for a mutual like.',
+              profile.name == connection.peerName
+                  ? 'Mutual like with ${profile.name}. Prototype only: messaging stays in the free core.'
+                  : 'Liked ${profile.name}. Prototype only: a real launch would notify them and wait for a mutual like.',
             ),
           ),
         );
