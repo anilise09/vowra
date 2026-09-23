@@ -12,6 +12,7 @@ void main() {
       SafetyReport? recorded;
       const connection = MatchConnection(
         matchId: 'synthetic-1',
+        peerProfileAssetPath: 'assets/profiles/maya.png',
         peerName: 'Maya',
       );
       await tester.pumpWidget(
@@ -72,6 +73,7 @@ void main() {
             connection: const MatchConnection(
               matchId: 'synthetic-2',
               peerName: 'Maya',
+              peerProfileAssetPath: 'assets/profiles/maya.png',
             ),
             messages: [
               ChatMessage(

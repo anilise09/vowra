@@ -151,6 +151,38 @@ void main() {
     );
   });
 
+  testWidgets('mutual like creates a free messaging match', (tester) async {
+    await enterDiscovery(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Chats'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('No chat yet'), findsOneWidget);
+
+    await tester.tap(find.text('Discover'));
+    await tester.pumpAndSettle();
+    await tester.flingFrom(const Offset(400, 320), const Offset(0, -500), 1000);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Chats'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Maya'), findsOneWidget);
+    expect(find.text('Hi! What is your ideal Sunday?'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('message-composer')),
+      180,
+    );
+    expect(find.byKey(const Key('message-composer')), findsOneWidget);
+  });
+
   testWidgets('swipe left rejects while swipe right only advances', (
     tester,
   ) async {

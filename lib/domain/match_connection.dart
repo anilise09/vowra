@@ -4,14 +4,27 @@ class MatchConnection {
   const MatchConnection({
     required this.matchId,
     required this.peerName,
+    required this.peerProfileAssetPath,
     this.status = ConnectionStatus.active,
     this.currentUserCallReady = false,
     this.peerCallReady = false,
     this.reported = false,
   });
 
+  factory MatchConnection.syntheticMutualLike({
+    required String profileAssetPath,
+    required String peerName,
+    bool peerCallReady = false,
+  }) => MatchConnection(
+    matchId: 'synthetic-mutual-${profileAssetPath.hashCode}',
+    peerName: peerName,
+    peerProfileAssetPath: profileAssetPath,
+    peerCallReady: peerCallReady,
+  );
+
   final String matchId;
   final String peerName;
+  final String peerProfileAssetPath;
   final ConnectionStatus status;
   final bool currentUserCallReady;
   final bool peerCallReady;
@@ -53,6 +66,7 @@ class MatchConnection {
   }) => MatchConnection(
     matchId: matchId,
     peerName: peerName,
+    peerProfileAssetPath: peerProfileAssetPath,
     status: status ?? this.status,
     currentUserCallReady: currentUserCallReady ?? this.currentUserCallReady,
     peerCallReady: peerCallReady ?? this.peerCallReady,

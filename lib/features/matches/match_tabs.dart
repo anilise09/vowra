@@ -12,12 +12,20 @@ class MatchTab extends StatelessWidget {
     required this.onOpenChat,
   });
 
-  final MatchConnection connection;
+  final MatchConnection? connection;
   final VoidCallback onOpenChat;
 
   @override
   Widget build(BuildContext context) {
-    if (!connection.isActive) {
+    final activeConnection = connection;
+    if (activeConnection == null) {
+      return const EmptyTab(
+        icon: Icons.favorite_outline,
+        title: 'No active matches yet',
+        message: 'Mutual likes can connect and message in the free core.',
+      );
+    }
+    if (!activeConnection.isActive) {
       return const EmptyTab(
         icon: Icons.favorite_outline,
         title: 'No active matches',
@@ -38,9 +46,9 @@ class MatchTab extends StatelessWidget {
         Card(
           child: ListTile(
             leading: const CircleAvatar(child: Icon(Icons.person)),
-            title: Text(connection.peerName),
+            title: Text(activeConnection.peerName),
             subtitle: Text(
-              connection.peerCallReady
+              activeConnection.peerCallReady
                   ? 'Matched · open to a call'
                   : 'Matched · text first',
             ),
@@ -66,7 +74,7 @@ class ChatTab extends StatelessWidget {
     required this.onBlock,
   });
 
-  final MatchConnection connection;
+  final MatchConnection? connection;
   final List<ChatMessage> messages;
   final SafetyReport? report;
   final ValueChanged<String> onSend;
@@ -77,13 +85,21 @@ class ChatTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!connection.isActive) {
-      final blocked = connection.status == ConnectionStatus.blocked;
+    final activeConnection = connection;
+    if (activeConnection == null) {
+      return const EmptyTab(
+        icon: Icons.chat_bubble_outline,
+        title: 'No chat yet',
+        message: 'Like someone who likes you back to open free messaging.',
+      );
+    }
+    if (!activeConnection.isActive) {
+      final blocked = activeConnection.status == ConnectionStatus.blocked;
       return EmptyTab(
         icon: blocked ? Icons.block : Icons.heart_broken_outlined,
         title: blocked ? 'Blocked' : 'Conversation closed',
         message: blocked
-            ? '${connection.peerName} can no longer message or call you.'
+            ? '${activeConnection.peerName} can no longer message or call you.'
             : 'You unmatched. Messaging and calling are disabled.',
       );
     }
@@ -99,7 +115,7 @@ class ChatTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    connection.peerName,
+                    activeConnection.peerName,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const Text('Synthetic prototype conversation'),
@@ -164,18 +180,18 @@ class ChatTab extends StatelessWidget {
                   key: const Key('call-ready-switch'),
                   contentPadding: EdgeInsets.zero,
                   title: const Text('I am open to a call'),
-                  value: connection.currentUserCallReady,
+                  value: activeConnection.currentUserCallReady,
                   onChanged: onCallReadinessChanged,
                 ),
                 Text(
-                  connection.peerCallReady
-                      ? '${connection.peerName} is also open to a call.'
-                      : '${connection.peerName} has not opted in.',
+                  activeConnection.peerCallReady
+                      ? '${activeConnection.peerName} is also open to a call.'
+                      : '${activeConnection.peerName} has not opted in.',
                 ),
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   key: const Key('request-video-call'),
-                  onPressed: connection.canRequestCall
+                  onPressed: activeConnection.canRequestCall
                       ? () => ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
@@ -194,7 +210,7 @@ class ChatTab extends StatelessWidget {
         const SizedBox(height: 16),
         TextField(
           key: const Key('message-composer'),
-          enabled: connection.canMessage,
+          enabled: activeConnection.canMessage,
           maxLength: MessagePolicy.maxCharacters,
           textInputAction: TextInputAction.send,
           onSubmitted: onSend,
@@ -209,6 +225,8 @@ class ChatTab extends StatelessWidget {
   }
 
   Future<SafetyReport?> _chooseReport(BuildContext context) {
+    final activeConnection = connection;
+    if (activeConnection == null) return Future.value();
     ReportReason? reason;
     final latestPeerMessage = messages
         .where((message) => message.author == MessageAuthor.peer)
@@ -218,7 +236,7 @@ class ChatTab extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text('Report ${connection.peerName} privately'),
+          title: Text('Report ${activeConnection.peerName} privately'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -277,7 +295,7 @@ class ChatTab extends StatelessWidget {
                   : () => Navigator.pop(
                       dialogContext,
                       SafetyReport(
-                        matchId: connection.matchId,
+                        matchId: activeConnection.matchId,
                         reason: reason!,
                         createdAt: DateTime.now().toUtc(),
                         messageId: includeMessageReference
@@ -294,6 +312,8 @@ class ChatTab extends StatelessWidget {
   }
 
   Future<void> _confirmAction(BuildContext context, String action) async {
+    final activeConnection = connection;
+    if (activeConnection == null) return;
     if (action == 'report') {
       final report = await _chooseReport(context);
       if (report != null) onReport(report);
@@ -303,7 +323,7 @@ class ChatTab extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('$verb ${connection.peerName}?'),
+        title: Text('$verb ${activeConnection.peerName}?'),
         content: Text(
           action == 'block'
               ? 'They will immediately lose access to this conversation and cannot call you.'

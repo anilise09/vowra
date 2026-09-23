@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-040 - Mutual-like match creation (2026-09-23)
+
+- Removed the always-present starter match. The app now starts with no active chat/match and creates a local `MatchConnection` only when the user likes a synthetic profile with an incoming-like fixture.
+- Added profile asset identity to `MatchConnection` and a `syntheticMutualLike` factory so future backend wiring can map match creation to profile IDs instead of the previous hardcoded starter match.
+- Preserved core safety and access behavior after match creation: mutual likes can message in the free core, call requests still require readiness, reports remain local pending review, and block/unmatch immediately close contact.
+- Covered the new flow with widget/domain tests. Verified with `flutter analyze` (no issues), `flutter test` (27 passed), and `flutter build apk --debug` (built). Device testing, including the paired ASUS phone, was skipped for this checkpoint at the user's request because work is currently active there.
+
+Next: continue backend-shaped architecture by splitting local match state into a small repository/service layer, then add UI copy for premium direct-intro placeholders without enabling production billing or bypassing safety gates. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-039 - Local like event previews (2026-09-22)
 
 - Added `LocalLikeEvent` with stable event keys for `outbound_like`, `notification_preview`, and `mutual_like`. Liking a profile records local event previews instead of sending a real notification or creating fake engagement.

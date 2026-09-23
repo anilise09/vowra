@@ -2,7 +2,11 @@ import 'package:ember_app/domain/match_connection.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const active = MatchConnection(matchId: 'synthetic-1', peerName: 'Maya');
+  const active = MatchConnection(
+    matchId: 'synthetic-1',
+    peerName: 'Maya',
+    peerProfileAssetPath: 'assets/profiles/maya.png',
+  );
 
   test('call request requires active match and mutual readiness', () {
     expect(active.canRequestCall, isFalse);

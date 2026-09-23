@@ -152,30 +152,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
   UserProfile? userProfile;
   SafetyReport? safetyReport;
-  MatchConnection connection = const MatchConnection(
-    matchId: 'synthetic-match-1',
-    peerName: 'Maya',
-    peerCallReady: true,
-  );
+  MatchConnection? connection;
 
-  @override
-  void initState() {
-    super.initState();
-    messageRepository.seed(connection.matchId, [
-      ChatMessage(
-        id: 'seed-peer',
-        author: MessageAuthor.peer,
-        text: 'Hi! What is your ideal Sunday?',
-        sentAt: DateTime.utc(2026, 9, 20, 12),
-      ),
-      ChatMessage(
-        id: 'seed-user',
-        author: MessageAuthor.currentUser,
-        text: 'Coffee, a long walk, and cooking something new.',
-        sentAt: DateTime.utc(2026, 9, 20, 12, 1),
-      ),
-    ]);
-  }
+  static const incomingLikeProfileAssets = {'assets/profiles/maya.png'};
+
+  bool _hasIncomingLike(DemoProfile profile) =>
+      incomingLikeProfileAssets.contains(profile.assetPath);
 
   static const profiles = [
     DemoProfile(
@@ -2690,18 +2672,20 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ),
       ChatTab(
         connection: connection,
-        messages: messageRepository.list(connection.matchId),
+        messages: connection == null
+            ? const []
+            : messageRepository.list(connection!.matchId),
         report: safetyReport,
         onSend: _sendMessage,
         onCallReadinessChanged: (value) => setState(
-          () => connection = connection.setCurrentUserCallReady(value),
+          () => connection = connection?.setCurrentUserCallReady(value),
         ),
         onReport: (report) => setState(() {
           safetyReport = report;
-          connection = connection.report();
+          connection = connection?.report();
         }),
-        onUnmatch: () => setState(() => connection = connection.unmatch()),
-        onBlock: () => setState(() => connection = connection.block()),
+        onUnmatch: () => setState(() => connection = connection?.unmatch()),
+        onBlock: () => setState(() => connection = connection?.block()),
       ),
       ProfileEditor(
         initialProfile: userProfile,
@@ -2804,14 +2788,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               profileAssetPath: profile.assetPath,
               profileName: profile.name,
               createdAt: createdAt,
-              mutualLike: profile.name == connection.peerName,
+              mutualLike: _hasIncomingLike(profile),
             ),
           );
+          if (_hasIncomingLike(profile) && connection == null) {
+            _createSyntheticMatch(profile);
+          }
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              profile.name == connection.peerName
+              _hasIncomingLike(profile)
                   ? 'Mutual like with ${profile.name}. Prototype only: messaging stays in the free core.'
                   : 'Liked ${profile.name}. Prototype only: a real launch would notify them and wait for a mutual like.',
             ),
@@ -2829,11 +2816,36 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     }
   }
 
+  void _createSyntheticMatch(DemoProfile profile) {
+    final match = MatchConnection.syntheticMutualLike(
+      profileAssetPath: profile.assetPath,
+      peerName: profile.name,
+      peerCallReady: true,
+    );
+    connection = match;
+    safetyReport = null;
+    messageRepository.seed(match.matchId, [
+      ChatMessage(
+        id: 'seed-peer',
+        author: MessageAuthor.peer,
+        text: 'Hi! What is your ideal Sunday?',
+        sentAt: DateTime.utc(2026, 9, 20, 12),
+      ),
+      ChatMessage(
+        id: 'seed-user',
+        author: MessageAuthor.currentUser,
+        text: 'Coffee, a long walk, and cooking something new.',
+        sentAt: DateTime.utc(2026, 9, 20, 12, 1),
+      ),
+    ]);
+  }
+
   void _sendMessage(String text) {
+    final activeConnection = connection;
     final result = messageRepository.send(
-      matchId: connection.matchId,
+      matchId: activeConnection?.matchId ?? 'no-active-match',
       text: text,
-      connectionActive: connection.canMessage,
+      connectionActive: activeConnection?.canMessage ?? false,
     );
     if (!result.accepted) {
       ScaffoldMessenger.of(context).showSnackBar(

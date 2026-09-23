@@ -114,7 +114,14 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('continue-button')));
     await tester.tap(find.byKey(const Key('continue-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('chat-tab')));
+    await tester.flingFrom(const Offset(400, 320), const Offset(0, -500), 1000);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Chats'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     FilledButton callButton() => tester.widget<FilledButton>(
@@ -124,6 +131,12 @@ void main() {
     await tester.tap(find.byKey(const Key('call-ready-switch')));
     await tester.pump();
     expect(callButton().onPressed, isNotNull);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('request-video-call')),
+      180,
+    );
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('request-video-call')));
     await tester.pump();
     expect(find.textContaining('no camera, microphone'), findsOneWidget);
@@ -131,6 +144,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const Key('message-composer')),
       180,
+      scrollable: find.byType(Scrollable).last,
     );
     await tester.enterText(
       find.byKey(const Key('message-composer')),
