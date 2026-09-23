@@ -1,7 +1,7 @@
 import 'package:ember_app/domain/chat_message.dart';
 import 'package:ember_app/domain/match_connection.dart';
 import 'package:ember_app/domain/safety_report.dart';
-import 'package:ember_app/main.dart';
+import 'package:ember_app/features/matches/match_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-035 — Match and chat UI extraction (2026-09-22)
+
+- Moved the match list and conversation UI into `lib/features/matches/match_tabs.dart`, including the call-readiness panel, message composer, private report dialog, block confirmation, and unmatch confirmation.
+- Updated widget tests to import `ChatTab` from the matches feature module directly. `main.dart` now keeps match/chat state and delegates the user-facing match surfaces.
+- Preserved the CP-031 through CP-033 behavior: reports require a reason, optional message evidence is an ID reference only, calls stay match-gated and readiness-gated, and block/unmatch still close contact.
+- Verified with `flutter analyze` (no issues), `flutter test` (18 passed), and `flutter build apk --debug` (built). No emulator or physical-device walkthrough was performed for this checkpoint.
+
+Next: extract the profile editor from `main.dart`, then add a small local moderation-state model that can later map cleanly to backend review states. Keep portrait generation deferred until the coding/UI phase is further along.
+
 ## CP-034 — Discovery UI extraction (2026-09-22)
 
 - Moved the synthetic discovery card, preference sheet, profile report dialog, and profile block confirmation into `DiscoveryDeck` under `lib/features/discovery/`.
