@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-034 — Discovery UI extraction (2026-09-22)
+
+- Moved the synthetic discovery card, preference sheet, profile report dialog, and profile block confirmation into `DiscoveryDeck` under `lib/features/discovery/`.
+- Moved the synthetic fixture shape into `DemoProfile` under `lib/domain/` and shared the empty-state UI through `lib/features/shared/empty_tab.dart`. `main.dart` now keeps app state and fixture data while delegating the discovery UI surface.
+- Preserved the CP-033 safety behavior: profile reports still require a reason and stay local to the device session, and blocked synthetic profiles are removed from discovery immediately.
+- Verified with `flutter analyze` (no issues), `flutter test` (18 passed), and `flutter build apk --debug` (built). No emulator or physical-device walkthrough was performed for this checkpoint.
+
+Next: continue architecture cleanup by extracting chat/match/profile widgets from `main.dart`, then add a small local moderation-state model that can later map cleanly to backend review states. Keep portrait generation deferred until the coding/UI phase is further along.
+
 ## CP-033 — Discovery safety actions (2026-09-22)
 
 - Added profile-scoped discovery reports so reporting a swipe card no longer reuses the match-report model. Reports require a reason, stay in memory for the current device session, and make clear that no review team is connected.
