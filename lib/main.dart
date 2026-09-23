@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'data/message_repository.dart';
 import 'data/profile_repository.dart';
 import 'domain/chat_message.dart';
+import 'domain/discovery_preferences.dart';
 import 'domain/match_connection.dart';
 import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
@@ -135,6 +136,7 @@ class DiscoveryScreen extends StatefulWidget {
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   int profileIndex = 0;
+  DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
   final ProfileRepository profileRepository = MemoryProfileRepository();
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
   UserProfile? userProfile;
@@ -2754,102 +2756,241 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _discover(BuildContext context) {
-    final profile = profiles[profileIndex % profiles.length];
+    final visibleProfiles = profiles
+        .where(
+          (profile) => discoveryPreferences.includes(
+            age: profile.age,
+            relationshipIntent: profile.intent,
+          ),
+        )
+        .toList();
+    final profile = visibleProfiles.isEmpty
+        ? null
+        : visibleProfiles[profileIndex % visibleProfiles.length];
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
-        const Text(
-          'PROTOTYPE PROFILE · NOT A REAL PERSON',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.7,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 380,
-                child: Image.asset(
-                  profile.assetPath,
-                  key: ValueKey(profile.assetPath),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                  semanticLabel: 'Synthetic portrait of ${profile.name}',
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${profile.name}, ${profile.age}',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      profile.background == null
-                          ? '${profile.intent} · ${profile.distanceBand}'
-                          : '${profile.background} · ${profile.intent} · ${profile.distanceBand}',
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      profile.bio,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 8,
-                      children: profile.interests
-                          .map((item) => Chip(label: Text(item)))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 12),
-                    const Row(
-                      children: [
-                        Icon(Icons.lock_outline, size: 17),
-                        SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'Exact location and precise distance are never shown.',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton.filledTonal(
-              tooltip: 'Pass',
-              iconSize: 32,
-              onPressed: _nextProfile,
-              icon: const Icon(Icons.close),
+            Expanded(
+              child: Text(
+                '${visibleProfiles.length} prototype profiles',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
             ),
-            const SizedBox(width: 24),
-            IconButton.filled(
-              tooltip: 'Like',
-              iconSize: 32,
-              onPressed: _nextProfile,
-              icon: const Icon(Icons.favorite),
+            OutlinedButton.icon(
+              key: const Key('discovery-preferences'),
+              onPressed: _showDiscoveryPreferences,
+              icon: const Icon(Icons.tune),
+              label: Text(
+                discoveryPreferences.isDefault
+                    ? 'Preferences'
+                    : 'Edit preferences',
+              ),
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        if (profile == null)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 80),
+            child: EmptyTab(
+              icon: Icons.search_off,
+              title: 'No prototype profiles in this range',
+              message:
+                  'Try a wider age range or include both relationship intents.',
+            ),
+          ),
+        if (profile != null) ...[
+          const Text(
+            'PROTOTYPE PROFILE · NOT A REAL PERSON',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.7,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 380,
+                  child: Image.asset(
+                    profile.assetPath,
+                    key: ValueKey(profile.assetPath),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    semanticLabel: 'Synthetic portrait of ${profile.name}',
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${profile.name}, ${profile.age}',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        profile.background == null
+                            ? '${profile.intent} · ${profile.distanceBand}'
+                            : '${profile.background} · ${profile.intent} · ${profile.distanceBand}',
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        profile.bio,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 14),
+                      Wrap(
+                        spacing: 8,
+                        children: profile.interests
+                            .map((item) => Chip(label: Text(item)))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 12),
+                      const Row(
+                        children: [
+                          Icon(Icons.lock_outline, size: 17),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Exact location and precise distance are never shown.',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton.filledTonal(
+                tooltip: 'Pass',
+                iconSize: 32,
+                onPressed: _nextProfile,
+                icon: const Icon(Icons.close),
+              ),
+              const SizedBox(width: 24),
+              IconButton.filled(
+                tooltip: 'Like',
+                iconSize: 32,
+                onPressed: _nextProfile,
+                icon: const Icon(Icons.favorite),
+              ),
+            ],
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _showDiscoveryPreferences() async {
+    var ageRange = RangeValues(
+      discoveryPreferences.minAge.toDouble(),
+      discoveryPreferences.maxAge.toDouble(),
+    );
+    String? selectedIntent = discoveryPreferences.intent;
+    final updated = await showModalBottomSheet<DiscoveryPreferences>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Discovery preferences',
+                  style: Theme.of(sheetContext).textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Filter synthetic profiles on this device. These choices are not sent to anyone.',
+                ),
+                const SizedBox(height: 20),
+                Text('Age ${ageRange.start.round()}–${ageRange.end.round()}'),
+                RangeSlider(
+                  key: const Key('age-range'),
+                  values: ageRange,
+                  min: 18,
+                  max: 99,
+                  divisions: 81,
+                  labels: RangeLabels(
+                    '${ageRange.start.round()}',
+                    '${ageRange.end.round()}',
+                  ),
+                  onChanged: (value) => setSheetState(() => ageRange = value),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Relationship intent',
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final intent in const [
+                      null,
+                      'Long-term relationship',
+                      'Open to long-term',
+                    ])
+                      ChoiceChip(
+                        label: Text(intent ?? 'Any intent'),
+                        selected: selectedIntent == intent,
+                        onSelected: (_) =>
+                            setSheetState(() => selectedIntent = intent),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  key: const Key('apply-discovery-preferences'),
+                  onPressed: () => Navigator.pop(
+                    sheetContext,
+                    DiscoveryPreferences(
+                      minAge: ageRange.start.round(),
+                      maxAge: ageRange.end.round(),
+                      intent: selectedIntent,
+                    ),
+                  ),
+                  child: const Text('Show profiles'),
+                ),
+                TextButton(
+                  key: const Key('reset-discovery-preferences'),
+                  onPressed: () =>
+                      Navigator.pop(sheetContext, const DiscoveryPreferences()),
+                  child: const Text('Reset preferences'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (updated != null && mounted) {
+      setState(() {
+        discoveryPreferences = updated;
+        profileIndex = 0;
+      });
+    }
   }
 
   void _nextProfile() => setState(() => profileIndex += 1);
@@ -3461,7 +3602,7 @@ class SafetySheet extends StatelessWidget {
             leading: Icon(Icons.block),
             title: Text('Block and report'),
             subtitle: Text(
-              'Available from every profile, conversation, and call.',
+              'Available from the prototype conversation. More safety entry points are planned.',
             ),
           ),
           const ListTile(

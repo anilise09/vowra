@@ -1,5 +1,13 @@
 # Checkpoints
 
+## CP-032 — Local discovery preferences (2026-09-22)
+
+- Added a local age-range and relationship-intent preference model for synthetic discovery cards. The sheet can apply or reset filters; discovery resets its card index and shows an honest empty state when no fixture matches.
+- Added a visible prototype-profile count and clarified that preference choices remain on the device. Corrected Safety Center copy that previously implied block/report controls were available from screens the prototype has not implemented.
+- Verified boundary/filter behavior and the sheet flow with tests. `flutter analyze` found no issues, all 16 Flutter tests passed, and the Android debug APK built. No emulator or physical-device walkthrough was performed for this checkpoint.
+
+Next: continue Phase 1 UI and safety flows, including reporting/blocking entry points from discovery, then tackle real backend/authorization architecture. Keep portrait generation deferred until the coding/UI phase is further along.
+
 ## CP-031 — Private prototype reporting flow (2026-09-22)
 
 - Paused portrait generation and the remaining Nepali, Sri Lankan, and South African profile batches so coding and UI work can proceed first. The existing 160 / 220 expansion count is unchanged.
