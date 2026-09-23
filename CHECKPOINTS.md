@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-037 - Discovery swipe interaction model (2026-09-22)
+
+- Added local discovery swipe actions: swipe up likes and advances, swipe left rejects and excludes the profile from discovery, and swipe right advances without counting as a rejection. The visible action buttons now mirror the same Like, Reject, and Next behavior.
+- Added in-memory liked-profile state so liked synthetic profiles disappear from the deck for the current session. The confirmation copy is explicit that a production launch would notify the liked person; the prototype does not send real notifications or create fake engagement.
+- Added a conversation-access policy preview for the requested product design: mutual likes can connect and message in the free core, while premium direct intros are represented as a future design concept rather than active production billing or messaging.
+- Covered the new policy and swipe behavior with widget/unit tests. Verified with `flutter analyze` (no issues), `flutter test` (22 passed), and `flutter build apk --debug` (built). Device testing, including the paired ASUS phone, was skipped for this checkpoint at the user's request because work is currently active there.
+
+Next: continue the coding/UI phase by adding a small local moderation-state model that can later map cleanly to backend review states, then continue swipe/match architecture polish. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-036 — Profile UI extraction and emulator smoke (2026-09-22)
 
 - Moved the profile editor into `lib/features/profile/profile_editor.dart`, preserving display-name, adult-age, bio, relationship-intent, interest, coarse-distance, and default call-readiness behavior.

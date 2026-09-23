@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/conversation_access_policy.dart';
 import '../../domain/demo_profile.dart';
+import '../../domain/discovery_interaction.dart';
 import '../../domain/discovery_preferences.dart';
 import '../../domain/safety_report.dart';
 import '../shared/empty_tab.dart';
@@ -11,10 +13,12 @@ class DiscoveryDeck extends StatelessWidget {
     required this.profiles,
     required this.preferences,
     required this.blockedProfileAssets,
+    required this.likedProfiles,
+    required this.rejectedProfileAssets,
     required this.reports,
     required this.profileIndex,
     required this.onPreferencesChanged,
-    required this.onNextProfile,
+    required this.onSwipeAction,
     required this.onReport,
     required this.onBlockProfile,
   });
@@ -22,10 +26,13 @@ class DiscoveryDeck extends StatelessWidget {
   final List<DemoProfile> profiles;
   final DiscoveryPreferences preferences;
   final Set<String> blockedProfileAssets;
+  final Map<String, LikedProfile> likedProfiles;
+  final Set<String> rejectedProfileAssets;
   final Map<String, DiscoveryProfileReport> reports;
   final int profileIndex;
   final ValueChanged<DiscoveryPreferences> onPreferencesChanged;
-  final VoidCallback onNextProfile;
+  final void Function(DemoProfile profile, DiscoverySwipeAction action)
+  onSwipeAction;
   final ValueChanged<DiscoveryProfileReport> onReport;
   final ValueChanged<DemoProfile> onBlockProfile;
 
@@ -39,6 +46,8 @@ class DiscoveryDeck extends StatelessWidget {
           ),
         )
         .where((profile) => !blockedProfileAssets.contains(profile.assetPath))
+        .where((profile) => !likedProfiles.containsKey(profile.assetPath))
+        .where((profile) => !rejectedProfileAssets.contains(profile.assetPath))
         .toList();
     final profile = visibleProfiles.isEmpty
         ? null
@@ -87,112 +96,121 @@ class DiscoveryDeck extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Card(
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 380,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        profile.assetPath,
-                        key: ValueKey(profile.assetPath),
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        semanticLabel: 'Synthetic portrait of ${profile.name}',
-                      ),
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Material(
-                          color: Theme.of(context).colorScheme.surface
-                              .withValues(alpha: 0.92),
-                          shape: const CircleBorder(),
-                          child: PopupMenuButton<String>(
-                            key: const Key('discovery-safety-menu'),
-                            tooltip: 'Profile safety actions',
-                            onSelected: (value) =>
-                                _handleSafetyAction(context, profile, value),
-                            itemBuilder: (_) => const [
-                              PopupMenuItem(
-                                value: 'report',
-                                child: Text('Report privately'),
-                              ),
-                              PopupMenuItem(
-                                value: 'block',
-                                child: Text('Block profile'),
-                              ),
-                            ],
-                          ),
+          _SwipeGestureSurface(
+            key: const Key('discovery-card-gesture'),
+            onSwipe: (action) => onSwipeAction(profile, action),
+            child: Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    height: 380,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          profile.assetPath,
+                          key: ValueKey(profile.assetPath),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                          semanticLabel:
+                              'Synthetic portrait of ${profile.name}',
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${profile.name}, ${profile.age}',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        profile.background == null
-                            ? '${profile.intent} · ${profile.distanceBand}'
-                            : '${profile.background} · ${profile.intent} · ${profile.distanceBand}',
-                      ),
-                      if (profileReport != null) ...[
-                        const SizedBox(height: 12),
-                        Card(
-                          color: const Color(0xFFFFF1D6),
-                          margin: EdgeInsets.zero,
-                          child: ListTile(
-                            dense: true,
-                            leading: const Icon(Icons.flag_outlined),
-                            title: Text(
-                              'Report recorded: ${profileReport.reason.label}',
-                            ),
-                            subtitle: const Text(
-                              'Saved in this device session only. No review team is connected.',
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Material(
+                            color: Theme.of(context).colorScheme.surface
+                                .withValues(alpha: 0.92),
+                            shape: const CircleBorder(),
+                            child: PopupMenuButton<String>(
+                              key: const Key('discovery-safety-menu'),
+                              tooltip: 'Profile safety actions',
+                              onSelected: (value) =>
+                                  _handleSafetyAction(context, profile, value),
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'report',
+                                  child: Text('Report privately'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'block',
+                                  child: Text('Block profile'),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
-                      const SizedBox(height: 16),
-                      Text(
-                        profile.bio,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 14),
-                      Wrap(
-                        spacing: 8,
-                        children: profile.interests
-                            .map((item) => Chip(label: Text(item)))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 12),
-                      const Row(
-                        children: [
-                          Icon(Icons.lock_outline, size: 17),
-                          SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'Exact location and precise distance are never shown.',
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${profile.name}, ${profile.age}',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          profile.background == null
+                              ? '${profile.intent} · ${profile.distanceBand}'
+                              : '${profile.background} · ${profile.intent} · ${profile.distanceBand}',
+                        ),
+                        const SizedBox(height: 12),
+                        const _SwipeGuide(),
+                        const SizedBox(height: 12),
+                        const _ConversationAccessPreview(),
+                        if (profileReport != null) ...[
+                          const SizedBox(height: 12),
+                          Card(
+                            color: const Color(0xFFFFF1D6),
+                            margin: EdgeInsets.zero,
+                            child: ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.flag_outlined),
+                              title: Text(
+                                'Report recorded: ${profileReport.reason.label}',
+                              ),
+                              subtitle: const Text(
+                                'Saved in this device session only. No review team is connected.',
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        Text(
+                          profile.bio,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 8,
+                          children: profile.interests
+                              .map((item) => Chip(label: Text(item)))
+                              .toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        const Row(
+                          children: [
+                            Icon(Icons.lock_outline, size: 17),
+                            SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Exact location and precise distance are never shown.',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -200,16 +218,26 @@ class DiscoveryDeck extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton.filledTonal(
-                tooltip: 'Pass',
+                tooltip: 'Reject',
                 iconSize: 32,
-                onPressed: onNextProfile,
+                onPressed: () =>
+                    onSwipeAction(profile, DiscoverySwipeAction.reject),
                 icon: const Icon(Icons.close),
+              ),
+              const SizedBox(width: 24),
+              IconButton.filledTonal(
+                tooltip: 'Next profile',
+                iconSize: 32,
+                onPressed: () =>
+                    onSwipeAction(profile, DiscoverySwipeAction.skip),
+                icon: const Icon(Icons.arrow_forward),
               ),
               const SizedBox(width: 24),
               IconButton.filled(
                 tooltip: 'Like',
                 iconSize: 32,
-                onPressed: onNextProfile,
+                onPressed: () =>
+                    onSwipeAction(profile, DiscoverySwipeAction.like),
                 icon: const Icon(Icons.favorite),
               ),
             ],
@@ -417,6 +445,117 @@ class DiscoveryDeck extends StatelessWidget {
                     ),
               child: const Text('Record report'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SwipeGuide extends StatelessWidget {
+  const _SwipeGuide();
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: const [
+      _SwipeGuideChip(icon: Icons.keyboard_arrow_up, label: 'Like'),
+      _SwipeGuideChip(icon: Icons.keyboard_arrow_left, label: 'Reject'),
+      _SwipeGuideChip(icon: Icons.keyboard_arrow_right, label: 'Next'),
+    ],
+  );
+}
+
+class _SwipeGestureSurface extends StatefulWidget {
+  const _SwipeGestureSurface({
+    super.key,
+    required this.child,
+    required this.onSwipe,
+  });
+
+  final Widget child;
+  final ValueChanged<DiscoverySwipeAction> onSwipe;
+
+  @override
+  State<_SwipeGestureSurface> createState() => _SwipeGestureSurfaceState();
+}
+
+class _SwipeGestureSurfaceState extends State<_SwipeGestureSurface> {
+  Offset? startPosition;
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    behavior: HitTestBehavior.translucent,
+    onPointerDown: (event) => startPosition = event.position,
+    onPointerUp: (event) {
+      final start = startPosition;
+      startPosition = null;
+      if (start == null) return;
+      final delta = event.position - start;
+      final action = _actionForDelta(delta);
+      if (action != null) widget.onSwipe(action);
+    },
+    child: widget.child,
+  );
+
+  DiscoverySwipeAction? _actionForDelta(Offset delta) {
+    const threshold = 80;
+    if (delta.dy < -threshold && delta.dy.abs() > delta.dx.abs()) {
+      return DiscoverySwipeAction.like;
+    }
+    if (delta.dx < -threshold && delta.dx.abs() > delta.dy.abs()) {
+      return DiscoverySwipeAction.reject;
+    }
+    if (delta.dx > threshold && delta.dx.abs() > delta.dy.abs()) {
+      return DiscoverySwipeAction.skip;
+    }
+    return null;
+  }
+}
+
+class _SwipeGuideChip extends StatelessWidget {
+  const _SwipeGuideChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) =>
+      Chip(avatar: Icon(icon, size: 18), label: Text(label));
+}
+
+class _ConversationAccessPreview extends StatelessWidget {
+  const _ConversationAccessPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    const likedPolicy = ConversationAccessPolicy(
+      relationship: LikeRelationship.currentUserLiked,
+    );
+    const mutualPolicy = ConversationAccessPolicy(
+      relationship: LikeRelationship.mutualLike,
+    );
+    const premiumPolicy = ConversationAccessPolicy(
+      currentUserTier: SubscriptionTier.premium,
+    );
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Connection rules',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            Text(likedPolicy.prototypeSummary),
+            const SizedBox(height: 4),
+            Text(mutualPolicy.prototypeSummary),
+            const SizedBox(height: 4),
+            Text(premiumPolicy.prototypeSummary),
           ],
         ),
       ),

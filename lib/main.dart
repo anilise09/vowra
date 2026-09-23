@@ -4,6 +4,7 @@ import 'data/message_repository.dart';
 import 'data/profile_repository.dart';
 import 'domain/chat_message.dart';
 import 'domain/demo_profile.dart';
+import 'domain/discovery_interaction.dart';
 import 'domain/discovery_preferences.dart';
 import 'domain/match_connection.dart';
 import 'domain/safety_report.dart';
@@ -142,6 +143,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
   final blockedProfileAssets = <String>{};
+  final likedProfiles = <String, LikedProfile>{};
+  final rejectedProfileAssets = <String>{};
   final discoveryReports = <String, DiscoveryProfileReport>{};
   final ProfileRepository profileRepository = MemoryProfileRepository();
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
@@ -2765,13 +2768,15 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     profiles: profiles,
     preferences: discoveryPreferences,
     blockedProfileAssets: blockedProfileAssets,
+    likedProfiles: likedProfiles,
+    rejectedProfileAssets: rejectedProfileAssets,
     reports: discoveryReports,
     profileIndex: profileIndex,
     onPreferencesChanged: (updated) => setState(() {
       discoveryPreferences = updated;
       profileIndex = 0;
     }),
-    onNextProfile: _nextProfile,
+    onSwipeAction: _handleDiscoverySwipe,
     onReport: (report) =>
         setState(() => discoveryReports[report.profileAssetPath] = report),
     onBlockProfile: (profile) => setState(() {
@@ -2779,7 +2784,35 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       profileIndex = 0;
     }),
   );
-  void _nextProfile() => setState(() => profileIndex += 1);
+
+  void _handleDiscoverySwipe(DemoProfile profile, DiscoverySwipeAction action) {
+    switch (action) {
+      case DiscoverySwipeAction.like:
+        setState(() {
+          likedProfiles[profile.assetPath] = LikedProfile(
+            profileAssetPath: profile.assetPath,
+            profileName: profile.name,
+            createdAt: DateTime.now().toUtc(),
+          );
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Liked ${profile.name}. Prototype only: a real launch would notify them and wait for a mutual like.',
+            ),
+          ),
+        );
+      case DiscoverySwipeAction.reject:
+        setState(() {
+          rejectedProfileAssets.add(profile.assetPath);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${profile.name} removed from discovery.')),
+        );
+      case DiscoverySwipeAction.skip:
+        setState(() => profileIndex += 1);
+    }
+  }
 
   void _sendMessage(String text) {
     final result = messageRepository.send(

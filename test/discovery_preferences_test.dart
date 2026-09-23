@@ -125,4 +125,34 @@ void main() {
     expect(find.text('Elena, 32'), findsOneWidget);
     expect(find.textContaining('prototype profiles'), findsOneWidget);
   });
+
+  testWidgets('swipe up likes a profile and advances the deck', (tester) async {
+    await enterDiscovery(tester);
+    expect(find.text('Maya, 29'), findsOneWidget);
+
+    await tester.flingFrom(const Offset(400, 320), const Offset(0, -500), 1000);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Maya, 29'), findsNothing);
+    expect(find.text('Elena, 32'), findsOneWidget);
+    expect(find.textContaining('Liked Maya'), findsOneWidget);
+  });
+
+  testWidgets('swipe left rejects while swipe right only advances', (
+    tester,
+  ) async {
+    await enterDiscovery(tester);
+
+    await tester.flingFrom(const Offset(400, 320), const Offset(500, 0), 1000);
+    await tester.pumpAndSettle();
+    expect(find.text('Elena, 32'), findsOneWidget);
+    expect(find.text('260 prototype profiles'), findsOneWidget);
+
+    await tester.flingFrom(const Offset(400, 320), const Offset(-500, 0), 1000);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Elena, 32'), findsNothing);
+    expect(find.text('Amina, 27'), findsOneWidget);
+    expect(find.textContaining('prototype profiles'), findsOneWidget);
+  });
 }
