@@ -1,5 +1,13 @@
 # Checkpoints
 
+## CP-041 - Local match repository layer (2026-09-23)
+
+- Added `MatchRepository` and `MemoryMatchRepository` so mutual-like match creation and match updates move out of raw UI state and into a small backend-shaped local service layer.
+- Wired discovery, match, and chat flows through the repository while preserving CP-040 behavior: no starter match, mutual-like creation from incoming-like fixtures, free messaging for mutual likes, and immediate block/unmatch/report state changes.
+- Added repository unit tests for incoming-like match creation and block invariants. Verified with `flutter analyze` (no issues) and `flutter test` (29 passed). `flutter build apk --debug` was attempted twice but stalled during Gradle assemble, so debug APK build evidence is pending for this checkpoint. Device testing, including the paired ASUS phone, was skipped at the user's request.
+
+Next: rerun the debug APK build in a fresh Gradle session, then add UI copy for premium direct-intro placeholders without enabling production billing or bypassing safety gates. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-040 - Mutual-like match creation (2026-09-23)
 
 - Removed the always-present starter match. The app now starts with no active chat/match and creates a local `MatchConnection` only when the user likes a synthetic profile with an incoming-like fixture.

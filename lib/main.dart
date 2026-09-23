@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'data/match_repository.dart';
 import 'data/message_repository.dart';
 import 'data/profile_repository.dart';
 import 'domain/chat_message.dart';
@@ -150,6 +151,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final discoveryReports = <String, DiscoveryProfileReport>{};
   final ProfileRepository profileRepository = MemoryProfileRepository();
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
+  final MatchRepository matchRepository = MemoryMatchRepository(
+    incomingLikeProfileAssets: incomingLikeProfileAssets,
+  );
   UserProfile? userProfile;
   SafetyReport? safetyReport;
   MatchConnection? connection;
@@ -157,7 +161,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   static const incomingLikeProfileAssets = {'assets/profiles/maya.png'};
 
   bool _hasIncomingLike(DemoProfile profile) =>
-      incomingLikeProfileAssets.contains(profile.assetPath);
+      matchRepository.hasIncomingLike(profile);
 
   static const profiles = [
     DemoProfile(
@@ -2678,14 +2682,20 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         report: safetyReport,
         onSend: _sendMessage,
         onCallReadinessChanged: (value) => setState(
-          () => connection = connection?.setCurrentUserCallReady(value),
+          () => connection = matchRepository.update(
+            (match) => match.setCurrentUserCallReady(value),
+          ),
         ),
         onReport: (report) => setState(() {
           safetyReport = report;
-          connection = connection?.report();
+          connection = matchRepository.update((match) => match.report());
         }),
-        onUnmatch: () => setState(() => connection = connection?.unmatch()),
-        onBlock: () => setState(() => connection = connection?.block()),
+        onUnmatch: () => setState(
+          () => connection = matchRepository.update((match) => match.unmatch()),
+        ),
+        onBlock: () => setState(
+          () => connection = matchRepository.update((match) => match.block()),
+        ),
       ),
       ProfileEditor(
         initialProfile: userProfile,
@@ -2817,11 +2827,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   void _createSyntheticMatch(DemoProfile profile) {
-    final match = MatchConnection.syntheticMutualLike(
-      profileAssetPath: profile.assetPath,
-      peerName: profile.name,
-      peerCallReady: true,
-    );
+    final match = matchRepository.createMutualLike(profile);
     connection = match;
     safetyReport = null;
     messageRepository.seed(match.matchId, [
