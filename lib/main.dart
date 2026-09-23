@@ -137,6 +137,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
+  final blockedProfileAssets = <String>{};
+  final discoveryReports = <String, DiscoveryProfileReport>{};
   final ProfileRepository profileRepository = MemoryProfileRepository();
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
   UserProfile? userProfile;
@@ -2763,10 +2765,14 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             relationshipIntent: profile.intent,
           ),
         )
+        .where((profile) => !blockedProfileAssets.contains(profile.assetPath))
         .toList();
     final profile = visibleProfiles.isEmpty
         ? null
         : visibleProfiles[profileIndex % visibleProfiles.length];
+    final profileReport = profile == null
+        ? null
+        : discoveryReports[profile.assetPath];
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
@@ -2819,12 +2825,42 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               children: [
                 SizedBox(
                   height: 380,
-                  child: Image.asset(
-                    profile.assetPath,
-                    key: ValueKey(profile.assetPath),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    semanticLabel: 'Synthetic portrait of ${profile.name}',
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        profile.assetPath,
+                        key: ValueKey(profile.assetPath),
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        semanticLabel: 'Synthetic portrait of ${profile.name}',
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Material(
+                          color: Theme.of(context).colorScheme.surface
+                              .withValues(alpha: 0.92),
+                          shape: const CircleBorder(),
+                          child: PopupMenuButton<String>(
+                            key: const Key('discovery-safety-menu'),
+                            tooltip: 'Profile safety actions',
+                            onSelected: (value) =>
+                                _handleDiscoverySafetyAction(profile, value),
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 'report',
+                                child: Text('Report privately'),
+                              ),
+                              PopupMenuItem(
+                                value: 'block',
+                                child: Text('Block profile'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Padding(
@@ -2843,6 +2879,23 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                             ? '${profile.intent} · ${profile.distanceBand}'
                             : '${profile.background} · ${profile.intent} · ${profile.distanceBand}',
                       ),
+                      if (profileReport != null) ...[
+                        const SizedBox(height: 12),
+                        Card(
+                          color: const Color(0xFFFFF1D6),
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.flag_outlined),
+                            title: Text(
+                              'Report recorded: ${profileReport.reason.label}',
+                            ),
+                            subtitle: const Text(
+                              'Saved in this device session only. No review team is connected.',
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       Text(
                         profile.bio,
@@ -2991,6 +3044,118 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         profileIndex = 0;
       });
     }
+  }
+
+  Future<void> _handleDiscoverySafetyAction(
+    DemoProfile profile,
+    String action,
+  ) async {
+    if (action == 'report') {
+      final report = await _chooseDiscoveryProfileReport(profile);
+      if (report == null || !mounted) return;
+      setState(() => discoveryReports[profile.assetPath] = report);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Report recorded on this device session only. No review team is connected.',
+          ),
+        ),
+      );
+      return;
+    }
+    if (action != 'block') return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Block ${profile.name}?'),
+        content: const Text(
+          'This removes the prototype profile from discovery for this app session. No real account is contacted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const Key('confirm-discovery-block'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      blockedProfileAssets.add(profile.assetPath);
+      profileIndex = 0;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${profile.name} removed from discovery.')),
+    );
+  }
+
+  Future<DiscoveryProfileReport?> _chooseDiscoveryProfileReport(
+    DemoProfile profile,
+  ) {
+    ReportReason? reason;
+    return showDialog<DiscoveryProfileReport>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text('Report ${profile.name} privately'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Choose the concern. Reporting does not block this profile; you can block separately.',
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<ReportReason>(
+                  key: const Key('discovery-report-reason'),
+                  decoration: const InputDecoration(labelText: 'Reason'),
+                  items: ReportReason.values
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item,
+                          child: Text(item.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setDialogState(() => reason = value),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Prototype only: this report stays in memory and is not sent to a review team.',
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              key: const Key('submit-discovery-report'),
+              onPressed: reason == null
+                  ? null
+                  : () => Navigator.pop(
+                      dialogContext,
+                      DiscoveryProfileReport(
+                        profileAssetPath: profile.assetPath,
+                        profileName: profile.name,
+                        reason: reason!,
+                        createdAt: DateTime.now().toUtc(),
+                      ),
+                    ),
+              child: const Text('Record report'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _nextProfile() => setState(() => profileIndex += 1);

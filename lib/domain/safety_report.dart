@@ -23,3 +23,17 @@ class SafetyReport {
   final DateTime createdAt;
   final String? messageId;
 }
+
+class DiscoveryProfileReport {
+  const DiscoveryProfileReport({
+    required this.profileAssetPath,
+    required this.profileName,
+    required this.reason,
+    required this.createdAt,
+  });
+
+  final String profileAssetPath;
+  final String profileName;
+  final ReportReason reason;
+  final DateTime createdAt;
+}

@@ -4,6 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  Future<void> enterDiscovery(WidgetTester tester) async {
+    await tester.pumpWidget(const EmberApp());
+    await tester.tap(find.byKey(const Key('adult-checkbox')));
+    await tester.tap(find.byKey(const Key('rules-checkbox')));
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('continue-button')));
+    await tester.tap(find.byKey(const Key('continue-button')));
+    await tester.pumpAndSettle();
+  }
+
   test('age limits and relationship intent are both respected', () {
     const preferences = DiscoveryPreferences(
       minAge: 30,
@@ -40,13 +50,7 @@ void main() {
   testWidgets('discovery preferences filter and reset synthetic cards', (
     tester,
   ) async {
-    await tester.pumpWidget(const EmberApp());
-    await tester.tap(find.byKey(const Key('adult-checkbox')));
-    await tester.tap(find.byKey(const Key('rules-checkbox')));
-    await tester.pump();
-    await tester.ensureVisible(find.byKey(const Key('continue-button')));
-    await tester.tap(find.byKey(const Key('continue-button')));
-    await tester.pumpAndSettle();
+    await enterDiscovery(tester);
     expect(find.text('Maya, 29'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('discovery-preferences')));
@@ -63,5 +67,62 @@ void main() {
     await tester.tap(find.byKey(const Key('reset-discovery-preferences')));
     await tester.pumpAndSettle();
     expect(find.text('Maya, 29'), findsOneWidget);
+  });
+
+  testWidgets('discovery report needs a reason and stays local', (
+    tester,
+  ) async {
+    await enterDiscovery(tester);
+    await tester.tap(find.byKey(const Key('discovery-safety-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Report privately'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('submit-discovery-report')),
+          )
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('discovery-report-reason')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Scam or suspicious request').last);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('submit-discovery-report')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+    await tester.tap(find.byKey(const Key('submit-discovery-report')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Report recorded: Scam or suspicious request'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('No review team is connected'), findsWidgets);
+  });
+
+  testWidgets('blocking a discovery profile removes it from the local deck', (
+    tester,
+  ) async {
+    await enterDiscovery(tester);
+    expect(find.text('Maya, 29'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('discovery-safety-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Block profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-discovery-block')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Maya, 29'), findsNothing);
+    expect(find.text('Elena, 32'), findsOneWidget);
+    expect(find.textContaining('prototype profiles'), findsOneWidget);
   });
 }

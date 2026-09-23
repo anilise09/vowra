@@ -1,5 +1,13 @@
 # Checkpoints
 
+## CP-033 — Discovery safety actions (2026-09-22)
+
+- Added profile-scoped discovery reports so reporting a swipe card no longer reuses the match-report model. Reports require a reason, stay in memory for the current device session, and make clear that no review team is connected.
+- Added a compact profile safety menu on discovery portraits with private report and block actions. Blocking is confirmed, removes the synthetic profile from the local discovery deck immediately, and does not pretend to contact a real account.
+- Verified the reason-required report flow and local block removal with widget tests. `flutter analyze` found no issues, all 18 Flutter tests passed, and the Android debug APK built. No emulator or physical-device walkthrough was performed for this checkpoint.
+
+Next: continue Phase 1 UI architecture by extracting discovery/chat/profile widgets from `main.dart`, then add a small local moderation-state model that can later map cleanly to backend review states. Keep portrait generation deferred until the coding/UI phase is further along.
+
 ## CP-032 — Local discovery preferences (2026-09-22)
 
 - Added a local age-range and relationship-intent preference model for synthetic discovery cards. The sheet can apply or reset filters; discovery resets its card index and shows an honest empty state when no fixture matches.
