@@ -4,6 +4,7 @@ import 'data/message_repository.dart';
 import 'data/profile_repository.dart';
 import 'domain/chat_message.dart';
 import 'domain/match_connection.dart';
+import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
 
 void main() => runApp(const EmberApp());
@@ -137,6 +138,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final ProfileRepository profileRepository = MemoryProfileRepository();
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
   UserProfile? userProfile;
+  SafetyReport? safetyReport;
   MatchConnection connection = const MatchConnection(
     matchId: 'synthetic-match-1',
     peerName: 'Maya',
@@ -2676,11 +2678,15 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ChatTab(
         connection: connection,
         messages: messageRepository.list(connection.matchId),
+        report: safetyReport,
         onSend: _sendMessage,
         onCallReadinessChanged: (value) => setState(
           () => connection = connection.setCurrentUserCallReady(value),
         ),
-        onReport: () => setState(() => connection = connection.report()),
+        onReport: (report) => setState(() {
+          safetyReport = report;
+          connection = connection.report();
+        }),
         onUnmatch: () => setState(() => connection = connection.unmatch()),
         onBlock: () => setState(() => connection = connection.block()),
       ),
@@ -2938,6 +2944,7 @@ class ChatTab extends StatelessWidget {
     super.key,
     required this.connection,
     required this.messages,
+    required this.report,
     required this.onSend,
     required this.onCallReadinessChanged,
     required this.onReport,
@@ -2947,9 +2954,10 @@ class ChatTab extends StatelessWidget {
 
   final MatchConnection connection;
   final List<ChatMessage> messages;
+  final SafetyReport? report;
   final ValueChanged<String> onSend;
   final ValueChanged<bool> onCallReadinessChanged;
-  final VoidCallback onReport;
+  final ValueChanged<SafetyReport> onReport;
   final VoidCallback onUnmatch;
   final VoidCallback onBlock;
 
@@ -2995,13 +3003,15 @@ class ChatTab extends StatelessWidget {
             ),
           ],
         ),
-        if (connection.reported)
-          const Card(
-            color: Color(0xFFFFF1D6),
+        if (report != null)
+          Card(
+            color: const Color(0xFFFFF1D6),
             child: ListTile(
-              leading: Icon(Icons.flag_outlined),
-              title: Text('Report saved for review'),
-              subtitle: Text('The other person is not notified.'),
+              leading: const Icon(Icons.flag_outlined),
+              title: Text('Report recorded: ${report!.reason.label}'),
+              subtitle: const Text(
+                'Saved in this device session only. No review team is connected. The other person is not notified.',
+              ),
             ),
           ),
         const SizedBox(height: 18),
@@ -3084,9 +3094,95 @@ class ChatTab extends StatelessWidget {
     );
   }
 
+  Future<SafetyReport?> _chooseReport(BuildContext context) {
+    ReportReason? reason;
+    final latestPeerMessage = messages
+        .where((message) => message.author == MessageAuthor.peer)
+        .lastOrNull;
+    var includeMessageReference = false;
+    return showDialog<SafetyReport>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text('Report ${connection.peerName} privately'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Choose the concern. Reporting does not block this person; you can block separately.',
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<ReportReason>(
+                  key: const Key('report-reason'),
+                  decoration: const InputDecoration(labelText: 'Reason'),
+                  items: ReportReason.values
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item,
+                          child: Text(item.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setDialogState(() => reason = value),
+                ),
+                if (latestPeerMessage != null) ...[
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    key: const Key('report-message-reference'),
+                    contentPadding: EdgeInsets.zero,
+                    value: includeMessageReference,
+                    onChanged: (value) => setDialogState(
+                      () => includeMessageReference = value ?? false,
+                    ),
+                    title: const Text(
+                      'Include latest received message reference',
+                    ),
+                    subtitle: const Text(
+                      'Optional. No conversation text is copied into this report.',
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                const Text(
+                  'Prototype only: this report stays in memory and is not sent to a review team.',
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              key: const Key('submit-report'),
+              onPressed: reason == null
+                  ? null
+                  : () => Navigator.pop(
+                      dialogContext,
+                      SafetyReport(
+                        matchId: connection.matchId,
+                        reason: reason!,
+                        createdAt: DateTime.now().toUtc(),
+                        messageId: includeMessageReference
+                            ? latestPeerMessage?.id
+                            : null,
+                      ),
+                    ),
+              child: const Text('Record report'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _confirmAction(BuildContext context, String action) async {
     if (action == 'report') {
-      onReport();
+      final report = await _chooseReport(context);
+      if (report != null) onReport(report);
       return;
     }
     final verb = action == 'block' ? 'Block' : 'Unmatch';

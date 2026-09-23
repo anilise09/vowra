@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-031 — Private prototype reporting flow (2026-09-22)
+
+- Paused portrait generation and the remaining Nepali, Sri Lankan, and South African profile batches so coding and UI work can proceed first. The existing 160 / 220 expansion count is unchanged.
+- Added a structured in-memory safety report with a required reason and an optional reference to the latest received message. The report does not copy conversation text or notify the peer.
+- Replaced the one-tap report action with a reason picker and explicit evidence opt-in. The chat confirmation clearly says that this prototype has no connected review team and retains the report only for the current app session.
+- Verified with `flutter analyze` (no issues), `flutter test` (14 passed), and `flutter build apk --debug` (built). This is build/test evidence, not device validation.
+
+Next: continue Phase 1 coding and UI design, including discovery preferences and complete safety entry points. Generate and review the remaining portraits at the end, then complete device walkthroughs. Do not present local reports as submitted to moderators.
+
 ## CP-030 — Mexican expansion completed (2026-09-21)
 
 - Added five more fictional adult Mexican women and five more fictional adult Mexican men with explicit fixture background metadata.
