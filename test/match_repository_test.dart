@@ -40,4 +40,19 @@ void main() {
     expect(blocked?.canMessage, isFalse);
     expect(blocked?.canRequestCall, isFalse);
   });
+
+  test('profile block only closes the matching connection', () {
+    final repository = MemoryMatchRepository(
+      incomingLikeProfileAssets: {maya.assetPath},
+    );
+    repository.createMutualLike(maya);
+
+    expect(
+      repository.blockProfile('assets/profiles/other.png')?.isActive,
+      isTrue,
+    );
+    final blocked = repository.blockProfile(maya.assetPath);
+    expect(blocked?.status, ConnectionStatus.blocked);
+    expect(blocked?.canMessage, isFalse);
+  });
 }

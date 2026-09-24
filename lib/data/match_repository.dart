@@ -5,6 +5,7 @@ abstract interface class MatchRepository {
   MatchConnection? current();
   bool hasIncomingLike(DemoProfile profile);
   MatchConnection createMutualLike(DemoProfile profile);
+  MatchConnection? blockProfile(String profileAssetPath);
   MatchConnection? update(
     MatchConnection Function(MatchConnection match) apply,
   );
@@ -39,6 +40,16 @@ class MemoryMatchRepository implements MatchRepository {
     );
     _current = match;
     return match;
+  }
+
+  @override
+  MatchConnection? blockProfile(String profileAssetPath) {
+    final existing = _current;
+    if (existing == null || existing.peerProfileAssetPath != profileAssetPath) {
+      return existing;
+    }
+    _current = existing.block();
+    return _current;
   }
 
   @override

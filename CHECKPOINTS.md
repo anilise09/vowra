@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-044 - Coordinated discovery safety boundary (2026-09-24)
+
+- Added `DiscoverySafetyService` and `LocalDiscoverySafetyService` so discovery reports and profile blocks no longer mutate unrelated screen collections directly.
+- A single local block operation now removes the profile from discovery and closes a matching active connection through `MatchRepository`; messaging and call readiness fail closed immediately. Blocking an unrelated profile preserves the active match.
+- Discovery report storage remains memory-only and is exposed through an immutable view. Updated block confirmation and feedback copy to describe both discovery and active-contact effects without implying that a real account or moderation team is connected.
+- Added service and repository invariant tests. Verified with `flutter analyze` (no issues), `flutter test` (37 passed), and a debug APK build. Device testing was not performed for this checkpoint.
+
+Next: define the first backend-facing account/profile and authorization contracts before adding any network client, keeping all fixtures synthetic and requiring server-side authorization for age, identity, location, entitlement, match, messaging, and block claims. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-043 - Local discovery interaction repository (2026-09-23)
 
 - Added `DiscoveryInteractionRepository` and `MemoryDiscoveryInteractionRepository` so liked, rejected, and blocked profile state plus local like-event previews no longer live as directly mutable collections in the screen state.

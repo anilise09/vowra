@@ -371,7 +371,7 @@ class DiscoveryDeck extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: Text('Block ${profile.name}?'),
         content: const Text(
-          'This removes the prototype profile from discovery for this app session. No real account is contacted.',
+          'This removes the prototype profile from discovery and closes any active match for this app session. No real account is contacted.',
         ),
         actions: [
           TextButton(
@@ -389,7 +389,11 @@ class DiscoveryDeck extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
     onBlockProfile(profile);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${profile.name} removed from discovery.')),
+      SnackBar(
+        content: Text(
+          '${profile.name} blocked locally. Discovery and active contact are closed.',
+        ),
+      ),
     );
   }
 

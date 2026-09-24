@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data/discovery_interaction_repository.dart';
+import 'data/discovery_safety_service.dart';
 import 'data/match_repository.dart';
 import 'data/message_repository.dart';
 import 'data/profile_repository.dart';
@@ -144,7 +145,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
-  final discoveryReports = <String, DiscoveryProfileReport>{};
   final DiscoveryInteractionRepository interactionRepository =
       MemoryDiscoveryInteractionRepository();
   final ProfileRepository profileRepository = MemoryProfileRepository();
@@ -152,6 +152,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final MatchRepository matchRepository = MemoryMatchRepository(
     incomingLikeProfileAssets: incomingLikeProfileAssets,
   );
+  late final DiscoverySafetyService discoverySafetyService =
+      LocalDiscoverySafetyService(
+        interactionRepository: interactionRepository,
+        matchRepository: matchRepository,
+      );
   UserProfile? userProfile;
   SafetyReport? safetyReport;
   MatchConnection? connection;
@@ -2764,7 +2769,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     blockedProfileAssets: interactionRepository.blockedProfileAssets(),
     likedProfiles: interactionRepository.likedProfiles(),
     rejectedProfileAssets: interactionRepository.rejectedProfileAssets(),
-    reports: discoveryReports,
+    reports: discoverySafetyService.reports(),
     likeEvents: interactionRepository.likeEvents(),
     profileIndex: profileIndex,
     onPreferencesChanged: (updated) => setState(() {
@@ -2773,9 +2778,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     }),
     onSwipeAction: _handleDiscoverySwipe,
     onReport: (report) =>
-        setState(() => discoveryReports[report.profileAssetPath] = report),
+        setState(() => discoverySafetyService.recordReport(report)),
     onBlockProfile: (profile) => setState(() {
-      interactionRepository.block(profile);
+      final result = discoverySafetyService.block(profile);
+      connection = result.currentMatch;
       profileIndex = 0;
     }),
   );
