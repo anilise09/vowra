@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-046 - Session and recovery trust contract (2026-09-24)
+
+- Added `docs/SESSION_CONTRACT.md` for passwordless/OIDC initiation, PKCE/state-bound proof exchange, short-lived rotating sessions, replay-family revocation, recent-reauthentication requirements, current-session logout, sign-out-everywhere, and non-enumerating recovery.
+- Added client contract types that redact account identifiers and authorization-code/PKCE/state secrets from logs. Public request receipts have one generic shape for known and unknown accounts, and only a live server-issued `active` session is locally eligible for authenticated requests.
+- Added `SessionApi` and a deliberately unconfigured implementation that fails sign-in, proof exchange, rotation, logout, and recovery-related requests until reviewed providers and secure platform storage exist. No credentials, network client, account provider, or real-user data were added.
+- Added contract tests for non-enumeration, secret redaction, expiry/state gating, and fail-closed behavior. Verified with `flutter analyze` (no issues), `flutter test` (44 passed), and a debug APK build. Device testing was not performed for this checkpoint.
+
+Next: define account data-lifecycle contracts for pause, export, deletion, recovery windows, narrowly retained abuse evidence, and location/privacy-zone handling before creating a backend service or collecting real data.
+
 ## CP-045 - Account/profile trust contract (2026-09-24)
 
 - Added `docs/BACKEND_API_CONTRACT.md` with the first server-authoritative account/profile boundary: authenticated `/me` operations, opaque IDs plus per-object authorization, age-assurance states, coarse-location rules, and fail-closed requirements for later discovery, match, messaging, block, call, entitlement, and moderation contracts.
