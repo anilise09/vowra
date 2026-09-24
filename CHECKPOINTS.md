@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-045 - Account/profile trust contract (2026-09-24)
+
+- Added `docs/BACKEND_API_CONTRACT.md` with the first server-authoritative account/profile boundary: authenticated `/me` operations, opaque IDs plus per-object authorization, age-assurance states, coarse-location rules, and fail-closed requirements for later discovery, match, messaging, block, call, entitlement, and moderation contracts.
+- Added `ProfileMutation`, whose contract payload contains only editable public profile fields. Client age, date of birth, coordinates, account ID, verification, entitlement, and match claims are structurally absent; relationship-intent keys are now stable backend values.
+- Added `AccountProfileApi` and a deliberately unconfigured implementation. It cannot pretend a profile was fetched or persisted before a reviewed account service exists. No network dependency, provider, secret, or real-user collection was introduced.
+- Added contract tests for the exact mutation allowlist, stable age-access states, adult-feature gating, and fail-closed API behavior. Verified with `flutter analyze` (no issues), `flutter test` (40 passed), and a debug APK build. Device testing was not performed for this checkpoint.
+
+Next: specify session lifecycle and recovery contracts (passwordless/OIDC exchange, rotation, revocation, sign-out-everywhere, and non-enumerating errors) before selecting or integrating an authentication provider. Keep production accounts and real-user data disabled.
+
 ## CP-044 - Coordinated discovery safety boundary (2026-09-24)
 
 - Added `DiscoverySafetyService` and `LocalDiscoverySafetyService` so discovery reports and profile blocks no longer mutate unrelated screen collections directly.

@@ -1,10 +1,11 @@
 enum RelationshipIntent {
-  longTerm('Long-term relationship'),
-  openToLongTerm('Open to long-term'),
-  casual('Casual dating'),
-  figuringItOut('Figuring it out');
+  longTerm('long_term', 'Long-term relationship'),
+  openToLongTerm('open_to_long_term', 'Open to long-term'),
+  casual('casual', 'Casual dating'),
+  figuringItOut('figuring_it_out', 'Figuring it out');
 
-  const RelationshipIntent(this.label);
+  const RelationshipIntent(this.backendKey, this.label);
+  final String backendKey;
   final String label;
 }
 
