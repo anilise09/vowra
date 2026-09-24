@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-047 - Account lifecycle and location privacy contract (2026-09-24)
+
+- Added `docs/DATA_LIFECYCLE_CONTRACT.md` for authenticated pause/resume, bounded exports, recently reauthenticated scheduled deletion/cancellation, backup expiry, and narrowly purpose-limited abuse-evidence retention. Legal retention and recovery periods remain deliberately server-configured and undecided.
+- Added lifecycle/export state contracts and a fail-closed `AccountLifecycleApi`. Only an active account may use dating features; deletion cancellation and export download readiness depend on unexpired server-provided times rather than client assumptions.
+- Added `EncryptedLocationEnvelope` and coarse `LocationPrivacySnapshot`. The client contract has no latitude/longitude fields, redacts ciphertext from logs, and permits only a dedicated encrypted payload; precise coordinates are never a profile or response field.
+- Added contract tests for lifecycle gating, server-timed deletion/export behavior, encrypted-location shape/redaction, and unconfigured API behavior. Verified with `flutter analyze` (no issues), `flutter test` (49 passed), and a debug APK build. No real account, location sample, export, deletion, retention schedule, or network service was enabled.
+
+Next: define signed media-upload and moderation-quarantine contracts, including content hashes, short-lived upload grants, malware scanning, consent-aware explicit-media handling, deletion, and authorization without exposing storage keys or permanent URLs.
+
 ## CP-046 - Session and recovery trust contract (2026-09-24)
 
 - Added `docs/SESSION_CONTRACT.md` for passwordless/OIDC initiation, PKCE/state-bound proof exchange, short-lived rotating sessions, replay-family revocation, recent-reauthentication requirements, current-session logout, sign-out-everywhere, and non-enumerating recovery.
