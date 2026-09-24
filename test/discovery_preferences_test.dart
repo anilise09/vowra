@@ -183,6 +183,27 @@ void main() {
     expect(find.byKey(const Key('message-composer')), findsOneWidget);
   });
 
+  testWidgets('premium direct intro is an unavailable honest preview', (
+    tester,
+  ) async {
+    await enterDiscovery(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('direct-intro-preview')),
+      180,
+    );
+
+    final button = tester.widget<OutlinedButton>(
+      find.byKey(const Key('direct-intro-preview')),
+    );
+    expect(button.onPressed, isNull);
+    expect(find.textContaining('No message is sent'), findsOneWidget);
+    expect(
+      find.textContaining('Mutual matches can always message for free'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('swipe left rejects while swipe right only advances', (
     tester,
   ) async {

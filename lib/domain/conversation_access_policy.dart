@@ -22,7 +22,7 @@ class ConversationAccessPolicy {
       return 'Mutual likes can connect and message in the free core.';
     }
     if (canUsePremiumDirectIntro) {
-      return 'Premium direct intros are a future design concept; this prototype still uses local synthetic profiles.';
+      return 'A future premium direct intro could request a conversation before a mutual like. It would not unlock messaging unless the recipient accepts.';
     }
     if (relationship == LikeRelationship.currentUserLiked) {
       return 'Like saved locally. A real launch would notify this person and wait for a mutual like.';

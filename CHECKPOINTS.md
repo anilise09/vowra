@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-042 - Honest premium direct-intro preview (2026-09-23)
+
+- Closed CP-041's pending build evidence: a fresh `flutter build apk --debug` completed successfully instead of stalling in Gradle.
+- Expanded the discovery connection-rules card with an explicitly disabled premium direct-intro preview. The copy says no message is sent, no purchase is offered, and recipient acceptance would still be required before messaging.
+- Preserved the free-core invariant: mutual likes can always message without premium. No production billing, entitlement, notification, or message-sending path was added.
+- Added policy and widget coverage for the disabled control and safety/free-core copy. Verified with `flutter analyze` (no issues), `flutter test` (30 passed), and a final debug APK build. Device testing was not performed for this checkpoint.
+
+Next: move local like/profile interaction state behind a small repository boundary while preserving truthful local-only events, mutual-like-only match creation, immediate blocks, and free mutual-match messaging. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-041 - Local match repository layer (2026-09-23)
 
 - Added `MatchRepository` and `MemoryMatchRepository` so mutual-like match creation and match updates move out of raw UI state and into a small backend-shaped local service layer.

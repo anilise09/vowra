@@ -22,6 +22,7 @@ void main() {
 
     expect(policy.canMessageMutualMatch, isFalse);
     expect(policy.canUsePremiumDirectIntro, isTrue);
-    expect(policy.prototypeSummary, contains('future design concept'));
+    expect(policy.prototypeSummary, contains('recipient accepts'));
+    expect(policy.prototypeSummary, isNot(contains('purchase')));
   });
 }
