@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'data/discovery_interaction_repository.dart';
 import 'data/match_repository.dart';
 import 'data/message_repository.dart';
 import 'data/profile_repository.dart';
@@ -7,7 +8,6 @@ import 'domain/chat_message.dart';
 import 'domain/demo_profile.dart';
 import 'domain/discovery_interaction.dart';
 import 'domain/discovery_preferences.dart';
-import 'domain/local_like_event.dart';
 import 'domain/match_connection.dart';
 import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
@@ -144,11 +144,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
-  final blockedProfileAssets = <String>{};
-  final likedProfiles = <String, LikedProfile>{};
-  final rejectedProfileAssets = <String>{};
-  final likeEvents = <LocalLikeEvent>[];
   final discoveryReports = <String, DiscoveryProfileReport>{};
+  final DiscoveryInteractionRepository interactionRepository =
+      MemoryDiscoveryInteractionRepository();
   final ProfileRepository profileRepository = MemoryProfileRepository();
   final MemoryMessageRepository messageRepository = MemoryMessageRepository();
   final MatchRepository matchRepository = MemoryMatchRepository(
@@ -2763,11 +2761,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget _discover(BuildContext context) => DiscoveryDeck(
     profiles: profiles,
     preferences: discoveryPreferences,
-    blockedProfileAssets: blockedProfileAssets,
-    likedProfiles: likedProfiles,
-    rejectedProfileAssets: rejectedProfileAssets,
+    blockedProfileAssets: interactionRepository.blockedProfileAssets(),
+    likedProfiles: interactionRepository.likedProfiles(),
+    rejectedProfileAssets: interactionRepository.rejectedProfileAssets(),
     reports: discoveryReports,
-    likeEvents: likeEvents,
+    likeEvents: interactionRepository.likeEvents(),
     profileIndex: profileIndex,
     onPreferencesChanged: (updated) => setState(() {
       discoveryPreferences = updated;
@@ -2777,7 +2775,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     onReport: (report) =>
         setState(() => discoveryReports[report.profileAssetPath] = report),
     onBlockProfile: (profile) => setState(() {
-      blockedProfileAssets.add(profile.assetPath);
+      interactionRepository.block(profile);
       profileIndex = 0;
     }),
   );
@@ -2787,21 +2785,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       case DiscoverySwipeAction.like:
         final createdAt = DateTime.now().toUtc();
         setState(() {
-          likedProfiles[profile.assetPath] = LikedProfile(
-            profileAssetPath: profile.assetPath,
-            profileName: profile.name,
+          final recorded = interactionRepository.recordLike(
+            profile,
             createdAt: createdAt,
+            mutualLike: _hasIncomingLike(profile),
           );
-          likeEvents.insertAll(
-            0,
-            localLikeEventsFor(
-              profileAssetPath: profile.assetPath,
-              profileName: profile.name,
-              createdAt: createdAt,
-              mutualLike: _hasIncomingLike(profile),
-            ),
-          );
-          if (_hasIncomingLike(profile) && connection == null) {
+          if (recorded && _hasIncomingLike(profile) && connection == null) {
             _createSyntheticMatch(profile);
           }
         });
@@ -2816,7 +2805,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         );
       case DiscoverySwipeAction.reject:
         setState(() {
-          rejectedProfileAssets.add(profile.assetPath);
+          interactionRepository.reject(profile);
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${profile.name} removed from discovery.')),

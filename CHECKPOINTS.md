@@ -1,5 +1,14 @@
 # Checkpoints
 
+## CP-043 - Local discovery interaction repository (2026-09-23)
+
+- Added `DiscoveryInteractionRepository` and `MemoryDiscoveryInteractionRepository` so liked, rejected, and blocked profile state plus local like-event previews no longer live as directly mutable collections in the screen state.
+- Repository views are immutable. Duplicate likes and likes for already rejected or blocked profiles fail without appending events, while a valid mutual-like fixture still emits the existing backend-shaped event sequence and creates the free-core match through `MatchRepository`.
+- Kept all data memory-only and synthetic: no real notification, network write, account, billing, or engagement was introduced.
+- Added repository invariant tests and preserved the existing discovery/match widget coverage. Verified with `flutter analyze` (no issues), `flutter test` (33 passed), and a debug APK build. Device testing was not performed for this checkpoint.
+
+Next: move local discovery report/block coordination behind a service boundary so a block can be applied atomically across discovery and any active match before beginning real backend contracts. Keep portrait generation deferred until the end of this coding/UI pass.
+
 ## CP-042 - Honest premium direct-intro preview (2026-09-23)
 
 - Closed CP-041's pending build evidence: a fresh `flutter build apk --debug` completed successfully instead of stalling in Gradle.
