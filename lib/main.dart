@@ -42,83 +42,56 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          'assets/branding/vawra_welcome_background.png',
-          fit: BoxFit.cover,
-          excludeFromSemantics: true,
-        ),
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0x38FFFFFF), Color(0x18FFFFFF), Color(0x52FFF9FB)],
-              stops: [0, 0.48, 1],
-            ),
-          ),
-        ),
-        SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Align(
-                      child: SizedBox(
-                        width: 92,
-                        height: 92,
-                        child: Image.asset(
-                          'assets/branding/vawra_company_mark.png',
-                          semanticLabel: 'Vawra logo',
-                          fit: BoxFit.contain,
-                        ),
+    backgroundColor: const Color(0xFFF1EEF2),
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height < 700 ? 154 : 326,
+                  child: const FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: 520,
+                      height: 326,
+                      child: _WelcomeArtwork(),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 18),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(38),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Find someone worth\nslowing down for.',
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
+                              color: const Color(0xFF182465),
+                              fontSize: 34,
+                            ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Vawra',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: VawraColors.plum,
-                        letterSpacing: 0.2,
+                      const SizedBox(height: 10),
+                      Text(
+                        'Intentional matches, safer conversations, and space to be yourself.',
+                        style: Theme.of(context).textTheme.bodyLarge
+                            ?.copyWith(color: const Color(0xFF737796)),
                       ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      'Meet with intention.\nConnect with confidence.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'A calmer, privacy-first way to discover people who want what you want.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge
-                          ?.copyWith(color: VawraColors.muted),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: Colors.white),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x145A274F),
-                            blurRadius: 28,
-                            offset: Offset(0, 14),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
+                      const SizedBox(height: 16),
+                      Material(
+                        color: const Color(0xFFF8F5FA),
+                        borderRadius: BorderRadius.circular(22),
                         child: Column(
                           children: [
                             CheckboxListTile(
@@ -127,9 +100,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               onChanged: (value) =>
                                   setState(() => isAdult = value ?? false),
                               title: const Text('I am 18 or older'),
-                              subtitle: const Text(
-                                'Vawra is exclusively for adults.',
-                              ),
                               secondary: const Icon(Icons.cake_outlined),
                               controlAffinity: ListTileControlAffinity.leading,
                               dense: true,
@@ -137,20 +107,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
                             ),
-                            const Divider(height: 8, indent: 62, endIndent: 14),
+                            const Divider(height: 1, indent: 56, endIndent: 12),
                             CheckboxListTile(
                               key: const Key('rules-checkbox'),
                               value: acceptsRules,
                               onChanged: (value) =>
                                   setState(() => acceptsRules = value ?? false),
                               title: const Text('I choose respect and consent'),
-                              subtitle: const Text(
-                                'No harassment, hate, impersonation, or scams.',
-                              ),
                               secondary: const Icon(
                                 Icons.favorite_border_rounded,
                               ),
@@ -160,50 +124,150 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      key: const Key('continue-button'),
-                      onPressed: isAdult && acceptsRules
-                          ? () => Navigator.of(context).pushReplacement(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const DiscoveryScreen(),
-                              ),
-                            )
-                          : null,
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: const Text('Enter Vawra'),
-                    ),
-                    const SizedBox(height: 8),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.lock_outline_rounded, size: 15),
-                        SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'Prototype only · no account or upload is created',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12),
-                          ),
+                      const SizedBox(height: 14),
+                      FilledButton.icon(
+                        key: const Key('continue-button'),
+                        onPressed: isAdult && acceptsRules
+                            ? () => Navigator.of(context).pushReplacement(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const DiscoveryScreen(),
+                                ),
+                              )
+                            : null,
+                        icon: const Icon(Icons.favorite_rounded),
+                        label: const Text('Start discovering'),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Prototype only · no account or upload is created',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: VawraColors.muted,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     ),
+  );
+}
+
+class _WelcomeArtwork extends StatelessWidget {
+  const _WelcomeArtwork();
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Positioned(
+        left: -36,
+        top: 18,
+        child: Container(
+          width: 330,
+          height: 275,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFD4E3), Color(0xFFE8DFFF)],
+            ),
+          ),
+        ),
+      ),
+      Positioned(
+        right: -74,
+        top: -28,
+        child: Container(
+          width: 240,
+          height: 240,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
+      Positioned(
+        top: 12,
+        left: 0,
+        right: 0,
+        child: Column(
+          children: [
+            SizedBox(
+              width: 118,
+              height: 104,
+              child: Image.asset(
+                'assets/branding/vawra_company_mark_clean.png',
+                semanticLabel: 'Vawra logo',
+                fit: BoxFit.contain,
+              ),
+            ),
+            Text(
+              'Vawra',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: const Color(0xFF182465),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const Positioned(
+        left: 34,
+        top: 86,
+        child: _FloatingPortrait(asset: 'assets/profiles/maya.png', size: 66),
+      ),
+      const Positioned(
+        right: 34,
+        top: 92,
+        child: _FloatingPortrait(asset: 'assets/profiles/elena.png', size: 72),
+      ),
+      const Positioned(
+        left: 96,
+        bottom: 22,
+        child: _FloatingPortrait(asset: 'assets/profiles/amina.png', size: 74),
+      ),
+      const Positioned(
+        right: 86,
+        bottom: 8,
+        child: _FloatingPortrait(asset: 'assets/profiles/sofia.png', size: 64),
+      ),
+      const Positioned(
+        left: 0,
+        right: 0,
+        top: 196,
+        child: Icon(Icons.favorite_rounded, color: VawraColors.coral, size: 54),
+      ),
+    ],
+  );
+}
+
+class _FloatingPortrait extends StatelessWidget {
+  const _FloatingPortrait({required this.asset, required this.size});
+
+  final String asset;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    padding: const EdgeInsets.all(3),
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      shape: BoxShape.circle,
+    ),
+    child: ClipOval(child: Image.asset(asset, fit: BoxFit.cover)),
   );
 }
 
@@ -2790,43 +2854,48 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return Scaffold(
       body: IndexedStack(index: selectedIndex, children: pages),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Color(0x145A274F),
-              blurRadius: 24,
-              offset: Offset(0, -8),
+              color: const Color(0x3D182465),
+              blurRadius: 26,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
-        child: NavigationBar(
-          selectedIndex: selectedIndex,
-          onDestinationSelected: (value) =>
-              setState(() => selectedIndex = value),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.explore_outlined),
-              selectedIcon: Icon(Icons.explore_rounded),
-              label: 'Discover',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.favorite_outline),
-              selectedIcon: Icon(Icons.favorite_rounded),
-              label: 'Matches',
-            ),
-            NavigationDestination(
-              key: Key('chat-tab'),
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat_bubble_rounded),
-              label: 'Chats',
-            ),
-            NavigationDestination(
-              key: Key('profile-tab'),
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person_rounded),
-              label: 'Profile',
-            ),
-          ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: NavigationBar(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: (value) =>
+                setState(() => selectedIndex = value),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.explore_outlined),
+                selectedIcon: Icon(Icons.explore_rounded),
+                label: 'Discover',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.favorite_outline),
+                selectedIcon: Icon(Icons.favorite_rounded),
+                label: 'Matches',
+              ),
+              NavigationDestination(
+                key: Key('chat-tab'),
+                icon: Icon(Icons.chat_bubble_outline),
+                selectedIcon: Icon(Icons.chat_bubble_rounded),
+                label: 'Chats',
+              ),
+              NavigationDestination(
+                key: Key('profile-tab'),
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );

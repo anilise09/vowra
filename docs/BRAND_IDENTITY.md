@@ -14,7 +14,8 @@ The owner-supplied identity sheet dated 2026-09-24 is the visual authority. The 
 
 ## Assets
 
-- `assets/branding/vawra_company_mark.png` is the transparent approved company mark used inside the app.
+- `assets/branding/vawra_company_mark.png` is the padded transparent master retained for launcher derivation.
+- `assets/branding/vawra_company_mark_clean.png` is the tightly cropped, artifact-cleaned transparent mark used inside the app with no tile, border, or shadow.
 - `assets/branding/vawra_mark.png` preserves the earlier exploratory ribbon mark for provenance; it is not the active identity.
 - `assets/branding/vawra_welcome_background.png` is the original welcome-screen artwork.
 - Android launcher assets live in `android/app/src/main/res/mipmap-*`.

@@ -111,23 +111,21 @@ abstract final class VawraTheme {
         shape: const StadiumBorder(),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 72,
+        height: 68,
         elevation: 0,
-        backgroundColor: Colors.white,
-        indicatorColor: VawraColors.blush,
+        backgroundColor: const Color(0xFF182465),
+        indicatorColor: VawraColors.coral,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? VawraColors.coralDark
-                : VawraColors.muted,
+                ? Colors.white
+                : const Color(0xFFC8CCE8),
             size: 25,
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
-            color: states.contains(WidgetState.selected)
-                ? VawraColors.ink
-                : VawraColors.muted,
+            color: Colors.white,
             fontSize: 12,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w800

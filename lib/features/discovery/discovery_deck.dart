@@ -6,6 +6,7 @@ import '../../domain/discovery_interaction.dart';
 import '../../domain/discovery_preferences.dart';
 import '../../domain/local_like_event.dart';
 import '../../domain/safety_report.dart';
+import '../../theme/vawra_theme.dart';
 import '../shared/empty_tab.dart';
 
 class DiscoveryDeck extends StatelessWidget {
@@ -78,6 +79,10 @@ class DiscoveryDeck extends StatelessWidget {
             onPreferences: () => _showPreferences(context),
             onSafety: onOpenSafety,
           ),
+          if (visibleProfiles.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _DiscoveryStoryStrip(profiles: visibleProfiles.take(5).toList()),
+          ],
           const SizedBox(height: 14),
           if (profile == null)
             const Padding(
@@ -595,7 +600,7 @@ class _DiscoveryHeader extends StatelessWidget {
         width: 48,
         height: 48,
         child: Image.asset(
-          'assets/branding/vawra_company_mark.png',
+          'assets/branding/vawra_company_mark_clean.png',
           semanticLabel: 'Vawra logo',
           fit: BoxFit.contain,
         ),
@@ -605,7 +610,14 @@ class _DiscoveryHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('For you', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Hello, welcome back 👋',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Text(
+              'Find your match',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             Text(
               '$count prototype profiles',
               style: Theme.of(context).textTheme.bodySmall,
@@ -628,6 +640,82 @@ class _DiscoveryHeader extends StatelessWidget {
         icon: const Icon(Icons.shield_outlined),
       ),
     ],
+  );
+}
+
+class _DiscoveryStoryStrip extends StatelessWidget {
+  const _DiscoveryStoryStrip({required this.profiles});
+
+  final List<DemoProfile> profiles;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 88,
+    child: ListView.separated(
+      scrollDirection: Axis.horizontal,
+      itemCount: profiles.length + 1,
+      separatorBuilder: (_, _) => const SizedBox(width: 13),
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return const _StoryAvatar(
+            label: 'Your story',
+            icon: Icons.add_rounded,
+          );
+        }
+        final profile = profiles[index - 1];
+        return _StoryAvatar(label: profile.name, assetPath: profile.assetPath);
+      },
+    ),
+  );
+}
+
+class _StoryAvatar extends StatelessWidget {
+  const _StoryAvatar({required this.label, this.assetPath, this.icon});
+
+  final String label;
+  final String? assetPath;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 62,
+    child: Column(
+      children: [
+        Container(
+          width: 58,
+          height: 58,
+          padding: const EdgeInsets.all(3),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [VawraColors.coral, Color(0xFFFF9CBE), Color(0xFF182465)],
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: assetPath == null
+                  ? ColoredBox(
+                      color: VawraColors.blush,
+                      child: Icon(icon, color: VawraColors.coral),
+                    )
+                  : Image.asset(assetPath!, fit: BoxFit.cover),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
+      ],
+    ),
   );
 }
 

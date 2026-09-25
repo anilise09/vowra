@@ -1,5 +1,25 @@
 # Checkpoints
 
+## CP-053 - Owner-directed welcome and discovery composition (2026-09-25)
+
+- Reworked welcome around the supplied dating-app reference: floating circular portraits, a central transparent
+  Vawra mark, soft blush/lavender shapes, and a clean rounded onboarding panel with one primary action.
+- Added a circular story/profile preview row to discovery, retained the immersive full-photo profile card, and
+  replaced the default bottom bar with a navy floating pill and coral selected state. Chat bubbles now use the
+  same navy, coral, blush, and soft-lavender visual language.
+- Created `vawra_company_mark_clean.png`, a tightly cropped transparent in-app mark with stray pixels removed.
+  Standalone logo use has no white background, containing tile, border, or shadow. Launcher assets remain
+  unchanged.
+- Preserved adult/consent gating, synthetic-profile disclosure, coarse-distance privacy, safety actions, and
+  existing match/message/call rules. Added compact-height behavior and an explicit vertical-scroll target so
+  the richer layout remains usable and testable on short viewports.
+- Refreshed all five phone-sized golden baselines. Verified `flutter analyze` with no issues, all 60 tests, and
+  a fresh debug APK build. Installed the exact APK on Samsung SM-S928W and visually verified both welcome and
+  discovery, including the transparent mark, story row, photo card, and floating navigation.
+
+Next: gather owner feedback from the installed build, then apply only specific requested refinements before
+expanding this visual system into additional production flows.
+
 ## CP-052 - Reference-informed connections, chat, and profile redesign (2026-09-25)
 
 - Reviewed the owner-supplied dating UI reference and the current Dribbble dating-app UI gallery. Reused broad

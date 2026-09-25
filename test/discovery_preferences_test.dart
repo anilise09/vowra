@@ -196,6 +196,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const Key('direct-intro-preview')),
       180,
+      scrollable: find.byType(Scrollable).first,
     );
 
     final button = tester.widget<OutlinedButton>(

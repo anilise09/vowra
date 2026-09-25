@@ -94,7 +94,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
                   height: 72,
                   padding: const EdgeInsets.all(5),
                   child: Image.asset(
-                    'assets/branding/vawra_company_mark.png',
+                    'assets/branding/vawra_company_mark_clean.png',
                     fit: BoxFit.contain,
                   ),
                 ),

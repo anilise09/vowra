@@ -67,3 +67,5 @@ Vawra combines photo-first clarity with intent-first context:
 - prototype and safety disclosures preserved, but demoted from the primary emotional hierarchy.
 
 The same system now extends through welcome, discovery, connections, chat, and profile editing. Existing safety, consent, report, block, match, messaging, and mutual-call-readiness behavior remains intact.
+
+CP-053 applies the owner's preferred presentation principles more directly: a split illustration/content welcome screen, floating circular people previews, a story-style discovery strip, a dominant portrait card, and a floating high-contrast navigation pill. These are composition principles only; Vawra retains its own logo, palette, copy, safety disclosures, profile fixtures, and interaction rules.

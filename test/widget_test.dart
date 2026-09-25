@@ -6,7 +6,9 @@ void main() {
   testWidgets('requires adult and community-rule consent', (tester) async {
     await tester.pumpWidget(const VawraApp());
     expect(
-      find.image(const AssetImage('assets/branding/vawra_company_mark.png')),
+      find.image(
+        const AssetImage('assets/branding/vawra_company_mark_clean.png'),
+      ),
       findsOneWidget,
     );
     expect(find.text('Vawra'), findsOneWidget);

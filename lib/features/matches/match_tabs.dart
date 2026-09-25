@@ -297,7 +297,7 @@ class ChatTab extends StatelessWidget {
             ),
           const SizedBox(height: 16),
           Material(
-            color: VawraColors.lavender,
+            color: VawraColors.blush,
             borderRadius: BorderRadius.circular(22),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
@@ -338,7 +338,7 @@ class ChatTab extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: message.author == MessageAuthor.currentUser
-                      ? VawraColors.plum
+                      ? const Color(0xFFDCDCE9)
                       : Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
@@ -352,15 +352,11 @@ class ChatTab extends StatelessWidget {
                   ),
                   border: message.author == MessageAuthor.currentUser
                       ? null
-                      : Border.all(color: const Color(0xFFEEE4EA)),
+                      : Border.all(color: VawraColors.coral, width: 1.2),
                 ),
                 child: Text(
                   message.text,
-                  style: TextStyle(
-                    color: message.author == MessageAuthor.currentUser
-                        ? Colors.white
-                        : VawraColors.ink,
-                  ),
+                  style: TextStyle(color: const Color(0xFF182465)),
                 ),
               ),
             ),
