@@ -6,7 +6,7 @@ The launch name is intentionally undecided until trademark, domain, and store-na
 
 ## Status
 
-CP-047 is complete locally: account lifecycle and location contracts now cover pause/resume, bounded export, scheduled deletion/cancellation, server-defined recovery windows, narrowly retained abuse evidence, encrypted exact-location submission, and coarse-only responses. The unconfigured API fails closed and no real account, location, export, deletion, or network service exists. `flutter analyze` passed, all 49 tests passed, and the Android debug APK built. No device walkthrough was performed. Portrait generation remains paused until coding and UI design are further along; representation-expansion progress remains 160 / 220. See `docs/DATA_LIFECYCLE_CONTRACT.md`, `docs/SESSION_CONTRACT.md`, `docs/BACKEND_API_CONTRACT.md`, and `CHECKPOINTS.md`.
+CP-048 is complete locally: signed media-upload and moderation-quarantine contracts now cover bounded upload facts, short-lived redacted grants, private quarantine, approved-only visibility, consent-aware matched attachments, deletion, and fail-closed authorization. No camera/gallery integration, storage account, scanner, moderation provider, real media, or network service exists. `flutter analyze` passed, all 55 tests passed, and the Android debug APK built. No device walkthrough was performed. Portrait generation remains paused until coding and UI design are further along; representation-expansion progress remains 160 / 220. See `docs/MEDIA_UPLOAD_CONTRACT.md`, `docs/DATA_LIFECYCLE_CONTRACT.md`, `docs/BACKEND_API_CONTRACT.md`, and `CHECKPOINTS.md`.
 
 ## Intended stack
 

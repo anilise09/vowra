@@ -52,3 +52,11 @@ Profile mutation contains no location. A later dedicated location endpoint may a
 The client fails closed when the service is unavailable, the session is invalid, age assurance is incomplete, or the server rejects a mutation. It may keep the existing memory-only synthetic prototype available in development builds, but it must never display a local write as a persisted account change.
 
 Before a real implementation: choose providers, define retention/deletion and recovery, threat-model sessions and account takeover, specify request/response schemas and rate limits, add cross-account authorization tests, and complete privacy/security review.
+
+## Media boundary
+
+Profile and matched-conversation media follow `MEDIA_UPLOAD_CONTRACT.md`. The authenticated client may
+request only a short-lived, single-object quarantine upload grant. It never receives bucket credentials,
+storage keys, permanent URLs, or authority to choose moderation state. Every status, delivery, attach,
+replace, reorder, and delete operation is reauthorized against the session account and current audience.
+Only server-approved media may be displayed.

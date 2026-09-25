@@ -1,5 +1,26 @@
 # Checkpoints
 
+## CP-048 - Signed media upload and moderation quarantine contract (2026-09-24)
+
+- Added `docs/MEDIA_UPLOAD_CONTRACT.md` for short-lived single-object upload grants, private quarantine,
+  checksum/size enforcement, malware and safe-decoding stages, approved-only delivery, explicit-media
+  consent, block/unmatch revocation, deletion, narrowly retained abuse evidence, and authorization that
+  never treats an opaque ID as permission.
+- Added bounded media request, signed-grant, and moderation snapshot contracts. Profile media structurally
+  rejects sexually explicit declarations; matched explicit attachments require recipient consent; signed
+  URLs are redacted from logs; and only the server-issued `approved` state can be displayed.
+- Added a fail-closed `MediaUploadApi`. No camera/gallery integration, object store, upload worker, scanner,
+  moderation provider, network dependency, real media, storage key, or permanent URL was introduced.
+- Added contract tests for payload allowlists, explicit-media placement, match-consent signaling, grant
+  expiry/size/HTTPS limits, URL redaction, approved-only visibility, and unconfigured API behavior. The
+  visibility test was proven by temporarily allowing every non-deleted state: it failed on quarantined
+  media, then passed after restoring the approved-only rule. Verified with `flutter analyze` (no issues),
+  `flutter test` (55 passed), and a debug APK build. No device walkthrough was performed.
+
+Next: define the server-side media authorization and moderation event schemas, idempotency/race rules,
+and cross-account abuse tests before selecting providers or adding a photo picker. Then return to the
+profile-media UI with the secure state model already fixed underneath it.
+
 ## CP-047 - Account lifecycle and location privacy contract (2026-09-24)
 
 - Added `docs/DATA_LIFECYCLE_CONTRACT.md` for authenticated pause/resume, bounded exports, recently reauthenticated scheduled deletion/cancellation, backup expiry, and narrowly purpose-limited abuse-evidence retention. Legal retention and recovery periods remain deliberately server-configured and undecided.
