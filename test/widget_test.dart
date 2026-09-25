@@ -4,7 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('requires adult and community-rule consent', (tester) async {
-    await tester.pumpWidget(const EmberApp());
+    await tester.pumpWidget(const VawraApp());
+    expect(
+      find.image(const AssetImage('assets/branding/vawra_mark.png')),
+      findsOneWidget,
+    );
+    expect(find.text('Vawra'), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(find.byKey(const Key('continue-button')))
@@ -30,7 +35,7 @@ void main() {
   });
 
   testWidgets('enters discovery and opens safety center', (tester) async {
-    await tester.pumpWidget(const EmberApp());
+    await tester.pumpWidget(const VawraApp());
     await tester.tap(find.byKey(const Key('adult-checkbox')));
     await tester.tap(find.byKey(const Key('rules-checkbox')));
     await tester.pump();
@@ -50,7 +55,7 @@ void main() {
   });
 
   testWidgets('validates and saves a local prototype profile', (tester) async {
-    await tester.pumpWidget(const EmberApp());
+    await tester.pumpWidget(const VawraApp());
     await tester.tap(find.byKey(const Key('adult-checkbox')));
     await tester.tap(find.byKey(const Key('rules-checkbox')));
     await tester.pump();
@@ -89,7 +94,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('save-profile')));
     await tester.pump();
-    expect(find.text('Project Ember is only for adults 18+.'), findsOneWidget);
+    expect(find.text('Vawra is only for adults 18+.'), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('profile-age')), '28');
     await tester.dragFrom(const Offset(400, 450), const Offset(0, -400));
@@ -107,7 +112,7 @@ void main() {
   testWidgets('video calls require mutual readiness and block closes contact', (
     tester,
   ) async {
-    await tester.pumpWidget(const EmberApp());
+    await tester.pumpWidget(const VawraApp());
     await tester.tap(find.byKey(const Key('adult-checkbox')));
     await tester.tap(find.byKey(const Key('rules-checkbox')));
     await tester.pump();

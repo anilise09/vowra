@@ -41,7 +41,7 @@ class UserProfile {
   static String? validateAge(String value) {
     final age = int.tryParse(value.trim());
     if (age == null) return 'Enter your age as a whole number.';
-    if (age < 18) return 'Project Ember is only for adults 18+.';
+    if (age < 18) return 'Vawra is only for adults 18+.';
     if (age > 99) return 'Enter an age from 18 to 99.';
     return null;
   }

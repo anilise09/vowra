@@ -16,17 +16,17 @@ import 'features/discovery/discovery_deck.dart';
 import 'features/matches/match_tabs.dart';
 import 'features/profile/profile_editor.dart';
 
-void main() => runApp(const EmberApp());
+void main() => runApp(const VawraApp());
 
-class EmberApp extends StatelessWidget {
-  const EmberApp({super.key});
+class VawraApp extends StatelessWidget {
+  const VawraApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: 'Project Ember',
+    title: 'Vawra',
     theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE84A72)),
-      scaffoldBackgroundColor: const Color(0xFFFFF9FA),
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF24F78)),
+      scaffoldBackgroundColor: const Color(0xFFFFF6F9),
       useMaterial3: true,
     ),
     home: const WelcomeScreen(),
@@ -54,12 +54,23 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.local_fire_department_rounded,
-                  size: 64,
-                  color: Color(0xFFE84A72),
+                Image.asset(
+                  'assets/branding/vawra_mark.png',
+                  width: 88,
+                  height: 88,
+                  semanticLabel: 'Vawra logo',
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
+                Text(
+                  'Vawra',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: const Color(0xFF5A274F),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   'Meet with intention.',
                   textAlign: TextAlign.center,
@@ -68,7 +79,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Project Ember is a private, safety-first place to meet. This early prototype uses synthetic profiles only.',
+                  'Vawra is a private, safety-first place to meet. This early prototype uses synthetic profiles only.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 28),
@@ -2715,9 +2726,18 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Project Ember',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/branding/vawra_mark.png',
+              width: 30,
+              height: 30,
+              semanticLabel: 'Vawra logo',
+            ),
+            const SizedBox(width: 9),
+            const Text('Vawra', style: TextStyle(fontWeight: FontWeight.w800)),
+          ],
         ),
         actions: [
           IconButton(

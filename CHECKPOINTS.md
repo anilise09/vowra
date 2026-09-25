@@ -1,5 +1,23 @@
 # Checkpoints
 
+## CP-049 - Vawra visual identity and cross-platform app icons (2026-09-24)
+
+- Replaced the generic Flutter mark and visible Project Ember codename with Vawra branding while preserving
+  the existing Android/iOS package identifiers so the prototype updates in place.
+- Created an original two-ribbon mark whose silhouette suggests a `V` and whose negative space suggests a
+  heart. Added the transparent master, complete Android launcher sizes, complete iPhone/iPad launcher sizes,
+  and an opaque blush launcher canvas that remains legible under platform masks.
+- Added the Vawra mark to onboarding and the main app bar, aligned the app theme to coral/plum/blush brand
+  tokens, updated adult-only validation copy, and documented the identity rules and generation record in
+  `docs/BRAND_IDENTITY.md`.
+- Added a widget regression assertion for the bundled brand asset and visible product name. Verified with
+  `flutter analyze` (no issues), `flutter test` (55 passed), and a fresh debug APK build. Installed and
+  launched the branded build on the connected Samsung SM-S928W; Vawra was the resumed activity, the mark
+  rendered on-device, and the scoped post-launch check found no app fatal crash.
+
+Next: continue the secure profile-media work on top of the CP-048 contract, beginning with server-side
+authorization/moderation event schemas and idempotency rules before any photo picker or real upload provider.
+
 ## CP-048 - Signed media upload and moderation quarantine contract (2026-09-24)
 
 - Added `docs/MEDIA_UPLOAD_CONTRACT.md` for short-lived single-object upload grants, private quarantine,

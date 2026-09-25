@@ -1,12 +1,12 @@
-# Project Ember
+# Vawra
 
-Project Ember is the working codename for an 18+ cross-platform dating app for Android and iPhone. Matching, messaging, blocking, reporting, and match-gated voice/video calling belong to the free core.
+Vawra is an 18+ cross-platform dating app for Android and iPhone. Matching, messaging, blocking, reporting, and match-gated voice/video calling belong to the free core.
 
-The launch name is intentionally undecided until trademark, domain, and store-name checks are complete.
+Vawra is the current product name and visual identity. Public launch under that name still depends on trademark, domain, and store-name clearance.
 
 ## Status
 
-CP-048 is complete locally: signed media-upload and moderation-quarantine contracts now cover bounded upload facts, short-lived redacted grants, private quarantine, approved-only visibility, consent-aware matched attachments, deletion, and fail-closed authorization. No camera/gallery integration, storage account, scanner, moderation provider, real media, or network service exists. `flutter analyze` passed, all 55 tests passed, and the Android debug APK built. No device walkthrough was performed. Portrait generation remains paused until coding and UI design are further along; representation-expansion progress remains 160 / 220. See `docs/MEDIA_UPLOAD_CONTRACT.md`, `docs/DATA_LIFECYCLE_CONTRACT.md`, `docs/BACKEND_API_CONTRACT.md`, and `CHECKPOINTS.md`.
+CP-049 is complete: Vawra now has an original ribbon-V/negative-space-heart identity, coordinated coral/plum/blush tokens, branded onboarding and app chrome, and complete Android/iOS launcher icon sets. The stable package identifiers remain unchanged so installs update the existing prototype. `flutter analyze` passed, all 55 tests passed, the Android debug APK built, and the branded build was installed and launched on the connected Samsung SM-S928W without an app fatal crash. Portrait generation remains paused until coding and UI design are further along; representation-expansion progress remains 160 / 220. See `docs/BRAND_IDENTITY.md`, `docs/MEDIA_UPLOAD_CONTRACT.md`, and `CHECKPOINTS.md`.
 
 ## Intended stack
 

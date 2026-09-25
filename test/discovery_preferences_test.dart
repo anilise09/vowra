@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Future<void> enterDiscovery(WidgetTester tester) async {
-    await tester.pumpWidget(const EmberApp());
+    await tester.pumpWidget(const VawraApp());
     await tester.tap(find.byKey(const Key('adult-checkbox')));
     await tester.tap(find.byKey(const Key('rules-checkbox')));
     await tester.pump();
