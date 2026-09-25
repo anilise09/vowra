@@ -23,6 +23,7 @@ class DiscoveryDeck extends StatelessWidget {
     required this.onSwipeAction,
     required this.onReport,
     required this.onBlockProfile,
+    required this.onOpenSafety,
   });
 
   final List<DemoProfile> profiles;
@@ -38,6 +39,7 @@ class DiscoveryDeck extends StatelessWidget {
   onSwipeAction;
   final ValueChanged<DiscoveryProfileReport> onReport;
   final ValueChanged<DemoProfile> onBlockProfile;
+  final VoidCallback onOpenSafety;
 
   @override
   Widget build(BuildContext context) {
@@ -56,201 +58,306 @@ class DiscoveryDeck extends StatelessWidget {
         ? null
         : visibleProfiles[profileIndex % visibleProfiles.length];
     final profileReport = profile == null ? null : reports[profile.assetPath];
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                '${visibleProfiles.length} prototype profiles',
-                style: Theme.of(context).textTheme.titleSmall,
+    final photoHeight = (MediaQuery.sizeOf(context).height * 0.53).clamp(
+      400.0,
+      530.0,
+    );
+    return SingleChildScrollView(
+      key: ValueKey(profile?.assetPath ?? 'empty-discovery'),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+      child: Column(
+        children: [
+          _DiscoveryHeader(
+            count: visibleProfiles.length,
+            filtersActive: !preferences.isDefault,
+            onPreferences: () => _showPreferences(context),
+            onSafety: onOpenSafety,
+          ),
+          const SizedBox(height: 14),
+          if (profile == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 80),
+              child: EmptyTab(
+                icon: Icons.search_off,
+                title: 'No prototype profiles in this range',
+                message: 'Try a wider age range or include both relationship intents.',
               ),
             ),
-            OutlinedButton.icon(
-              key: const Key('discovery-preferences'),
-              onPressed: () => _showPreferences(context),
-              icon: const Icon(Icons.tune),
-              label: Text(
-                preferences.isDefault ? 'Preferences' : 'Edit preferences',
-              ),
-            ),
-          ],
-        ),
-        if (likeEvents.isNotEmpty) ...[
-          _LocalActivityCard(events: likeEvents.take(3).toList()),
-          const SizedBox(height: 12),
-        ],
-        const SizedBox(height: 12),
-        if (profile == null)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 80),
-            child: EmptyTab(
-              icon: Icons.search_off,
-              title: 'No prototype profiles in this range',
-              message:
-                  'Try a wider age range or include both relationship intents.',
-            ),
-          ),
-        if (profile != null) ...[
-          const Text(
-            'PROTOTYPE PROFILE · NOT A REAL PERSON',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.7,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _SwipeGestureSurface(
-            key: const Key('discovery-card-gesture'),
-            onSwipe: (action) => onSwipeAction(profile, action),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: 380,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(
-                          profile.assetPath,
-                          key: ValueKey(profile.assetPath),
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                          semanticLabel:
-                              'Synthetic portrait of ${profile.name}',
-                        ),
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: Material(
-                            color: Theme.of(context).colorScheme.surface
-                                .withValues(alpha: 0.92),
-                            shape: const CircleBorder(),
-                            child: PopupMenuButton<String>(
-                              key: const Key('discovery-safety-menu'),
-                              tooltip: 'Profile safety actions',
-                              onSelected: (value) =>
-                                  _handleSafetyAction(context, profile, value),
-                              itemBuilder: (_) => const [
-                                PopupMenuItem(
-                                  value: 'report',
-                                  child: Text('Report privately'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'block',
-                                  child: Text('Block profile'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+          if (profile != null) ...[
+            _SwipeGestureSurface(
+              key: const Key('discovery-card-gesture'),
+              onSwipe: (action) => onSwipeAction(profile, action),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: const Color(0xFFF0E5EB)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x1A5A274F),
+                      blurRadius: 32,
+                      offset: Offset(0, 16),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${profile.name}, ${profile.age}',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          profile.background == null
-                              ? '${profile.intent} · ${profile.distanceBand}'
-                              : '${profile.background} · ${profile.intent} · ${profile.distanceBand}',
-                        ),
-                        const SizedBox(height: 12),
-                        const _SwipeGuide(),
-                        const SizedBox(height: 12),
-                        const _ConversationAccessPreview(),
-                        if (profileReport != null) ...[
-                          const SizedBox(height: 12),
-                          Card(
-                            color: const Color(0xFFFFF1D6),
-                            margin: EdgeInsets.zero,
-                            child: ListTile(
-                              dense: true,
-                              leading: const Icon(Icons.flag_outlined),
-                              title: Text(
-                                'Report recorded: ${profileReport.reason.label}',
-                              ),
-                              subtitle: Text(
-                                '${profileReport.moderationState.label}. Saved in this device session only. No review team is connected.',
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(29),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: photoHeight,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              profile.assetPath,
+                              key: ValueKey(profile.assetPath),
+                              fit: BoxFit.cover,
+                              alignment: Alignment.topCenter,
+                              semanticLabel:
+                                  'Synthetic portrait of ${profile.name}',
+                            ),
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  stops: [0, 0.48, 1],
+                                  colors: [
+                                    Color(0x24000000),
+                                    Colors.transparent,
+                                    Color(0xD9000000),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        Text(
-                          profile.bio,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        const SizedBox(height: 14),
-                        Wrap(
-                          spacing: 8,
-                          children: profile.interests
-                              .map((item) => Chip(label: Text(item)))
-                              .toList(),
-                        ),
-                        const SizedBox(height: 12),
-                        const Row(
-                          children: [
-                            Icon(Icons.lock_outline, size: 17),
-                            SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                'Exact location and precise distance are never shown.',
+                            const Positioned(
+                              top: 16,
+                              left: 16,
+                              child: _OverlayPill(
+                                icon: Icons.science_outlined,
+                                label: 'PROTOTYPE PROFILE · NOT A REAL PERSON',
+                              ),
+                            ),
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: Material(
+                                color: Colors.black.withValues(alpha: 0.28),
+                                shape: const CircleBorder(),
+                                child: PopupMenuButton<String>(
+                                  key: const Key('discovery-safety-menu'),
+                                  tooltip: 'Profile safety actions',
+                                  iconColor: Colors.white,
+                                  onSelected: (value) => _handleSafetyAction(
+                                    context,
+                                    profile,
+                                    value,
+                                  ),
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(
+                                      value: 'report',
+                                      child: Text('Report privately'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'block',
+                                      child: Text('Block profile'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 20,
+                              right: 20,
+                              bottom: 20,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${profile.name}, ${profile.age}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          shadows: const [
+                                            Shadow(
+                                              color: Colors.black45,
+                                              blurRadius: 12,
+                                            ),
+                                          ],
+                                        ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      _OverlayPill(
+                                        icon: Icons.favorite_outline_rounded,
+                                        label: profile.intent,
+                                      ),
+                                      _OverlayPill(
+                                        icon: Icons.lock_outline_rounded,
+                                        label: profile.distanceBand,
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _ProfileActionButton(
+                              tooltip: 'Reject',
+                              icon: Icons.close_rounded,
+                              onPressed: () => onSwipeAction(
+                                profile,
+                                DiscoverySwipeAction.reject,
+                              ),
+                              foreground: const Color(0xFF5A274F),
+                              background: Colors.white,
+                            ),
+                            const SizedBox(width: 18),
+                            _ProfileActionButton(
+                              tooltip: 'Next profile',
+                              icon: Icons.arrow_forward_rounded,
+                              onPressed: () => onSwipeAction(
+                                profile,
+                                DiscoverySwipeAction.skip,
+                              ),
+                              foreground: const Color(0xFF5A274F),
+                              background: const Color(0xFFF1ECFF),
+                            ),
+                            const SizedBox(width: 18),
+                            _ProfileActionButton(
+                              tooltip: 'Like',
+                              icon: Icons.favorite_rounded,
+                              onPressed: () => onSwipeAction(
+                                profile,
+                                DiscoverySwipeAction.like,
+                              ),
+                              foreground: Colors.white,
+                              background: const Color(0xFFF24F78),
+                              emphasized: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: _SwipeGuide(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'A little about me',
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(color: const Color(0xFFF24F78)),
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              profile.bio,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(height: 1.35),
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: profile.interests
+                                  .map(
+                                    (item) => Chip(
+                                      avatar: const Icon(
+                                        Icons.auto_awesome_rounded,
+                                        size: 15,
+                                      ),
+                                      label: Text(item),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.shield_outlined,
+                                  size: 18,
+                                  color: Color(0xFF5A274F),
+                                ),
+                                SizedBox(width: 7),
+                                Expanded(
+                                  child: Text(
+                                    'Exact location and precise distance are never shown.',
+                                    style: TextStyle(fontSize: 12.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (profileReport != null) ...[
+                              const SizedBox(height: 14),
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF4DE),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.flag_outlined, size: 20),
+                                    const SizedBox(width: 9),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Report recorded: ${profileReport.reason.label}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            '${profileReport.moderationState.label}. Saved in this device session only. No review team is connected.',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton.filledTonal(
-                tooltip: 'Reject',
-                iconSize: 32,
-                onPressed: () =>
-                    onSwipeAction(profile, DiscoverySwipeAction.reject),
-                icon: const Icon(Icons.close),
-              ),
-              const SizedBox(width: 24),
-              IconButton.filledTonal(
-                tooltip: 'Next profile',
-                iconSize: 32,
-                onPressed: () =>
-                    onSwipeAction(profile, DiscoverySwipeAction.skip),
-                icon: const Icon(Icons.arrow_forward),
-              ),
-              const SizedBox(width: 24),
-              IconButton.filled(
-                tooltip: 'Like',
-                iconSize: 32,
-                onPressed: () =>
-                    onSwipeAction(profile, DiscoverySwipeAction.like),
-                icon: const Icon(Icons.favorite),
-              ),
+            if (likeEvents.isNotEmpty) ...[
+              const SizedBox(height: 22),
+              _LocalActivityCard(events: likeEvents.take(3).toList()),
             ],
-          ),
+            const SizedBox(height: 18),
+            const _ConversationAccessPreview(),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -463,6 +570,142 @@ class DiscoveryDeck extends StatelessWidget {
   }
 }
 
+class _DiscoveryHeader extends StatelessWidget {
+  const _DiscoveryHeader({
+    required this.count,
+    required this.filtersActive,
+    required this.onPreferences,
+    required this.onSafety,
+  });
+
+  final int count;
+  final bool filtersActive;
+  final VoidCallback onPreferences;
+  final VoidCallback onSafety;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Container(
+        width: 44,
+        height: 44,
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0xFFF0E4EA)),
+        ),
+        child: Image.asset(
+          'assets/branding/vawra_mark.png',
+          semanticLabel: 'Vawra logo',
+        ),
+      ),
+      const SizedBox(width: 11),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('For you', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              '$count prototype profiles',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+      IconButton.filledTonal(
+        key: const Key('discovery-preferences'),
+        tooltip: filtersActive ? 'Edit preferences' : 'Preferences',
+        onPressed: onPreferences,
+        icon: Icon(
+          filtersActive ? Icons.tune_rounded : Icons.tune_outlined,
+          size: 21,
+        ),
+      ),
+      IconButton(
+        tooltip: 'Safety center',
+        onPressed: onSafety,
+        icon: const Icon(Icons.shield_outlined),
+      ),
+    ],
+  );
+}
+
+class _OverlayPill extends StatelessWidget {
+  const _OverlayPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.white),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.15,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ProfileActionButton extends StatelessWidget {
+  const _ProfileActionButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+    required this.foreground,
+    required this.background,
+    this.emphasized = false,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color foreground;
+  final Color background;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = emphasized ? 68.0 : 58.0;
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: background,
+        shape: const CircleBorder(),
+        elevation: emphasized ? 7 : 2,
+        shadowColor: emphasized
+            ? const Color(0x66F24F78)
+            : const Color(0x225A274F),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: SizedBox.square(
+            dimension: size,
+            child: Icon(icon, color: foreground, size: emphasized ? 32 : 28),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _LocalActivityCard extends StatelessWidget {
   const _LocalActivityCard({required this.events});
 
@@ -503,13 +746,18 @@ class _SwipeGuide extends StatelessWidget {
   const _SwipeGuide();
 
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
-    children: const [
-      _SwipeGuideChip(icon: Icons.keyboard_arrow_up, label: 'Like'),
-      _SwipeGuideChip(icon: Icons.keyboard_arrow_left, label: 'Reject'),
-      _SwipeGuideChip(icon: Icons.keyboard_arrow_right, label: 'Next'),
+  Widget build(BuildContext context) => const Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.swipe_rounded, size: 15, color: Color(0xFF756A72)),
+      SizedBox(width: 6),
+      Flexible(
+        child: Text(
+          'Swipe left to pass · right for next · up to like',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 11.5, color: Color(0xFF756A72)),
+        ),
+      ),
     ],
   );
 }
@@ -539,8 +787,7 @@ class _SwipeGestureSurfaceState extends State<_SwipeGestureSurface> {
       final start = startPosition;
       startPosition = null;
       if (start == null) return;
-      final delta = event.position - start;
-      final action = _actionForDelta(delta);
+      final action = _actionForDelta(event.position - start);
       if (action != null) widget.onSwipe(action);
     },
     child: widget.child,
@@ -561,17 +808,6 @@ class _SwipeGestureSurfaceState extends State<_SwipeGestureSurface> {
   }
 }
 
-class _SwipeGuideChip extends StatelessWidget {
-  const _SwipeGuideChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) =>
-      Chip(avatar: Icon(icon, size: 18), label: Text(label));
-}
-
 class _ConversationAccessPreview extends StatelessWidget {
   const _ConversationAccessPreview();
 
@@ -587,35 +823,50 @@ class _ConversationAccessPreview extends StatelessWidget {
       currentUserTier: SubscriptionTier.premium,
     );
     return Card(
-      margin: EdgeInsets.zero,
+      color: const Color(0xFFF8F4FF),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Connection rules',
-              style: Theme.of(context).textTheme.titleSmall,
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.forum_outlined,
+                    size: 20,
+                    color: Color(0xFF5A274F),
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Text(
+                    'Connection, without pressure',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
             Text(likedPolicy.prototypeSummary),
             const SizedBox(height: 4),
             Text(mutualPolicy.prototypeSummary),
-            const SizedBox(height: 10),
-            Text(
-              'Premium preview',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
             Text(premiumPolicy.prototypeSummary),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               key: const Key('direct-intro-preview'),
               onPressed: null,
               icon: const Icon(Icons.lock_outline),
               label: const Text('Direct intro — unavailable in prototype'),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 7),
             Text(
               'No message is sent and no purchase is offered. Mutual matches can always message for free.',
               style: Theme.of(context).textTheme.bodySmall,

@@ -139,6 +139,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const Key('request-video-call')),
       180,
+      scrollable: find.byType(Scrollable).last,
     );
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();

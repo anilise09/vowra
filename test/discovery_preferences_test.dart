@@ -60,7 +60,7 @@ void main() {
     await tester.tap(find.byKey(const Key('apply-discovery-preferences')));
     await tester.pumpAndSettle();
     expect(find.text('Amina, 27'), findsOneWidget);
-    expect(find.text('Edit preferences'), findsOneWidget);
+    expect(find.byTooltip('Edit preferences'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('discovery-preferences')));
     await tester.pumpAndSettle();
@@ -135,9 +135,13 @@ void main() {
 
     expect(find.text('Maya, 29'), findsNothing);
     expect(find.text('Elena, 32'), findsOneWidget);
-    expect(find.textContaining('Mutual like with Maya'), findsOneWidget);
+    expect(find.textContaining('Mutual like with Maya'), findsWidgets);
 
-    await tester.drag(find.byType(ListView), const Offset(0, 900));
+    await tester.scrollUntilVisible(
+      find.text('Local activity'),
+      180,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Local activity'), findsOneWidget);
@@ -179,6 +183,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const Key('message-composer')),
       180,
+      scrollable: find.byType(Scrollable).last,
     );
     expect(find.byKey(const Key('message-composer')), findsOneWidget);
   });

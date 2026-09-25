@@ -6,7 +6,7 @@ Vawra is the current product name and visual identity. Public launch under that 
 
 ## Status
 
-CP-049 is complete: Vawra now has an original ribbon-V/negative-space-heart identity, coordinated coral/plum/blush tokens, branded onboarding and app chrome, and complete Android/iOS launcher icon sets. The stable package identifiers remain unchanged so installs update the existing prototype. `flutter analyze` passed, all 55 tests passed, the Android debug APK built, and the branded build was installed and launched on the connected Samsung SM-S928W without an app fatal crash. Portrait generation remains paused until coding and UI design are further along; representation-expansion progress remains 160 / 220. See `docs/BRAND_IDENTITY.md`, `docs/MEDIA_UPLOAD_CONTRACT.md`, and `CHECKPOINTS.md`.
+CP-050 is complete: current Tinder, Bumble, Hinge, and Feeld patterns were reviewed from first-party sources, then Vawra's welcome and discovery experience was rebuilt around an original intent-first, photo-led system. The checkpoint adds a reusable theme, immersive profile card, first-viewport decision controls, compact filter/safety chrome, refined navigation, and phone-sized golden baselines. The safety and prototype disclosures remain truthful but no longer dominate the primary hierarchy. `flutter analyze` passes, all 57 tests pass, and the Android debug APK builds. The redesigned APK is installed on the connected Samsung SM-S928W; visual inspection on the locked physical screen remains pending until the owner unlocks it. Portrait generation remains paused; representation-expansion progress remains 160 / 220. See `docs/COMPETITIVE_UI_RESEARCH.md`, `docs/BRAND_IDENTITY.md`, and `CHECKPOINTS.md`.
 
 ## Intended stack
 

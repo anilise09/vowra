@@ -15,6 +15,7 @@ import 'domain/user_profile.dart';
 import 'features/discovery/discovery_deck.dart';
 import 'features/matches/match_tabs.dart';
 import 'features/profile/profile_editor.dart';
+import 'theme/vawra_theme.dart';
 
 void main() => runApp(const VawraApp());
 
@@ -24,11 +25,7 @@ class VawraApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     title: 'Vawra',
-    theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF24F78)),
-      scaffoldBackgroundColor: const Color(0xFFFFF6F9),
-      useMaterial3: true,
-    ),
+    theme: VawraTheme.light,
     home: const WelcomeScreen(),
   );
 }
@@ -45,99 +42,161 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Image.asset(
-                  'assets/branding/vawra_mark.png',
-                  width: 88,
-                  height: 88,
-                  semanticLabel: 'Vawra logo',
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Vawra',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: const Color(0xFF5A274F),
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
+    body: DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFF0F5), Color(0xFFFFFBFC), Color(0xFFF4EFFF)],
+        ),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    child: Container(
+                      width: 76,
+                      height: 76,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x1F5A274F),
+                            blurRadius: 30,
+                            offset: Offset(0, 14),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/branding/vawra_mark.png',
+                        semanticLabel: 'Vawra logo',
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Meet with intention.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Vawra is a private, safety-first place to meet. This early prototype uses synthetic profiles only.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 28),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        CheckboxListTile(
-                          key: const Key('adult-checkbox'),
-                          value: isAdult,
-                          onChanged: (value) =>
-                              setState(() => isAdult = value ?? false),
-                          title: const Text('I am at least 18 years old'),
-                          subtitle: const Text(
-                            'Age assurance will be required before public launch.',
-                          ),
-                          controlAffinity: ListTileControlAffinity.leading,
-                        ),
-                        CheckboxListTile(
-                          key: const Key('rules-checkbox'),
-                          value: acceptsRules,
-                          onChanged: (value) =>
-                              setState(() => acceptsRules = value ?? false),
-                          title: const Text(
-                            'I agree to treat people with respect',
-                          ),
-                          subtitle: const Text(
-                            'No harassment, hate, impersonation, scams, or sexual content without consent.',
-                          ),
-                          controlAffinity: ListTileControlAffinity.leading,
+                  const SizedBox(height: 10),
+                  Text(
+                    'Vawra',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(color: VawraColors.plum, letterSpacing: 0.2),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    'Meet with intention.\nConnect with confidence.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'A calmer, privacy-first way to discover people who want what you want.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge
+                        ?.copyWith(color: VawraColors.muted),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.white),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x145A274F),
+                          blurRadius: 28,
+                          offset: Offset(0, 14),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  key: const Key('continue-button'),
-                  onPressed: isAdult && acceptsRules
-                      ? () => Navigator.of(context).pushReplacement(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const DiscoveryScreen(),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Column(
+                        children: [
+                          CheckboxListTile(
+                            key: const Key('adult-checkbox'),
+                            value: isAdult,
+                            onChanged: (value) =>
+                                setState(() => isAdult = value ?? false),
+                            title: const Text('I am 18 or older'),
+                            subtitle: const Text(
+                              'Vawra is exclusively for adults.',
+                            ),
+                            secondary: const Icon(Icons.cake_outlined),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            dense: true,
+                            visualDensity: const VisualDensity(vertical: -2),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
                           ),
-                        )
-                      : null,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text('Continue'),
+                          const Divider(height: 8, indent: 62, endIndent: 14),
+                          CheckboxListTile(
+                            key: const Key('rules-checkbox'),
+                            value: acceptsRules,
+                            onChanged: (value) =>
+                                setState(() => acceptsRules = value ?? false),
+                            title: const Text('I choose respect and consent'),
+                            subtitle: const Text(
+                              'No harassment, hate, impersonation, or scams.',
+                            ),
+                            secondary: const Icon(
+                              Icons.favorite_border_rounded,
+                            ),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            dense: true,
+                            visualDensity: const VisualDensity(vertical: -2),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Continuing will not create an account or upload data in this prototype.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    key: const Key('continue-button'),
+                    onPressed: isAdult && acceptsRules
+                        ? () => Navigator.of(context).pushReplacement(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const DiscoveryScreen(),
+                            ),
+                          )
+                        : null,
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: const Text('Enter Vawra'),
+                  ),
+                  const SizedBox(height: 8),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.lock_outline_rounded, size: 15),
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Prototype only · no account or upload is created',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -2725,60 +2784,60 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ),
     ];
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/branding/vawra_mark.png',
-              width: 30,
-              height: 30,
-              semanticLabel: 'Vawra logo',
+      appBar: selectedIndex == 0
+          ? null
+          : AppBar(
+              title: Text(
+                const ['', 'Matches', 'Chats', 'Your profile'][selectedIndex],
+              ),
+              actions: [
+                IconButton(
+                  tooltip: 'Safety center',
+                  icon: const Icon(Icons.shield_outlined),
+                  onPressed: () => _openSafety(context),
+                ),
+              ],
             ),
-            const SizedBox(width: 9),
-            const Text('Vawra', style: TextStyle(fontWeight: FontWeight.w800)),
+      body: IndexedStack(index: selectedIndex, children: pages),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x145A274F),
+              blurRadius: 24,
+              offset: Offset(0, -8),
+            ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Safety center',
-            icon: const Icon(Icons.shield_outlined),
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              showDragHandle: true,
-              builder: (_) => const SafetySheet(),
+        child: NavigationBar(
+          selectedIndex: selectedIndex,
+          onDestinationSelected: (value) =>
+              setState(() => selectedIndex = value),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.explore_outlined),
+              selectedIcon: Icon(Icons.explore_rounded),
+              label: 'Discover',
             ),
-          ),
-        ],
-      ),
-      body: IndexedStack(index: selectedIndex, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (value) => setState(() => selectedIndex = value),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
-            label: 'Discover',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite_outline),
-            selectedIcon: Icon(Icons.favorite),
-            label: 'Matches',
-          ),
-          NavigationDestination(
-            key: Key('chat-tab'),
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
-            label: 'Chats',
-          ),
-          NavigationDestination(
-            key: Key('profile-tab'),
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+            NavigationDestination(
+              icon: Icon(Icons.favorite_outline),
+              selectedIcon: Icon(Icons.favorite_rounded),
+              label: 'Matches',
+            ),
+            NavigationDestination(
+              key: Key('chat-tab'),
+              icon: Icon(Icons.chat_bubble_outline),
+              selectedIcon: Icon(Icons.chat_bubble_rounded),
+              label: 'Chats',
+            ),
+            NavigationDestination(
+              key: Key('profile-tab'),
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person_rounded),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2804,6 +2863,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       connection = result.currentMatch;
       profileIndex = 0;
     }),
+    onOpenSafety: () => _openSafety(context),
+  );
+
+  void _openSafety(BuildContext context) => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (_) => const SafetySheet(),
   );
 
   void _handleDiscoverySwipe(DemoProfile profile, DiscoverySwipeAction action) {

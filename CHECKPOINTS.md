@@ -1,5 +1,28 @@
 # Checkpoints
 
+## CP-050 - Competitor-researched welcome and discovery redesign (2026-09-24)
+
+- Reviewed current first-party Tinder, Bumble, Hinge, and Feeld product material and official store
+  screenshots. Recorded reusable principles, former Vawra weaknesses, sources, and anti-copying boundaries in
+  `docs/COMPETITIVE_UI_RESEARCH.md`.
+- Added a reusable Vawra Material 3 theme with explicit coral/plum/blush/ink tokens, stronger typography,
+  rounded cards and inputs, expressive chips, clearer buttons, bottom sheets, and a refined navigation bar.
+- Rebuilt the welcome flow as a focused brand moment with a calmer gradient, stronger emotional hierarchy,
+  compact adult/consent confirmation, and a single clear entry action. The prototype still creates no account
+  and uploads no data.
+- Rebuilt discovery around a large portrait-led card. Name, age, relationship intent, coarse distance,
+  biography, and interests now scan in a deliberate hierarchy; filter and safety actions remain immediately
+  accessible; and Pass, Next, and Like are visible in the first phone viewport. Exact location remains hidden,
+  synthetic-profile disclosure remains explicit, and existing swipe/report/block/match behavior is preserved.
+- Added 412 x 915 welcome/discovery golden baselines. The visual pass caught and fixed a compact-height welcome
+  issue, a narrow-header overflow, swipe/scroll competition, lazy-section reachability, and first-viewport
+  action placement. Verified with `flutter analyze` (no issues), `flutter test` (57 passed), and a fresh debug
+  APK build. The redesigned APK was installed on the connected Samsung SM-S928W; the handset locked before the
+  final physical screenshot, and no lock-screen bypass was attempted.
+
+Next: apply the same component system to Matches, Chats, and profile editing; then conduct an unlocked Samsung
+walkthrough at normal and large text sizes before treating the mobile visual redesign as complete.
+
 ## CP-049 - Vawra visual identity and cross-platform app icons (2026-09-24)
 
 - Replaced the generic Flutter mark and visible Project Ember codename with Vawra branding while preserving
