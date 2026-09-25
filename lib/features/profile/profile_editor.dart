@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/user_profile.dart';
+import '../../theme/vawra_theme.dart';
 
 class ProfileEditor extends StatefulWidget {
   const ProfileEditor({
@@ -65,16 +66,70 @@ class _ProfileEditorState extends State<ProfileEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Your profile',
-            style: Theme.of(context).textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.w800),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  VawraColors.plum,
+                  Color(0xFF8A346C),
+                  VawraColors.coral,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x255A274F),
+                  blurRadius: 28,
+                  offset: Offset(0, 14),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  padding: const EdgeInsets.all(5),
+                  child: Image.asset(
+                    'assets/branding/vawra_company_mark.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.initialProfile == null
+                            ? 'Create your profile'
+                            : 'Make your profile memorable',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: 5),
+                      const Text(
+                        'Give someone an easy reason to start a real conversation.',
+                        style: TextStyle(
+                          color: Color(0xFFFFEAF1),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
           const Text(
             'Prototype data stays in memory and disappears when the app closes.',
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           TextFormField(
             key: const Key('profile-name'),
             controller: nameController,
@@ -95,6 +150,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
           DropdownButtonFormField<RelationshipIntent>(
             key: const Key('profile-intent'),
             initialValue: intent,
+            isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'What are you looking for?',
             ),
@@ -121,6 +177,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
           ),
           const SizedBox(height: 10),
           Text('Interests', style: Theme.of(context).textTheme.titleMedium),
+          const Text('Choose at least one'),
           const SizedBox(height: 6),
           Wrap(
             spacing: 8,
@@ -147,21 +204,35 @@ class _ProfileEditorState extends State<ProfileEditor> {
               ),
             ),
           const SizedBox(height: 12),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Show a coarse distance band'),
-            subtitle: const Text('Exact location is never displayed.'),
-            value: showDistanceBand,
-            onChanged: (value) => setState(() => showDistanceBand = value),
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Open to calls by default'),
-            subtitle: const Text(
-              'Calls still require a match, mutual readiness, and acceptance.',
+          Material(
+            color: VawraColors.lavender,
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Show a coarse distance band'),
+                    subtitle: const Text('Exact location is never displayed.'),
+                    value: showDistanceBand,
+                    onChanged: (value) =>
+                        setState(() => showDistanceBand = value),
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Open to calls by default'),
+                    subtitle: const Text(
+                      'Calls still require a match, mutual readiness, and acceptance.',
+                    ),
+                    value: callReadyByDefault,
+                    onChanged: (value) =>
+                        setState(() => callReadyByDefault = value),
+                  ),
+                ],
+              ),
             ),
-            value: callReadyByDefault,
-            onChanged: (value) => setState(() => callReadyByDefault = value),
           ),
           const SizedBox(height: 14),
           FilledButton(

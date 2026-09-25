@@ -70,24 +70,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Align(
-                      child: Container(
-                        width: 76,
-                        height: 76,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.82),
-                          borderRadius: BorderRadius.circular(32),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x1F5A274F),
-                              blurRadius: 30,
-                              offset: Offset(0, 14),
-                            ),
-                          ],
-                        ),
+                      child: SizedBox(
+                        width: 92,
+                        height: 92,
                         child: Image.asset(
                           'assets/branding/vawra_company_mark.png',
                           semanticLabel: 'Vawra logo',
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -2783,34 +2772,22 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           () => connection = matchRepository.update((match) => match.block()),
         ),
       ),
-      ProfileEditor(
-        initialProfile: userProfile,
-        onSaved: (profile) {
-          profileRepository.save(profile);
-          setState(() => userProfile = profileRepository.load());
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile saved on this device session only.'),
-            ),
-          );
-        },
+      SafeArea(
+        child: ProfileEditor(
+          initialProfile: userProfile,
+          onSaved: (profile) {
+            profileRepository.save(profile);
+            setState(() => userProfile = profileRepository.load());
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profile saved on this device session only.'),
+              ),
+            );
+          },
+        ),
       ),
     ];
     return Scaffold(
-      appBar: selectedIndex == 0
-          ? null
-          : AppBar(
-              title: Text(
-                const ['', 'Matches', 'Chats', 'Your profile'][selectedIndex],
-              ),
-              actions: [
-                IconButton(
-                  tooltip: 'Safety center',
-                  icon: const Icon(Icons.shield_outlined),
-                  onPressed: () => _openSafety(context),
-                ),
-              ],
-            ),
       body: IndexedStack(index: selectedIndex, children: pages),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(

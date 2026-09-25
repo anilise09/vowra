@@ -30,6 +30,10 @@ Feeld's 2025 redesign is the strongest reference for expressive differentiation.
 
 Sources: [Feeld 8.0 overview](https://support.feeld.co/hc/en-gb/articles/21061472034716-Meet-the-new-Feeld-app-version-8-0), [Feeld design roundtable](https://feeld.co/ask-feeld/how-to/a-roundtable-with-feeld-designers-on-the-app-s-newest-evolution)
 
+### Visual inspiration gallery
+
+The owner also supplied a dating-app presentation reference and the current [Dribbble dating-app UI gallery](https://dribbble.com/tags/dating-app-ui). These are inspiration sources rather than product evidence. Reusable ideas include layered photo cards, circular connection previews, compact conversation headers, soft asymmetric message bubbles, and low-chrome navigation. Vawra does not reproduce a specific shot, layout, illustration, or trade dress.
+
 ## Shared strengths
 
 - The current person is the largest visual element.
@@ -62,4 +66,4 @@ Vawra combines photo-first clarity with intent-first context:
 - a welcoming adult/consent gate that remains explicit without reading like a settings screen;
 - prototype and safety disclosures preserved, but demoted from the primary emotional hierarchy.
 
-This checkpoint improves the welcome and discovery experience. Matches, chats, and profile editing retain their existing behavior and should receive the same component-level redesign in later UI checkpoints.
+The same system now extends through welcome, discovery, connections, chat, and profile editing. Existing safety, consent, report, block, match, messaging, and mutual-call-readiness behavior remains intact.

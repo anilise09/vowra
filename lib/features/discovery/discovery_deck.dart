@@ -591,18 +591,13 @@ class _DiscoveryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Container(
-        width: 44,
-        height: 44,
-        padding: const EdgeInsets.all(7),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: const Color(0xFFF0E4EA)),
-        ),
+      SizedBox(
+        width: 48,
+        height: 48,
         child: Image.asset(
           'assets/branding/vawra_company_mark.png',
           semanticLabel: 'Vawra logo',
+          fit: BoxFit.contain,
         ),
       ),
       const SizedBox(width: 11),

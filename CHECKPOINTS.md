@@ -1,5 +1,24 @@
 # Checkpoints
 
+## CP-052 - Reference-informed connections, chat, and profile redesign (2026-09-25)
+
+- Reviewed the owner-supplied dating UI reference and the current Dribbble dating-app UI gallery. Reused broad
+  interaction principles—layered photo cards, compact conversation chrome, asymmetric bubbles, and low-chrome
+  navigation—without copying a specific composition or trade dress.
+- Removed the white tile, border, and shadow from standalone in-app company-mark presentations. Welcome,
+  discovery, and profile surfaces now show only the transparent approved mark.
+- Rebuilt Connections around a full-photo mutual-match card with clear status and a single conversation action.
+  Rebuilt Chat with a photo avatar, compact mutual-call control, softer asymmetric message bubbles, persistent
+  safety actions, and a quieter composer. Reframed Profile editing with a branded hero and grouped privacy/call
+  controls while retaining validation and prototype disclosures.
+- Removed the generic per-tab app bars and gave each destination its own phone-safe hierarchy. Added 412 x 915
+  golden baselines for Connections, Chat, and Profile; these caught and fixed narrow-phone overflows in the chat
+  status line, intent dropdown, and interests heading.
+- Verified `flutter analyze` with no issues, all 60 tests, and a fresh debug APK build. Physical Samsung
+  installation is pending because the previously connected SM-S928W was not visible to ADB at final handoff.
+
+Next: reconnect the Samsung, install this exact APK, and complete normal/large-text physical walkthroughs.
+
 ## CP-051 - Approved company mark, welcome artwork, and Samsung inset fix (2026-09-24)
 
 - Adopted the owner-supplied Vawra company identity sheet as the visual authority. Extracted the approved
