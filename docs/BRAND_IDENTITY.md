@@ -2,9 +2,9 @@
 
 ## Core mark
 
-Vawra's mark is built from two meeting ribbons. Together they create a subtle `V` silhouette and a heart-shaped negative space, representing mutual connection, consent, warmth, and equal partnership.
+Vawra's approved company mark is a continuous heart-shaped ribbon surrounding two facing profiles. The coral, pink, peach, and plum folds represent attraction, warmth, conversation, and partnership.
 
-The mark deliberately avoids the category's common standalone flame, swipe card, location pin, and chat-bubble motifs. It must remain recognizable at 24 px.
+The owner-supplied identity sheet dated 2026-09-24 is the visual authority. The app uses a clean transparent extraction of that approved mark rather than reproducing the entire presentation sheet.
 
 ## Palette
 
@@ -14,14 +14,20 @@ The mark deliberately avoids the category's common standalone flame, swipe card,
 
 ## Assets
 
-- `assets/branding/vawra_mark.png` is the transparent master used inside the app.
+- `assets/branding/vawra_company_mark.png` is the transparent approved company mark used inside the app.
+- `assets/branding/vawra_mark.png` preserves the earlier exploratory ribbon mark for provenance; it is not the active identity.
+- `assets/branding/vawra_welcome_background.png` is the original welcome-screen artwork.
 - Android launcher assets live in `android/app/src/main/res/mipmap-*`.
 - iOS launcher assets live in `ios/Runner/Assets.xcassets/AppIcon.appiconset`.
 
-Launcher assets place the mark on the opaque Blush Canvas so it remains legible under platform masks. Do not add text, shadows, or another enclosing heart around the mark.
+Launcher assets place the approved mark on the opaque Blush Canvas so it remains legible under platform masks. Do not add text, shadows, or another enclosing heart around the mark.
+
+## Trademark usage
+
+Use `Vawra` and the approved mark consistently as brand identifiers. Do not use the registered-trademark symbol (`®`) or claim registration unless the owner supplies confirmation of an active registration for the relevant jurisdiction and goods/services. This engineering record is not a trademark clearance opinion.
 
 ## Generation record
 
-The master was produced with the built-in image-generation workflow as an original, vector-friendly symbol. The final prompt requested two meeting ribbon forms, a subtle `V`, heart-shaped negative space, coral/plum colors, transparent background, a strong small-size silhouette, and no text, trademarks, mockup, 3D treatment, or competitor-like flame/swipe imagery.
+The active master was extracted with the built-in image-generation workflow from the owner-supplied company identity sheet. The extraction request preserved the approved profiles, ribbon geometry, proportions, gradients, highlights, and silhouette while removing the presentation sheet, wordmark, tagline, and background.
 
 The Android and iOS size variants are deterministic resizes of the selected master, not separately generated artwork.

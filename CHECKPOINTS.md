@@ -1,5 +1,25 @@
 # Checkpoints
 
+## CP-051 - Approved company mark, welcome artwork, and Samsung inset fix (2026-09-24)
+
+- Adopted the owner-supplied Vawra company identity sheet as the visual authority. Extracted the approved
+  couple/heart mark to `assets/branding/vawra_company_mark.png`, switched the welcome and discovery headers to
+  it, and regenerated every existing Android and iOS launcher icon size on the Blush Canvas. The former mark
+  remains in the repository only as design provenance.
+- Added an original portrait welcome background using layered coral, plum, lavender, blush, and ivory ribbon
+  forms. A restrained white wash preserves headline and consent-control contrast while allowing the artwork to
+  remain visible edge to edge.
+- Used an unlocked Samsung SM-S928W walkthrough to find and fix a discovery-header collision with the Android
+  edge-to-edge status bar. Re-captured the welcome and discovery screens after the fix; the header, profile card,
+  first-viewport actions, and bottom navigation are unobstructed.
+- Documented trademark-use discipline: the approved identity may be used as a brand identifier, but Vawra must
+  not claim registration or show `®` without confirmation of an active registration in the relevant market.
+- Regenerated the 412 x 915 visual baselines and verified `flutter analyze` (no issues), `flutter test` (57
+  passed), a fresh Android debug build, successful Samsung installation, and physical-device visual inspection.
+
+Next: apply the same visual system to Matches, Chats, and profile editing, including normal and large-text
+device walkthroughs.
+
 ## CP-050 - Competitor-researched welcome and discovery redesign (2026-09-24)
 
 - Reviewed current first-party Tinder, Bumble, Hinge, and Feeld product material and official store

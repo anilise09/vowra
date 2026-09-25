@@ -64,7 +64,12 @@ class DiscoveryDeck extends StatelessWidget {
     );
     return SingleChildScrollView(
       key: ValueKey(profile?.assetPath ?? 'empty-discovery'),
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        MediaQuery.paddingOf(context).top + 10,
+        16,
+        28,
+      ),
       child: Column(
         children: [
           _DiscoveryHeader(
@@ -596,7 +601,7 @@ class _DiscoveryHeader extends StatelessWidget {
           border: Border.all(color: const Color(0xFFF0E4EA)),
         ),
         child: Image.asset(
-          'assets/branding/vawra_mark.png',
+          'assets/branding/vawra_company_mark.png',
           semanticLabel: 'Vawra logo',
         ),
       ),

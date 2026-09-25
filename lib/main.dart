@@ -42,165 +42,178 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFF0F5), Color(0xFFFFFBFC), Color(0xFFF4EFFF)],
+    body: Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/branding/vawra_welcome_background.png',
+          fit: BoxFit.cover,
+          excludeFromSemantics: true,
         ),
-      ),
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    child: Container(
-                      width: 76,
-                      height: 76,
-                      padding: const EdgeInsets.all(10),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x38FFFFFF), Color(0x18FFFFFF), Color(0x52FFF9FB)],
+              stops: [0, 0.48, 1],
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      child: Container(
+                        width: 76,
+                        height: 76,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.82),
+                          borderRadius: BorderRadius.circular(32),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1F5A274F),
+                              blurRadius: 30,
+                              offset: Offset(0, 14),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/branding/vawra_company_mark.png',
+                          semanticLabel: 'Vawra logo',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Vawra',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: VawraColors.plum,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      'Meet with intention.\nConnect with confidence.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'A calmer, privacy-first way to discover people who want what you want.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge
+                          ?.copyWith(color: VawraColors.muted),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.82),
-                        borderRadius: BorderRadius.circular(32),
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: Colors.white),
                         boxShadow: const [
                           BoxShadow(
-                            color: Color(0x1F5A274F),
-                            blurRadius: 30,
+                            color: Color(0x145A274F),
+                            blurRadius: 28,
                             offset: Offset(0, 14),
                           ),
                         ],
                       ),
-                      child: Image.asset(
-                        'assets/branding/vawra_mark.png',
-                        semanticLabel: 'Vawra logo',
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Column(
+                          children: [
+                            CheckboxListTile(
+                              key: const Key('adult-checkbox'),
+                              value: isAdult,
+                              onChanged: (value) =>
+                                  setState(() => isAdult = value ?? false),
+                              title: const Text('I am 18 or older'),
+                              subtitle: const Text(
+                                'Vawra is exclusively for adults.',
+                              ),
+                              secondary: const Icon(Icons.cake_outlined),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              dense: true,
+                              visualDensity: const VisualDensity(vertical: -2),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            const Divider(height: 8, indent: 62, endIndent: 14),
+                            CheckboxListTile(
+                              key: const Key('rules-checkbox'),
+                              value: acceptsRules,
+                              onChanged: (value) =>
+                                  setState(() => acceptsRules = value ?? false),
+                              title: const Text('I choose respect and consent'),
+                              subtitle: const Text(
+                                'No harassment, hate, impersonation, or scams.',
+                              ),
+                              secondary: const Icon(
+                                Icons.favorite_border_rounded,
+                              ),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              dense: true,
+                              visualDensity: const VisualDensity(vertical: -2),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Vawra',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge
-                        ?.copyWith(color: VawraColors.plum, letterSpacing: 0.2),
-                  ),
-                  const SizedBox(height: 7),
-                  Text(
-                    'Meet with intention.\nConnect with confidence.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'A calmer, privacy-first way to discover people who want what you want.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge
-                        ?.copyWith(color: VawraColors.muted),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: Colors.white),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x145A274F),
-                          blurRadius: 28,
-                          offset: Offset(0, 14),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      key: const Key('continue-button'),
+                      onPressed: isAdult && acceptsRules
+                          ? () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const DiscoveryScreen(),
+                              ),
+                            )
+                          : null,
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      label: const Text('Enter Vawra'),
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.lock_outline_rounded, size: 15),
+                        SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Prototype only · no account or upload is created',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                       ],
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Column(
-                        children: [
-                          CheckboxListTile(
-                            key: const Key('adult-checkbox'),
-                            value: isAdult,
-                            onChanged: (value) =>
-                                setState(() => isAdult = value ?? false),
-                            title: const Text('I am 18 or older'),
-                            subtitle: const Text(
-                              'Vawra is exclusively for adults.',
-                            ),
-                            secondary: const Icon(Icons.cake_outlined),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            dense: true,
-                            visualDensity: const VisualDensity(vertical: -2),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          const Divider(height: 8, indent: 62, endIndent: 14),
-                          CheckboxListTile(
-                            key: const Key('rules-checkbox'),
-                            value: acceptsRules,
-                            onChanged: (value) =>
-                                setState(() => acceptsRules = value ?? false),
-                            title: const Text('I choose respect and consent'),
-                            subtitle: const Text(
-                              'No harassment, hate, impersonation, or scams.',
-                            ),
-                            secondary: const Icon(
-                              Icons.favorite_border_rounded,
-                            ),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            dense: true,
-                            visualDensity: const VisualDensity(vertical: -2),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    key: const Key('continue-button'),
-                    onPressed: isAdult && acceptsRules
-                        ? () => Navigator.of(context).pushReplacement(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const DiscoveryScreen(),
-                            ),
-                          )
-                        : null,
-                    icon: const Icon(Icons.arrow_forward_rounded),
-                    label: const Text('Enter Vawra'),
-                  ),
-                  const SizedBox(height: 8),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.lock_outline_rounded, size: 15),
-                      SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          'Prototype only · no account or upload is created',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
+      ],
     ),
   );
 }
