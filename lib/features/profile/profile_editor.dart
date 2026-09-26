@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/lifestyle.dart';
 import '../../domain/user_profile.dart';
 import '../../theme/vawra_theme.dart';
+import '../shared/lifestyle_picker.dart';
+import 'profile_preview.dart';
 
 class ProfileEditor extends StatefulWidget {
   const ProfileEditor({
@@ -26,6 +29,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
   late Set<String> interests;
   late bool showDistanceBand;
   late bool callReadyByDefault;
+  late Map<LifestyleTopic, String> lifestyle;
 
   @override
   void initState() {
@@ -38,10 +42,15 @@ class _ProfileEditorState extends State<ProfileEditor> {
     interests = {...?profile?.interests};
     showDistanceBand = profile?.showDistanceBand ?? true;
     callReadyByDefault = profile?.callReadyByDefault ?? false;
+    lifestyle = {...?profile?.lifestyle};
+    bioController.addListener(_refresh);
   }
+
+  void _refresh() => setState(() {});
 
   @override
   void dispose() {
+    bioController.removeListener(_refresh);
     nameController.dispose();
     ageController.dispose();
     bioController.dispose();
@@ -120,6 +129,19 @@ class _ProfileEditorState extends State<ProfileEditor> {
             'Prototype data stays in memory and disappears when the app closes.',
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            key: const Key('preview-card'),
+            onPressed: () => ProfilePreviewSheet.show(context, _draft()),
+            icon: const Icon(Icons.visibility_outlined),
+            label: const Text('Preview my card'),
+          ),
+          const SizedBox(height: 12),
+          ProfileStrengthCard(
+            hasIntro: bioController.text.trim().isNotEmpty,
+            interestCount: interests.length,
+            hasLifestyle: lifestyle.isNotEmpty,
+          ),
           const SizedBox(height: 22),
           TextFormField(
             key: const Key('profile-name'),
@@ -194,7 +216,19 @@ class _ProfileEditorState extends State<ProfileEditor> {
                 style: TextStyle(color: Colors.red),
               ),
             ),
+          const SizedBox(height: 18),
+          Text('Lifestyle', style: Theme.of(context).textTheme.titleMedium),
+          const Text('Optional. Tap a chosen answer again to clear it.'),
           const SizedBox(height: 12),
+          LifestylePicker(
+            selected: lifestyle,
+            onChanged: (topic, option) => setState(
+              () => lifestyle[topic] == option
+                  ? lifestyle.remove(topic)
+                  : lifestyle[topic] = option,
+            ),
+          ),
+          const SizedBox(height: 18),
           Material(
             color: VawraColors.lavender,
             borderRadius: BorderRadius.circular(24),
@@ -239,6 +273,18 @@ class _ProfileEditorState extends State<ProfileEditor> {
     ),
   );
 
+  /// The current form as a profile, unvalidated, for the preview.
+  UserProfile _draft() => UserProfile(
+    displayName: nameController.text,
+    age: int.tryParse(ageController.text.trim()) ?? 18,
+    intent: intent,
+    bio: bioController.text.trim(),
+    interests: interests.toList()..sort(),
+    showDistanceBand: showDistanceBand,
+    callReadyByDefault: callReadyByDefault,
+    lifestyle: Map.unmodifiable(lifestyle),
+  );
+
   void _save() {
     if (!(formKey.currentState?.validate() ?? false) || interests.isEmpty) {
       return;
@@ -252,7 +298,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
         interests: interests.toList()..sort(),
         showDistanceBand: showDistanceBand,
         callReadyByDefault: callReadyByDefault,
-        lifestyle: widget.initialProfile?.lifestyle ?? const {},
+        lifestyle: Map.unmodifiable(lifestyle),
       ),
     );
   }

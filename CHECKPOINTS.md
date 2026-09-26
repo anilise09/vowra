@@ -1,5 +1,17 @@
 # Checkpoints
 
+## CP-058 - Profile preview, profile strength, and editable habits (2026-09-26)
+
+- "Preview my card" opens "How others see you": the person's own card built from the current form (name in
+  bold with lighter age, intent, distance-band note, intro, interests, habits), with a placeholder where
+  photos will go once uploads exist.
+- A "Profile strength" card counts the optional pieces live (intro, 3+ interests, habits) with a progress
+  bar and check chips; everything stays optional.
+- The habits from sign-up are editable in the profile via a shared picker and are kept on save.
+- Verified: `flutter analyze` no issues, 75 tests pass (3 new), profile golden refreshed.
+
+Next: a settings page (discovery settings, pause profile for free, honest delete-profile flow).
+
 ## CP-057 - Sign-up additions from the teardown (2026-09-26)
 
 - New optional "A few habits" step (drinking, smoking, exercise, pets): one choice per topic, tap again to
