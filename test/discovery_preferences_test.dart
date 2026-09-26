@@ -48,12 +48,20 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Open to long-term').last);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('apply-discovery-preferences')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('apply-discovery-preferences')));
     await tester.pumpAndSettle();
     expect(find.text('Amina, 27', findRichText: true), findsOneWidget);
     expect(find.byTooltip('Edit preferences'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('discovery-preferences')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('reset-discovery-preferences')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('reset-discovery-preferences')));
     await tester.pumpAndSettle();

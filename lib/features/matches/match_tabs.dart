@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/chat_message.dart';
+import '../../domain/demo_profile.dart';
+import '../../domain/discovery_interaction.dart';
 import '../../domain/match_connection.dart';
 import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
@@ -11,130 +13,302 @@ class MatchTab extends StatelessWidget {
     super.key,
     required this.connection,
     required this.onOpenChat,
+    this.likesYou = const [],
+    this.onRespond,
   });
 
   final MatchConnection? connection;
   final VoidCallback onOpenChat;
 
+  /// People who liked the current person. Seeing them is free in Vawra.
+  final List<DemoProfile> likesYou;
+  final void Function(DemoProfile profile, DiscoverySwipeAction action)?
+  onRespond;
+
   @override
   Widget build(BuildContext context) {
     final activeConnection = connection;
-    if (activeConnection == null) {
-      return const SafeArea(
-        child: EmptyTab(
-          icon: Icons.favorite_outline,
-          title: 'No active matches yet',
-          message: 'Mutual likes can connect and message in the free core.',
-        ),
-      );
-    }
-    if (!activeConnection.isActive) {
-      return const SafeArea(
-        child: EmptyTab(
-          icon: Icons.favorite_outline,
-          title: 'No active matches',
-          message: 'Blocked and unmatched people cannot contact you.',
-        ),
-      );
-    }
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
         children: [
-          Text(
-            'Connections',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 5),
+          Text('Matches', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 4),
           const Text(
             'Start with something specific. Curiosity beats a generic hello.',
           ),
-          const SizedBox(height: 22),
-          Text('New match', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          InkWell(
-            borderRadius: BorderRadius.circular(30),
-            onTap: onOpenChat,
-            child: Ink(
-              height: 430,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                image: DecorationImage(
-                  image: AssetImage(activeConnection.peerProfileAssetPath),
-                  fit: BoxFit.cover,
+          if (likesYou.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Text(
+                  'Likes you',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x245A274F),
-                    blurRadius: 30,
-                    offset: Offset(0, 16),
-                  ),
-                ],
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Color(0xD9140C13)],
-                    stops: [0.45, 1],
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Align(
-                        alignment: Alignment.topRight,
-                        child: _MatchPill(
-                          icon: Icons.science_outlined,
-                          label: 'Prototype',
-                        ),
-                      ),
-                      const Spacer(),
-                      const _MatchPill(
-                        icon: Icons.favorite_rounded,
-                        label: 'It\'s mutual',
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        activeConnection.peerName,
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(color: Colors.white, fontSize: 34),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        activeConnection.peerCallReady
-                            ? 'Ready to message · open to a call'
-                            : 'Ready to message · text first',
-                        style: const TextStyle(
-                          color: Color(0xFFEFE7ED),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      FilledButton.icon(
-                        onPressed: onOpenChat,
-                        icon: const Icon(Icons.chat_bubble_rounded),
-                        label: const Text('Start a conversation'),
-                      ),
-                    ],
-                  ),
+                const SizedBox(width: 8),
+                const _FreeBadge(),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 262,
+              child: ListView.separated(
+                key: const Key('likes-you-row'),
+                scrollDirection: Axis.horizontal,
+                itemCount: likesYou.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, index) => _LikesYouTile(
+                  profile: likesYou[index],
+                  onRespond: onRespond,
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Synthetic prototype match · not a real person.',
-            textAlign: TextAlign.center,
-          ),
+          ],
+          const SizedBox(height: 22),
+          if (activeConnection == null)
+            _MatchesEmpty(
+              title: 'No matches yet',
+              message: likesYou.isEmpty
+                  ? 'When you and someone both like each other, they appear here.'
+                  : 'Like someone back to match. Messaging is always free.',
+            )
+          else if (!activeConnection.isActive)
+            const _MatchesEmpty(
+              title: 'No active matches',
+              message: 'Blocked and unmatched people cannot contact you.',
+            )
+          else ...[
+            Text('New match', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            _NewMatchCard(connection: activeConnection, onOpenChat: onOpenChat),
+            const SizedBox(height: 16),
+            const Text(
+              'Synthetic prototype match · not a real person.',
+              textAlign: TextAlign.center,
+            ),
+          ],
         ],
       ),
     );
   }
+}
+
+class _NewMatchCard extends StatelessWidget {
+  const _NewMatchCard({required this.connection, required this.onOpenChat});
+
+  final MatchConnection connection;
+  final VoidCallback onOpenChat;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeConnection = connection;
+    return InkWell(
+      borderRadius: BorderRadius.circular(30),
+      onTap: onOpenChat,
+      child: Ink(
+        height: 430,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          image: DecorationImage(
+            image: AssetImage(activeConnection.peerProfileAssetPath),
+            fit: BoxFit.cover,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x245A274F),
+              blurRadius: 30,
+              offset: Offset(0, 16),
+            ),
+          ],
+        ),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Color(0xD9140C13)],
+              stops: [0.45, 1],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Align(
+                  alignment: Alignment.topRight,
+                  child: _MatchPill(
+                    icon: Icons.science_outlined,
+                    label: 'Prototype',
+                  ),
+                ),
+                const Spacer(),
+                const _MatchPill(
+                  icon: Icons.favorite_rounded,
+                  label: 'It\'s mutual',
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  activeConnection.peerName,
+                  style: Theme.of(context).textTheme.headlineMedium
+                      ?.copyWith(color: Colors.white, fontSize: 34),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  activeConnection.peerCallReady
+                      ? 'Ready to message · open to a call'
+                      : 'Ready to message · text first',
+                  style: const TextStyle(
+                    color: Color(0xFFEFE7ED),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                FilledButton.icon(
+                  onPressed: onOpenChat,
+                  icon: const Icon(Icons.chat_bubble_rounded),
+                  label: const Text('Start a conversation'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FreeBadge extends StatelessWidget {
+  const _FreeBadge();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: VawraColors.blush,
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: const Text(
+      'Free',
+      style: TextStyle(
+        color: VawraColors.coralDark,
+        fontWeight: FontWeight.w800,
+        fontSize: 12,
+      ),
+    ),
+  );
+}
+
+class _LikesYouTile extends StatelessWidget {
+  const _LikesYouTile({required this.profile, required this.onRespond});
+
+  final DemoProfile profile;
+  final void Function(DemoProfile profile, DiscoverySwipeAction action)?
+  onRespond;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 160,
+    child: Column(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  profile.assetPath,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  semanticLabel: 'Synthetic portrait of ${profile.name}',
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.5, 1],
+                      colors: [Colors.transparent, Color(0xCC000000)],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  bottom: 10,
+                  child: Text(
+                    '${profile.name}, ${profile.age}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton.outlined(
+              key: Key('likes-you-pass-${profile.name}'),
+              tooltip: 'Pass on ${profile.name}',
+              onPressed: onRespond == null
+                  ? null
+                  : () => onRespond!(profile, DiscoverySwipeAction.reject),
+              icon: const Icon(Icons.close_rounded),
+            ),
+            IconButton.filled(
+              key: Key('likes-you-like-${profile.name}'),
+              tooltip: 'Like ${profile.name} back',
+              style: IconButton.styleFrom(backgroundColor: VawraColors.coral),
+              onPressed: onRespond == null
+                  ? null
+                  : () => onRespond!(profile, DiscoverySwipeAction.like),
+              icon: const Icon(Icons.favorite_rounded),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _MatchesEmpty extends StatelessWidget {
+  const _MatchesEmpty({required this.title, required this.message});
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(22),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: const Color(0xFFF0E5EB)),
+    ),
+    child: Column(
+      children: [
+        const Icon(
+          Icons.favorite_outline_rounded,
+          size: 40,
+          color: VawraColors.coral,
+        ),
+        const SizedBox(height: 10),
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 6),
+        Text(message, textAlign: TextAlign.center),
+      ],
+    ),
+  );
 }
 
 class _MatchPill extends StatelessWidget {

@@ -15,12 +15,19 @@ abstract interface class DiscoveryInteractionRepository {
   });
   void reject(DemoProfile profile);
   void block(DemoProfile profile);
+
+  /// Brings back the most recent pass (never a like). Returns its asset path.
+  String? undoLastRejection();
+
+  /// Lets every passed profile appear again.
+  void clearRejections();
 }
 
 class MemoryDiscoveryInteractionRepository
     implements DiscoveryInteractionRepository {
   final Map<String, LikedProfile> _likedProfiles = {};
   final Set<String> _rejectedProfileAssets = {};
+  final List<String> _rejectionOrder = [];
   final Set<String> _blockedProfileAssets = {};
   final List<LocalLikeEvent> _likeEvents = [];
 
@@ -69,8 +76,28 @@ class MemoryDiscoveryInteractionRepository
   void reject(DemoProfile profile) {
     if (!_likedProfiles.containsKey(profile.assetPath) &&
         !_blockedProfileAssets.contains(profile.assetPath)) {
-      _rejectedProfileAssets.add(profile.assetPath);
+      if (_rejectedProfileAssets.add(profile.assetPath)) {
+        _rejectionOrder.add(profile.assetPath);
+      }
     }
+  }
+
+  @override
+  String? undoLastRejection() {
+    while (_rejectionOrder.isNotEmpty) {
+      final asset = _rejectionOrder.removeLast();
+      if (_rejectedProfileAssets.remove(asset) &&
+          !_blockedProfileAssets.contains(asset)) {
+        return asset;
+      }
+    }
+    return null;
+  }
+
+  @override
+  void clearRejections() {
+    _rejectedProfileAssets.clear();
+    _rejectionOrder.clear();
   }
 
   @override

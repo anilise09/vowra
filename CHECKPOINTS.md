@@ -1,5 +1,15 @@
 # Checkpoints
 
+## CP-060 - Free "Likes you", free undo, distance filter, end of deck (2026-09-26)
+
+- Matches tab: a "Likes you · Free" row shows people who liked you (Tinder paywalls this) with Pass and
+  Like-back buttons; liking back creates the match through the normal swipe path. Clearer empty states.
+- Discover: a free Undo button restores the most recent pass only (likes are never undone) and puts that
+  person back on top. Preferences gain a distance filter (Any, up to 5/10/20/50 km) that compares only
+  the far edge of each profile's band. The end of the deck now explains why it is empty and offers
+  "Change preferences" and "See passed profiles again".
+- Verified: `flutter analyze` no issues, 83 tests pass (5 new), discovery and connections goldens refreshed.
+
 ## CP-059 - Settings page with free pause and honest deletion (2026-09-26)
 
 - A gear on the Profile tab opens Settings, grouped by purpose: Discover ("Show me on Discover"), Safety

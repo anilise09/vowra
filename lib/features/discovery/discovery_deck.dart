@@ -7,7 +7,6 @@ import '../../domain/discovery_preferences.dart';
 import '../../domain/local_like_event.dart';
 import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
-import '../shared/empty_tab.dart';
 
 class DiscoveryDeck extends StatelessWidget {
   const DiscoveryDeck({
@@ -25,6 +24,10 @@ class DiscoveryDeck extends StatelessWidget {
     required this.onReport,
     required this.onBlockProfile,
     required this.onOpenSafety,
+    this.canUndo = false,
+    this.onUndo,
+    this.focusProfileAsset,
+    this.onShowPassedAgain,
   });
 
   final List<DemoProfile> profiles;
@@ -42,6 +45,14 @@ class DiscoveryDeck extends StatelessWidget {
   final ValueChanged<DemoProfile> onBlockProfile;
   final VoidCallback onOpenSafety;
 
+  /// Free undo of the most recent pass. Likes are never undone here.
+  final bool canUndo;
+  final VoidCallback? onUndo;
+
+  /// A profile to show first, such as one just brought back by undo.
+  final String? focusProfileAsset;
+  final VoidCallback? onShowPassedAgain;
+
   @override
   Widget build(BuildContext context) {
     final visibleProfiles = profiles
@@ -49,15 +60,19 @@ class DiscoveryDeck extends StatelessWidget {
           (profile) => preferences.includes(
             age: profile.age,
             relationshipIntent: profile.intent,
+            distanceBand: profile.distanceBand,
           ),
         )
         .where((profile) => !blockedProfileAssets.contains(profile.assetPath))
         .where((profile) => !likedProfiles.containsKey(profile.assetPath))
         .where((profile) => !rejectedProfileAssets.contains(profile.assetPath))
         .toList();
+    final focused = visibleProfiles
+        .where((p) => p.assetPath == focusProfileAsset)
+        .firstOrNull;
     final profile = visibleProfiles.isEmpty
         ? null
-        : visibleProfiles[profileIndex % visibleProfiles.length];
+        : focused ?? visibleProfiles[profileIndex % visibleProfiles.length];
     final profileReport = profile == null ? null : reports[profile.assetPath];
     final photoHeight = (MediaQuery.sizeOf(context).height * 0.66).clamp(
       430.0,
@@ -85,13 +100,11 @@ class DiscoveryDeck extends StatelessWidget {
           ],
           const SizedBox(height: 10),
           if (profile == null)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 80),
-              child: EmptyTab(
-                icon: Icons.search_off,
-                title: 'No prototype profiles in this range',
-                message: 'Try a wider age range or include both relationship intents.',
-              ),
+            _EndOfDeck(
+              filtersActive: !preferences.isDefault,
+              hasPassed: rejectedProfileAssets.isNotEmpty,
+              onPreferences: () => _showPreferences(context),
+              onShowPassedAgain: onShowPassedAgain,
             ),
           if (profile != null) ...[
             _SwipeGestureSurface(
@@ -241,6 +254,13 @@ class DiscoveryDeck extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            IconButton.outlined(
+                              key: const Key('undo-pass'),
+                              tooltip: 'Undo last pass',
+                              onPressed: canUndo ? onUndo : null,
+                              icon: const Icon(Icons.undo_rounded),
+                            ),
+                            const SizedBox(width: 20),
                             _ProfileActionButton(
                               tooltip: 'Pass',
                               icon: Icons.close_rounded,
@@ -263,6 +283,7 @@ class DiscoveryDeck extends StatelessWidget {
                               background: const Color(0xFFF24F78),
                               emphasized: true,
                             ),
+                            const SizedBox(width: 68),
                           ],
                         ),
                       ),
@@ -473,6 +494,7 @@ class DiscoveryDeck extends StatelessWidget {
       preferences.maxAge.toDouble(),
     );
     String? selectedIntent = preferences.intent;
+    int? selectedDistance = preferences.maxDistanceKm;
     final updated = await showModalBottomSheet<DiscoveryPreferences>(
       context: context,
       showDragHandle: true,
@@ -530,6 +552,35 @@ class DiscoveryDeck extends StatelessWidget {
                       ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  'Distance',
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+                const Text(
+                  'Uses the distance band only. Nobody\'s location is shared.',
+                  style: TextStyle(fontSize: 12.5),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final km in <int?>[
+                      null,
+                      ...DiscoveryPreferences.distanceChoices,
+                    ])
+                      ChoiceChip(
+                        key: Key('distance-${km ?? 'any'}'),
+                        label: Text(
+                          km == null ? 'Any distance' : 'Up to $km km',
+                        ),
+                        selected: selectedDistance == km,
+                        onSelected: (_) =>
+                            setSheetState(() => selectedDistance = km),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 FilledButton(
                   key: const Key('apply-discovery-preferences'),
@@ -539,6 +590,7 @@ class DiscoveryDeck extends StatelessWidget {
                       minAge: ageRange.start.round(),
                       maxAge: ageRange.end.round(),
                       intent: selectedIntent,
+                      maxDistanceKm: selectedDistance,
                     ),
                   ),
                   child: const Text('Show profiles'),
@@ -1224,6 +1276,74 @@ class _SafetyRow extends StatelessWidget {
           ),
         ),
       ),
+    ),
+  );
+}
+
+class _EndOfDeck extends StatelessWidget {
+  const _EndOfDeck({
+    required this.filtersActive,
+    required this.hasPassed,
+    required this.onPreferences,
+    required this.onShowPassedAgain,
+  });
+
+  final bool filtersActive;
+  final bool hasPassed;
+  final VoidCallback onPreferences;
+  final VoidCallback? onShowPassedAgain;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const Key('end-of-deck'),
+    margin: const EdgeInsets.only(top: 40),
+    padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: const Color(0xFFF0E5EB)),
+    ),
+    child: Column(
+      children: [
+        const Icon(
+          Icons.travel_explore_rounded,
+          size: 48,
+          color: VawraColors.coral,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          "You've seen everyone for now",
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          filtersActive
+              ? 'Your preferences are narrowing things down. Widen them to see more people.'
+              : 'Check back later, or look again at people you passed.',
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 18),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            key: const Key('end-open-preferences'),
+            onPressed: onPreferences,
+            child: const Text('Change preferences'),
+          ),
+        ),
+        if (hasPassed && onShowPassedAgain != null) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              key: const Key('end-show-passed'),
+              onPressed: onShowPassedAgain,
+              child: const Text('See passed profiles again'),
+            ),
+          ),
+        ],
+      ],
     ),
   );
 }

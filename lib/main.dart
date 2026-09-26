@@ -297,6 +297,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   bool safetyGuideSeen = false;
   bool profilePaused = false;
+  String? focusProfileAsset;
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
   final DiscoveryInteractionRepository interactionRepository =
@@ -2848,7 +2849,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget build(BuildContext context) {
     final pages = [
       profilePaused ? _pausedDiscover(context) : _discover(context),
-      MatchTab(connection: connection, onOpenChat: () => _selectTab(2)),
+      MatchTab(
+        connection: connection,
+        onOpenChat: () => _selectTab(2),
+        likesYou: _likesYou(),
+        onRespond: _handleDiscoverySwipe,
+      ),
       ChatTab(
         connection: connection,
         messages: connection == null
@@ -2986,6 +2992,15 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       profileIndex = 0;
     }),
     onOpenSafety: () => _openSafety(context),
+    canUndo: interactionRepository.rejectedProfileAssets().isNotEmpty,
+    onUndo: () => setState(
+      () => focusProfileAsset = interactionRepository.undoLastRejection(),
+    ),
+    focusProfileAsset: focusProfileAsset,
+    onShowPassedAgain: () => setState(() {
+      interactionRepository.clearRejections();
+      profileIndex = 0;
+    }),
   );
 
   /// Discover with a banner while the person has paused their profile.
@@ -3029,6 +3044,19 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     ],
   );
 
+  /// Incoming likes the person has not answered or blocked yet.
+  List<DemoProfile> _likesYou() {
+    final liked = interactionRepository.likedProfiles();
+    final passed = interactionRepository.rejectedProfileAssets();
+    final blocked = interactionRepository.blockedProfileAssets();
+    return profiles
+        .where(_hasIncomingLike)
+        .where((p) => !liked.containsKey(p.assetPath))
+        .where((p) => !passed.contains(p.assetPath))
+        .where((p) => !blocked.contains(p.assetPath))
+        .toList();
+  }
+
   void _openSettings(BuildContext context) => Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => SettingsPage(
@@ -3052,6 +3080,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   );
 
   void _handleDiscoverySwipe(DemoProfile profile, DiscoverySwipeAction action) {
+    focusProfileAsset = null;
     switch (action) {
       case DiscoverySwipeAction.like:
         final createdAt = DateTime.now().toUtc();
