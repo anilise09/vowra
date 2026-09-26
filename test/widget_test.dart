@@ -40,7 +40,7 @@ void main() {
 
   testWidgets('enters discovery and opens safety center', (tester) async {
     await enterDiscovery(tester);
-    expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsOneWidget);
+    expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsWidgets);
     await tester.ensureVisible(find.byKey(const Key('open-profile-details')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open-profile-details')));
@@ -115,6 +115,7 @@ void main() {
     await enterDiscovery(tester);
     await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
+    await closeMatchIfShown(tester);
     await tester.tap(
       find.descendant(
         of: find.byType(NavigationBar),

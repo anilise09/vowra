@@ -7,6 +7,7 @@ import '../../domain/discovery_preferences.dart';
 import '../../domain/local_like_event.dart';
 import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
+import 'swipe_card_stack.dart';
 
 class DiscoveryDeck extends StatelessWidget {
   const DiscoveryDeck({
@@ -28,6 +29,9 @@ class DiscoveryDeck extends StatelessWidget {
     this.onUndo,
     this.focusProfileAsset,
     this.onShowPassedAgain,
+    this.superLikesLeft = 0,
+    this.showTutorial = false,
+    this.onTutorialDone,
   });
 
   final List<DemoProfile> profiles;
@@ -53,6 +57,13 @@ class DiscoveryDeck extends StatelessWidget {
   final String? focusProfileAsset;
   final VoidCallback? onShowPassedAgain;
 
+  /// Free Super Likes left today.
+  final int superLikesLeft;
+
+  /// First-visit overlay explaining the three swipe directions.
+  final bool showTutorial;
+  final VoidCallback? onTutorialDone;
+
   @override
   Widget build(BuildContext context) {
     final visibleProfiles = profiles
@@ -74,256 +85,218 @@ class DiscoveryDeck extends StatelessWidget {
         ? null
         : focused ?? visibleProfiles[profileIndex % visibleProfiles.length];
     final profileReport = profile == null ? null : reports[profile.assetPath];
-    final photoHeight = (MediaQuery.sizeOf(context).height * 0.66).clamp(
-      430.0,
-      650.0,
-    );
-    return SingleChildScrollView(
+    final nextProfile = profile == null || visibleProfiles.length < 2
+        ? null
+        : visibleProfiles[(visibleProfiles.indexOf(profile) + 1) %
+              visibleProfiles.length];
+    return Padding(
       key: ValueKey(profile?.assetPath ?? 'empty-discovery'),
       padding: EdgeInsets.fromLTRB(
         16,
         MediaQuery.paddingOf(context).top + 10,
         16,
-        28,
+        12,
       ),
-      child: Column(
-        children: [
-          _DiscoveryHeader(
-            count: visibleProfiles.length,
-            filtersActive: !preferences.isDefault,
-            onPreferences: () => _showPreferences(context),
-            onSafety: onOpenSafety,
-          ),
-          if (visibleProfiles.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _DiscoveryStoryStrip(profiles: visibleProfiles.take(5).toList()),
-          ],
-          const SizedBox(height: 10),
-          if (profile == null)
-            _EndOfDeck(
-              filtersActive: !preferences.isDefault,
-              hasPassed: rejectedProfileAssets.isNotEmpty,
-              onPreferences: () => _showPreferences(context),
-              onShowPassedAgain: onShowPassedAgain,
-            ),
-          if (profile != null) ...[
-            _SwipeGestureSurface(
-              key: const Key('discovery-card-gesture'),
-              onSwipe: (action) => onSwipeAction(profile, action),
-              onOpenDetails: () =>
-                  _showProfileDetails(context, profile, profileReport),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: const Color(0xFFF0E5EB)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x1A5A274F),
-                      blurRadius: 32,
-                      offset: Offset(0, 16),
-                    ),
-                  ],
+      child: LayoutBuilder(
+        // The story row only shows when the card still gets most of the space.
+        builder: (context, constraints) {
+          final roomy = constraints.maxHeight > 640;
+          return Column(
+            children: [
+              _DiscoveryHeader(
+                count: visibleProfiles.length,
+                filtersActive: !preferences.isDefault,
+                onPreferences: () => _showPreferences(context),
+                onSafety: onOpenSafety,
+              ),
+              if (visibleProfiles.isNotEmpty && roomy) ...[
+                const SizedBox(height: 12),
+                _DiscoveryStoryStrip(
+                  profiles: visibleProfiles.take(5).toList(),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(29),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        height: photoHeight,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.asset(
-                              profile.assetPath,
-                              key: ValueKey(profile.assetPath),
-                              fit: BoxFit.cover,
-                              alignment: Alignment.topCenter,
-                              semanticLabel:
-                                  'Synthetic portrait of ${profile.name}',
-                            ),
-                            const DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  stops: [0, 0.48, 1],
-                                  colors: [
-                                    Color(0x24000000),
-                                    Colors.transparent,
-                                    Color(0xD9000000),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const Positioned(
-                              top: 16,
-                              left: 16,
-                              child: _OverlayPill(
-                                icon: Icons.science_outlined,
-                                label: 'PROTOTYPE PROFILE · NOT A REAL PERSON',
-                              ),
-                            ),
-                            Positioned(
-                              top: 10,
-                              right: 10,
-                              child: Material(
-                                color: Colors.black.withValues(alpha: 0.28),
-                                shape: const CircleBorder(),
-                                child: PopupMenuButton<String>(
-                                  key: const Key('discovery-safety-menu'),
-                                  tooltip: 'Profile safety actions',
-                                  iconColor: Colors.white,
-                                  onSelected: (value) => _handleSafetyAction(
-                                    context,
-                                    profile,
-                                    value,
-                                  ),
-                                  itemBuilder: (_) => const [
-                                    PopupMenuItem(
-                                      value: 'report',
-                                      child: Text('Report privately'),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'block',
-                                      child: Text('Block profile'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 20,
-                              right: 14,
-                              bottom: 18,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _NameAge(
-                                          name: profile.name,
-                                          age: profile.age,
-                                          color: Colors.white,
-                                          size: 30,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        _CardFact(
-                                          icon: Icons.favorite_outline_rounded,
-                                          label: profile.intent,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        _CardFact(
-                                          icon: Icons.near_me_outlined,
-                                          label: profile.distanceBand,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Material(
-                                    color: Colors.white,
-                                    shape: const CircleBorder(),
-                                    elevation: 4,
-                                    child: IconButton(
-                                      key: const Key('open-profile-details'),
-                                      tooltip: 'View profile details',
-                                      icon: const Icon(
-                                        Icons.keyboard_arrow_up_rounded,
-                                      ),
-                                      color: VawraColors.plum,
-                                      onPressed: () => _showProfileDetails(
-                                        context,
-                                        profile,
-                                        profileReport,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton.outlined(
-                              key: const Key('undo-pass'),
-                              tooltip: 'Undo last pass',
-                              onPressed: canUndo ? onUndo : null,
-                              icon: const Icon(Icons.undo_rounded),
-                            ),
-                            const SizedBox(width: 20),
-                            _ProfileActionButton(
-                              tooltip: 'Pass',
-                              icon: Icons.close_rounded,
-                              onPressed: () => onSwipeAction(
-                                profile,
-                                DiscoverySwipeAction.reject,
-                              ),
-                              foreground: const Color(0xFF5A274F),
-                              background: Colors.white,
-                            ),
-                            const SizedBox(width: 34),
-                            _ProfileActionButton(
-                              tooltip: 'Like',
-                              icon: Icons.favorite_rounded,
-                              onPressed: () => onSwipeAction(
-                                profile,
-                                DiscoverySwipeAction.like,
-                              ),
-                              foreground: Colors.white,
-                              background: const Color(0xFFF24F78),
-                              emphasized: true,
-                            ),
-                            const SizedBox(width: 68),
-                          ],
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: _SwipeGuide(),
-                      ),
-                      if (profileReport != null)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Report recorded: ${profileReport.reason.label}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const Text(
-                                'Saved on this device only. No review team is connected.',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
+              ],
+              const SizedBox(height: 10),
+              if (profile == null)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: _EndOfDeck(
+                      filtersActive: !preferences.isDefault,
+                      hasPassed: rejectedProfileAssets.isNotEmpty,
+                      onPreferences: () => _showPreferences(context),
+                      onShowPassedAgain: onShowPassedAgain,
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: _SwipeArea(
+                    key: const Key('discovery-card-gesture'),
+                    profile: profile,
+                    front: _profileCard(context, profile, profileReport),
+                    back: nextProfile == null
+                        ? null
+                        : _profileCard(
+                            context,
+                            nextProfile,
+                            null,
+                            preview: true,
                           ),
-                        ),
-                      const SizedBox(height: 10),
-                    ],
+                    superLikesLeft: superLikesLeft,
+                    canUndo: canUndo,
+                    onUndo: onUndo,
+                    onAction: (action) => onSwipeAction(profile, action),
+                    showTutorial: showTutorial,
+                    onTutorialDone: onTutorialDone,
                   ),
                 ),
-              ),
-            ),
-            if (likeEvents.isNotEmpty) ...[
-              const SizedBox(height: 22),
-              _LocalActivityCard(events: likeEvents.take(3).toList()),
             ],
-          ],
-        ],
+          );
+        },
       ),
     );
   }
+
+  /// The card itself: full photo with name, facts and actions laid over it.
+  Widget _profileCard(
+    BuildContext context,
+    DemoProfile profile,
+    DiscoveryProfileReport? profileReport, {
+    bool preview = false,
+  }) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: Colors.black,
+      borderRadius: BorderRadius.circular(30),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x225A274F),
+          blurRadius: 28,
+          offset: Offset(0, 14),
+        ),
+      ],
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            profile.assetPath,
+            key: ValueKey(profile.assetPath),
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            semanticLabel: 'Synthetic portrait of ${profile.name}',
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0, 0.5, 1],
+                colors: [
+                  Color(0x24000000),
+                  Colors.transparent,
+                  Color(0xE0000000),
+                ],
+              ),
+            ),
+          ),
+          const Positioned(
+            top: 16,
+            left: 16,
+            child: _OverlayPill(
+              icon: Icons.science_outlined,
+              label: 'PROTOTYPE PROFILE · NOT A REAL PERSON',
+            ),
+          ),
+          if (profileReport != null)
+            Positioned(
+              top: 52,
+              left: 16,
+              right: 60,
+              child: Tooltip(
+                message:
+                    '${profileReport.moderationState.label}. Saved on this device only; no review team is connected.',
+                child: _OverlayPill(
+                  icon: Icons.flag_outlined,
+                  label: 'Report recorded: ${profileReport.reason.label}',
+                ),
+              ),
+            ),
+          if (!preview)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Material(
+                color: Colors.black.withValues(alpha: 0.28),
+                shape: const CircleBorder(),
+                child: PopupMenuButton<String>(
+                  key: const Key('discovery-safety-menu'),
+                  tooltip: 'Profile safety actions',
+                  iconColor: Colors.white,
+                  onSelected: (value) =>
+                      _handleSafetyAction(context, profile, value),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'report',
+                      child: Text('Report privately'),
+                    ),
+                    PopupMenuItem(value: 'block', child: Text('Block profile')),
+                  ],
+                ),
+              ),
+            ),
+          Positioned(
+            left: 20,
+            right: 14,
+            bottom: 20,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _NameAge(
+                        name: profile.name,
+                        age: profile.age,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                      const SizedBox(height: 8),
+                      _CardFact(
+                        icon: Icons.favorite_outline_rounded,
+                        label: profile.intent,
+                      ),
+                      const SizedBox(height: 4),
+                      _CardFact(
+                        icon: Icons.near_me_outlined,
+                        label: profile.distanceBand,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                if (!preview)
+                  Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    elevation: 4,
+                    child: IconButton(
+                      key: const Key('open-profile-details'),
+                      tooltip: 'View profile details',
+                      icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                      color: VawraColors.plum,
+                      onPressed: () =>
+                          _showProfileDetails(context, profile, profileReport),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _showProfileDetails(
     BuildContext context,
@@ -624,7 +597,7 @@ class DiscoveryDeck extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Report recorded as local pending review on this device only.',
+            'Report recorded privately. Saved on this device only. No review team is connected.',
           ),
         ),
       );
@@ -945,8 +918,8 @@ class _ProfileActionButton extends StatelessWidget {
   }
 }
 
-class _LocalActivityCard extends StatelessWidget {
-  const _LocalActivityCard({required this.events});
+class LocalActivityCard extends StatelessWidget {
+  const LocalActivityCard({super.key, required this.events});
 
   final List<LocalLikeEvent> events;
 
@@ -979,77 +952,6 @@ class _LocalActivityCard extends StatelessWidget {
       ),
     ),
   );
-}
-
-class _SwipeGuide extends StatelessWidget {
-  const _SwipeGuide();
-
-  @override
-  Widget build(BuildContext context) => const Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Icon(Icons.swipe_rounded, size: 15, color: Color(0xFF756A72)),
-      SizedBox(width: 6),
-      Flexible(
-        child: Text(
-          'Swipe left to pass · right to like · up for details',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 11.5, color: Color(0xFF756A72)),
-        ),
-      ),
-    ],
-  );
-}
-
-class _SwipeGestureSurface extends StatefulWidget {
-  const _SwipeGestureSurface({
-    super.key,
-    required this.child,
-    required this.onSwipe,
-    required this.onOpenDetails,
-  });
-
-  final Widget child;
-  final ValueChanged<DiscoverySwipeAction> onSwipe;
-  final VoidCallback onOpenDetails;
-
-  @override
-  State<_SwipeGestureSurface> createState() => _SwipeGestureSurfaceState();
-}
-
-class _SwipeGestureSurfaceState extends State<_SwipeGestureSurface> {
-  Offset? startPosition;
-
-  @override
-  Widget build(BuildContext context) => Listener(
-    behavior: HitTestBehavior.translucent,
-    onPointerDown: (event) => startPosition = event.position,
-    onPointerCancel: (_) => startPosition = null,
-    onPointerUp: (event) {
-      final start = startPosition;
-      startPosition = null;
-      if (start == null) return;
-      final delta = event.position - start;
-      if (delta.dy < -80 && delta.dy.abs() > delta.dx.abs()) {
-        widget.onOpenDetails();
-        return;
-      }
-      final action = _actionForDelta(delta);
-      if (action != null) widget.onSwipe(action);
-    },
-    child: widget.child,
-  );
-
-  DiscoverySwipeAction? _actionForDelta(Offset delta) {
-    const threshold = 80;
-    if (delta.dx < -threshold && delta.dx.abs() > delta.dy.abs()) {
-      return DiscoverySwipeAction.reject;
-    }
-    if (delta.dx > threshold && delta.dx.abs() > delta.dy.abs()) {
-      return DiscoverySwipeAction.like;
-    }
-    return null;
-  }
 }
 
 class ConversationAccessPreview extends StatelessWidget {
@@ -1344,6 +1246,295 @@ class _EndOfDeck extends StatelessWidget {
             ),
           ),
         ],
+      ],
+    ),
+  );
+}
+
+/// The card stack plus the action row. Buttons drive the same animations as
+/// dragging, so every choice looks and feels the same.
+class _SwipeArea extends StatefulWidget {
+  const _SwipeArea({
+    super.key,
+    required this.profile,
+    required this.front,
+    required this.back,
+    required this.superLikesLeft,
+    required this.canUndo,
+    required this.onUndo,
+    required this.onAction,
+    required this.showTutorial,
+    required this.onTutorialDone,
+  });
+
+  final DemoProfile profile;
+  final Widget front;
+  final Widget? back;
+  final int superLikesLeft;
+  final bool canUndo;
+  final VoidCallback? onUndo;
+  final ValueChanged<DiscoverySwipeAction> onAction;
+  final bool showTutorial;
+  final VoidCallback? onTutorialDone;
+
+  @override
+  State<_SwipeArea> createState() => _SwipeAreaState();
+}
+
+class _SwipeAreaState extends State<_SwipeArea> {
+  final stackKey = GlobalKey<SwipeCardStackState>();
+
+  void _noSuperLikes() => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      const SnackBar(
+        content: Text('No Super Likes left today. You get 3 free every day.'),
+      ),
+    );
+
+  void _swiped(SwipeDirection direction) => widget.onAction(switch (direction) {
+    SwipeDirection.left => DiscoverySwipeAction.reject,
+    SwipeDirection.right => DiscoverySwipeAction.like,
+    SwipeDirection.up => DiscoverySwipeAction.superLike,
+  });
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    children: [
+      Column(
+        children: [
+          Expanded(
+            child: SwipeCardStack(
+              key: stackKey,
+              frontId: widget.profile.assetPath,
+              front: widget.front,
+              back: widget.back,
+              canSwipeUp: widget.superLikesLeft > 0,
+              onSwipeUpBlocked: _noSuperLikes,
+              onSwiped: _swiped,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _RoundAction(
+                key: const Key('undo-pass'),
+                tooltip: 'Undo last pass',
+                icon: Icons.undo_rounded,
+                color: const Color(0xFFE0A33A),
+                size: 48,
+                onPressed: widget.canUndo ? widget.onUndo : null,
+              ),
+              const SizedBox(width: 14),
+              _RoundAction(
+                key: const Key('action-pass'),
+                tooltip: 'Pass',
+                icon: Icons.close_rounded,
+                color: VawraColors.plum,
+                size: 62,
+                onPressed: () =>
+                    stackKey.currentState?.swipe(SwipeDirection.left),
+              ),
+              const SizedBox(width: 14),
+              Badge(
+                label: Text('${widget.superLikesLeft}'),
+                backgroundColor: VawraColors.superLike,
+                offset: const Offset(-2, 2),
+                isLabelVisible: widget.superLikesLeft > 0,
+                child: _RoundAction(
+                  key: const Key('action-super-like'),
+                  tooltip: 'Super Like',
+                  icon: Icons.star_rounded,
+                  color: VawraColors.superLike,
+                  size: 50,
+                  onPressed: () =>
+                      stackKey.currentState?.swipe(SwipeDirection.up),
+                ),
+              ),
+              const SizedBox(width: 14),
+              _RoundAction(
+                key: const Key('action-like'),
+                tooltip: 'Like',
+                icon: Icons.favorite_rounded,
+                color: VawraColors.coral,
+                size: 62,
+                onPressed: () =>
+                    stackKey.currentState?.swipe(SwipeDirection.right),
+              ),
+            ],
+          ),
+        ],
+      ),
+      if (widget.showTutorial)
+        Positioned.fill(
+          child: _SwipeTutorial(onDone: widget.onTutorialDone ?? () {}),
+        ),
+    ],
+  );
+}
+
+/// White circle with a coloured icon that presses in slightly when tapped.
+class _RoundAction extends StatefulWidget {
+  const _RoundAction({
+    super.key,
+    required this.tooltip,
+    required this.icon,
+    required this.color,
+    required this.size,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final Color color;
+  final double size;
+  final VoidCallback? onPressed;
+
+  @override
+  State<_RoundAction> createState() => _RoundActionState();
+}
+
+class _RoundActionState extends State<_RoundAction> {
+  var pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onPressed != null;
+    return Tooltip(
+      message: widget.tooltip,
+      child: GestureDetector(
+        onTapDown: enabled ? (_) => setState(() => pressed = true) : null,
+        onTapCancel: () => setState(() => pressed = false),
+        onTapUp: (_) => setState(() => pressed = false),
+        onTap: widget.onPressed,
+        child: AnimatedScale(
+          scale: pressed ? 0.86 : 1,
+          duration: const Duration(milliseconds: 110),
+          child: Semantics(
+            button: true,
+            enabled: enabled,
+            label: widget.tooltip,
+            child: Container(
+              width: widget.size,
+              height: widget.size,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFF0E5EB)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1F5A274F),
+                    blurRadius: 14,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Icon(
+                widget.icon,
+                size: widget.size * 0.5,
+                color: enabled ? widget.color : const Color(0xFFD5CCD2),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SwipeTutorial extends StatelessWidget {
+  const _SwipeTutorial({required this.onDone});
+
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    key: const Key('swipe-tutorial'),
+    borderRadius: BorderRadius.circular(30),
+    child: ColoredBox(
+      color: const Color(0xD9140C13),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'How it works',
+                style: Theme.of(context).textTheme.headlineSmall
+                    ?.copyWith(color: Colors.white),
+              ),
+              const SizedBox(height: 22),
+              const _TutorialRow(
+                icon: Icons.east_rounded,
+                color: VawraColors.coral,
+                text: 'Swipe right to like',
+              ),
+              const _TutorialRow(
+                icon: Icons.west_rounded,
+                color: Color(0xFFB9AEB6),
+                text: 'Swipe left to pass. Nobody is told.',
+              ),
+              const _TutorialRow(
+                icon: Icons.north_rounded,
+                color: VawraColors.superLike,
+                text: 'Swipe up to Super Like. 3 free every day.',
+              ),
+              const _TutorialRow(
+                icon: Icons.keyboard_arrow_up_rounded,
+                color: Colors.white,
+                text: 'Tap the arrow to see their whole profile',
+              ),
+              const SizedBox(height: 22),
+              FilledButton(
+                key: const Key('swipe-tutorial-done'),
+                onPressed: onDone,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  child: Text('Got it'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _TutorialRow extends StatelessWidget {
+  const _TutorialRow({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      children: [
+        CircleAvatar(
+          radius: 20,
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          child: Icon(icon, color: color),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ],
     ),
   );

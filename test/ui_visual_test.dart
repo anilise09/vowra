@@ -84,11 +84,49 @@ void main() {
     );
   });
 
+  testWidgets('swipe tutorial visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await startOnboarding(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-name')), 'Alex');
+    await tapNext(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('intent-open_to_long_term')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('interest-Books')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('onboarding-skip')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding-skip')));
+    await tester.pumpAndSettle();
+    await tapNext(tester);
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_swipe_tutorial.png'),
+    );
+  });
+
+  testWidgets('match celebration visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await enterDiscovery(tester);
+    await tester.tap(find.byKey(const Key('action-like')));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_match.png'),
+    );
+  });
+
   testWidgets('connections visual baseline', (tester) async {
     await usePhoneViewport(tester);
     await enterDiscovery(tester);
     await tester.flingFrom(const Offset(160, 300), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
+    await closeMatchIfShown(tester);
     await tester.tap(find.text('Matches'));
     await tester.pumpAndSettle();
 
@@ -103,6 +141,7 @@ void main() {
     await enterDiscovery(tester);
     await tester.flingFrom(const Offset(160, 300), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
+    await closeMatchIfShown(tester);
     await tester.tap(find.text('Chats'));
     await tester.pumpAndSettle();
     await closeSafetyGuideIfShown(tester);

@@ -12,6 +12,7 @@ abstract interface class DiscoveryInteractionRepository {
     DemoProfile profile, {
     required DateTime createdAt,
     required bool mutualLike,
+    bool superLike = false,
   });
   void reject(DemoProfile profile);
   void block(DemoProfile profile);
@@ -49,6 +50,7 @@ class MemoryDiscoveryInteractionRepository
     DemoProfile profile, {
     required DateTime createdAt,
     required bool mutualLike,
+    bool superLike = false,
   }) {
     if (_likedProfiles.containsKey(profile.assetPath) ||
         _blockedProfileAssets.contains(profile.assetPath) ||
@@ -59,6 +61,7 @@ class MemoryDiscoveryInteractionRepository
       profileAssetPath: profile.assetPath,
       profileName: profile.name,
       createdAt: createdAt,
+      superLike: superLike,
     );
     _likeEvents.insertAll(
       0,

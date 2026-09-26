@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../../domain/chat_message.dart';
 import '../../domain/demo_profile.dart';
 import '../../domain/discovery_interaction.dart';
+import '../../domain/local_like_event.dart';
 import '../../domain/match_connection.dart';
 import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
+import '../discovery/discovery_deck.dart' show LocalActivityCard;
 import '../shared/empty_tab.dart';
 
 class MatchTab extends StatelessWidget {
@@ -15,6 +17,7 @@ class MatchTab extends StatelessWidget {
     required this.onOpenChat,
     this.likesYou = const [],
     this.onRespond,
+    this.activity = const [],
   });
 
   final MatchConnection? connection;
@@ -24,6 +27,9 @@ class MatchTab extends StatelessWidget {
   final List<DemoProfile> likesYou;
   final void Function(DemoProfile profile, DiscoverySwipeAction action)?
   onRespond;
+
+  /// On-device previews of like events; never sent anywhere.
+  final List<LocalLikeEvent> activity;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +92,10 @@ class MatchTab extends StatelessWidget {
               'Synthetic prototype match · not a real person.',
               textAlign: TextAlign.center,
             ),
+          ],
+          if (activity.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            LocalActivityCard(events: activity.take(3).toList()),
           ],
         ],
       ),

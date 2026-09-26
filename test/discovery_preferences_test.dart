@@ -125,40 +125,36 @@ void main() {
     expect(find.textContaining('prototype profiles'), findsOneWidget);
   });
 
-  testWidgets('swipe up opens details without liking; right likes', (
+  testWidgets('arrow opens details; right like celebrates the match', (
     tester,
   ) async {
     await enterDiscovery(tester);
     expect(find.text('Maya, 29', findRichText: true), findsOneWidget);
 
-    await tester.dragFrom(const Offset(200, 500), const Offset(0, -160));
+    await tester.tap(find.byKey(const Key('open-profile-details')));
     await tester.pumpAndSettle();
-
     expect(find.byKey(const Key('close-profile-details')), findsOneWidget);
-    expect(find.text('Maya, 29', findRichText: true), findsNWidgets(2));
-    expect(find.textContaining('Mutual like with Maya'), findsNothing);
     await tester.tap(find.byKey(const Key('close-profile-details')));
     await tester.pumpAndSettle();
 
     await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
+    expect(find.text("It's a match!"), findsOneWidget);
+    expect(find.text('You and Maya like each other.'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('match-keep-swiping')));
+    await tester.pumpAndSettle();
 
     expect(find.text('Maya, 29', findRichText: true), findsNothing);
     expect(find.text('Elena, 32', findRichText: true), findsOneWidget);
-    expect(find.textContaining('Mutual like with Maya'), findsWidgets);
 
+    await tester.tap(find.text('Matches'));
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Local activity'),
       180,
-      scrollable: find.byType(Scrollable).last,
+      scrollable: find.byType(Scrollable).first,
     );
-    await tester.pumpAndSettle();
-
     expect(find.text('Local activity'), findsOneWidget);
-    expect(
-      find.textContaining('Notification preview for Maya'),
-      findsOneWidget,
-    );
     expect(
       find.textContaining('Mutual like with Maya can connect'),
       findsOneWidget,
@@ -181,6 +177,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
+    await closeMatchIfShown(tester);
 
     await tester.tap(
       find.descendant(
@@ -229,6 +226,7 @@ void main() {
 
     await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
+    await closeMatchIfShown(tester);
     expect(find.text('Elena, 32', findRichText: true), findsOneWidget);
     expect(find.textContaining('prototype profiles'), findsOneWidget);
 

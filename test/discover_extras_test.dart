@@ -69,10 +69,12 @@ void main() {
 
   testWidgets('undo puts the passed profile back on top', (tester) async {
     await enterDiscovery(tester);
-    await tester.ensureVisible(find.byKey(const Key('undo-pass')));
+    await tester.tap(find.byKey(const Key('undo-pass')));
+    await tester.pumpAndSettle();
     expect(
-      tester.widget<IconButton>(find.byKey(const Key('undo-pass'))).onPressed,
-      isNull,
+      find.text('Maya, 29', findRichText: true),
+      findsOneWidget,
+      reason: 'nothing to undo yet',
     );
 
     await tester.flingFrom(const Offset(400, 320), const Offset(-500, 0), 1000);

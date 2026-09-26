@@ -42,6 +42,25 @@ Future<void> enterDiscovery(WidgetTester tester) async {
   await tester.tap(find.byKey(const Key('onboarding-skip')));
   await tester.pumpAndSettle();
   await tapNext(tester);
+  await dismissSwipeTutorial(tester);
+}
+
+/// The first visit to Discover shows how swiping works.
+Future<void> dismissSwipeTutorial(WidgetTester tester) async {
+  final done = find.byKey(const Key('swipe-tutorial-done'));
+  if (done.evaluate().isNotEmpty) {
+    await tester.tap(done);
+    await tester.pumpAndSettle();
+  }
+}
+
+/// A like that matches opens the celebration; keep swiping past it.
+Future<void> closeMatchIfShown(WidgetTester tester) async {
+  final keep = find.byKey(const Key('match-keep-swiping'));
+  if (keep.evaluate().isNotEmpty) {
+    await tester.tap(keep);
+    await tester.pumpAndSettle();
+  }
 }
 
 /// The first visit to Chats shows the date-safely guide; close it if open.

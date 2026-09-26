@@ -1,5 +1,23 @@
 # Checkpoints
 
+## CP-062 - Real swipe deck, Super Like, match celebration, swipe tutorial (2026-09-26)
+
+- Owner feedback: swiping had no motion and Super Like was missing. The teardown recorded screens but the
+  UI pass missed interaction feel; this checkpoint fixes that.
+- New `SwipeCardStack`: the card follows the finger, tilts around a low pivot, shows LIKE / NOPE / SUPER
+  LIKE stamps that fade in with distance, flies off with momentum (distance or fling velocity), springs
+  back elastically when released early, and the next card grows into place behind it. Buttons drive the
+  same animation (a short lean, then fly-off) and press in when tapped; light haptics on each decision.
+- Super Like: swipe up or the blue star button. 3 free a day (count badge); when none are left, the swipe
+  springs back and says so. Recorded as a like with a super flag. Details now open from the arrow button.
+- "It's a match!" full-screen celebration with both people, an animated heart or star, the prototype
+  disclosure, "Send a message" (opens Chats) and "Keep swiping". Replaces the old snackbar.
+- First-visit tutorial overlay on the first card explains right/left/up and the details arrow.
+- Discover no longer scrolls: header, story row (only when there is room), the card, the action row.
+  Local like-event previews moved to the Matches tab; reported cards show "Report recorded: …".
+- Verified: `flutter analyze` no issues, 90 tests pass (3 new swipe tests, 2 new goldens), large-text sweep
+  covers the tutorial, debug APK builds.
+
 ## CP-061 - Photos card, photo tips, and a large-text sweep (2026-09-26)
 
 - Profile tab: a Photos card states honestly that upload is coming and every photo will be checked first,

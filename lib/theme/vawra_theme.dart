@@ -9,6 +9,7 @@ abstract final class VawraColors {
   static const blush = Color(0xFFFFF3F7);
   static const canvas = Color(0xFFFFFAFC);
   static const lavender = Color(0xFFF1ECFF);
+  static const superLike = Color(0xFF4C6FFF);
 }
 
 abstract final class VawraTheme {

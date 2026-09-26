@@ -39,6 +39,12 @@ void main() {
     await tester.pumpAndSettle();
     await tapNext(tester);
 
+    // The first-visit swipe tutorial must fit at large text too.
+    expect(find.byKey(const Key('swipe-tutorial')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('swipe-tutorial-done')));
+    await tester.pumpAndSettle();
+    await dismissSwipeTutorial(tester);
+
     // Discover, details, preferences.
     await tester.ensureVisible(find.byKey(const Key('open-profile-details')));
     await tester.pumpAndSettle();

@@ -14,6 +14,7 @@ import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
 import 'features/discovery/discovery_deck.dart';
 import 'features/matches/date_safely_guide.dart';
+import 'features/matches/match_celebration.dart';
 import 'features/matches/match_tabs.dart';
 import 'features/onboarding/onboarding_flow.dart';
 import 'features/profile/profile_editor.dart';
@@ -298,6 +299,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   bool safetyGuideSeen = false;
   bool profilePaused = false;
   String? focusProfileAsset;
+  int superLikesLeft = 3;
+  bool swipeTutorialSeen = false;
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
   final DiscoveryInteractionRepository interactionRepository =
@@ -2854,6 +2857,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         onOpenChat: () => _selectTab(2),
         likesYou: _likesYou(),
         onRespond: _handleDiscoverySwipe,
+        activity: interactionRepository.likeEvents(),
       ),
       ChatTab(
         connection: connection,
@@ -2997,6 +3001,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       () => focusProfileAsset = interactionRepository.undoLastRejection(),
     ),
     focusProfileAsset: focusProfileAsset,
+    superLikesLeft: superLikesLeft,
+    showTutorial: !swipeTutorialSeen,
+    onTutorialDone: () => setState(() => swipeTutorialSeen = true),
     onShowPassedAgain: () => setState(() {
       interactionRepository.clearRejections();
       profileIndex = 0;
@@ -3083,35 +3090,41 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     focusProfileAsset = null;
     switch (action) {
       case DiscoverySwipeAction.like:
-        final createdAt = DateTime.now().toUtc();
-        setState(() {
-          final recorded = interactionRepository.recordLike(
-            profile,
-            createdAt: createdAt,
-            mutualLike: _hasIncomingLike(profile),
-          );
-          if (recorded && _hasIncomingLike(profile) && connection == null) {
-            _createSyntheticMatch(profile);
-          }
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _hasIncomingLike(profile)
-                  ? 'Mutual like with ${profile.name}. Prototype only: messaging stays in the free core.'
-                  : 'Liked ${profile.name}. Prototype only: a real launch would notify them and wait for a mutual like.',
-            ),
-          ),
-        );
+        _like(profile, superLike: false);
+      case DiscoverySwipeAction.superLike:
+        if (superLikesLeft > 0) _like(profile, superLike: true);
       case DiscoverySwipeAction.reject:
-        setState(() {
-          interactionRepository.reject(profile);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${profile.name} removed from discovery.')),
-        );
+        setState(() => interactionRepository.reject(profile));
       case DiscoverySwipeAction.skip:
         setState(() => profileIndex += 1);
+    }
+  }
+
+  void _like(DemoProfile profile, {required bool superLike}) {
+    var matched = false;
+    setState(() {
+      final recorded = interactionRepository.recordLike(
+        profile,
+        createdAt: DateTime.now().toUtc(),
+        mutualLike: _hasIncomingLike(profile),
+        superLike: superLike,
+      );
+      if (recorded && superLike) superLikesLeft -= 1;
+      if (recorded && _hasIncomingLike(profile) && connection == null) {
+        _createSyntheticMatch(profile);
+        matched = true;
+      }
+    });
+    if (matched) {
+      final name = userProfile?.displayName.trim() ?? '';
+      MatchCelebration.show(
+        context,
+        peerName: profile.name,
+        peerPhotoAsset: profile.assetPath,
+        ownInitial: name.isEmpty ? 'You' : name.characters.first.toUpperCase(),
+        superLike: superLike,
+        onMessage: () => _selectTab(2),
+      );
     }
   }
 

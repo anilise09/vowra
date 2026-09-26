@@ -128,7 +128,7 @@ void main() {
   ) async {
     await enterDiscovery(tester);
 
-    expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsOneWidget);
+    expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsWidgets);
     await tester.tap(find.byKey(const Key('profile-tab')));
     await tester.pumpAndSettle();
     expect(
