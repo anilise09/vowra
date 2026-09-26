@@ -13,6 +13,8 @@ void main() {
     expect(UserProfile.validateName('A'), isNotNull);
     expect(UserProfile.validateName('Alex'), isNull);
     expect(UserProfile.validateName('Alex\u0000'), isNotNull);
+    expect(UserProfile.validateBio(''), isNull);
+    expect(UserProfile.validateBio('   '), isNull);
     expect(UserProfile.validateBio('Too short'), isNotNull);
     expect(
       UserProfile.validateBio('A thoughtful introduction with enough context.'),

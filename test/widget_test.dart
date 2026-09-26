@@ -2,6 +2,8 @@ import 'package:ember_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/app_flow.dart';
+
 void main() {
   testWidgets('requires adult and community-rule consent', (tester) async {
     await tester.pumpWidget(const VawraApp());
@@ -37,14 +39,7 @@ void main() {
   });
 
   testWidgets('enters discovery and opens safety center', (tester) async {
-    await tester.pumpWidget(const VawraApp());
-    await tester.tap(find.byKey(const Key('adult-checkbox')));
-    await tester.tap(find.byKey(const Key('rules-checkbox')));
-    await tester.pump();
-    await tester.ensureVisible(find.byKey(const Key('continue-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('continue-button')));
-    await tester.pumpAndSettle();
+    await enterDiscovery(tester);
     expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsOneWidget);
     await tester.tap(find.byKey(const Key('open-profile-details')));
     await tester.pumpAndSettle();
@@ -62,13 +57,7 @@ void main() {
   });
 
   testWidgets('validates and saves a local prototype profile', (tester) async {
-    await tester.pumpWidget(const VawraApp());
-    await tester.tap(find.byKey(const Key('adult-checkbox')));
-    await tester.tap(find.byKey(const Key('rules-checkbox')));
-    await tester.pump();
-    await tester.ensureVisible(find.byKey(const Key('continue-button')));
-    await tester.tap(find.byKey(const Key('continue-button')));
-    await tester.pumpAndSettle();
+    await enterDiscovery(tester);
 
     await tester.tap(find.byKey(const Key('profile-tab')));
     await tester.pumpAndSettle();
@@ -79,7 +68,7 @@ void main() {
       'I enjoy good books, thoughtful conversations, and cooking.',
     );
     await tester.scrollUntilVisible(
-      find.text('Books'),
+      find.text('Cooking'),
       180,
       scrollable: find
           .descendant(
@@ -88,7 +77,7 @@ void main() {
           )
           .first,
     );
-    await tester.tap(find.text('Books'));
+    await tester.tap(find.text('Cooking'));
     await tester.scrollUntilVisible(
       find.byKey(const Key('save-profile')),
       220,
@@ -119,13 +108,7 @@ void main() {
   testWidgets('video calls require mutual readiness and block closes contact', (
     tester,
   ) async {
-    await tester.pumpWidget(const VawraApp());
-    await tester.tap(find.byKey(const Key('adult-checkbox')));
-    await tester.tap(find.byKey(const Key('rules-checkbox')));
-    await tester.pump();
-    await tester.ensureVisible(find.byKey(const Key('continue-button')));
-    await tester.tap(find.byKey(const Key('continue-button')));
-    await tester.pumpAndSettle();
+    await enterDiscovery(tester);
     await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
     await tester.tap(

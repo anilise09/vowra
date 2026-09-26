@@ -2,19 +2,12 @@ import 'package:ember_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/app_flow.dart';
+
 void main() {
   Future<void> usePhoneViewport(WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(412, 915));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-  }
-
-  Future<void> enterDiscovery(WidgetTester tester) async {
-    await tester.pumpWidget(const VawraApp());
-    await tester.tap(find.byKey(const Key('adult-checkbox')));
-    await tester.tap(find.byKey(const Key('rules-checkbox')));
-    await tester.pump();
-    await tester.tap(find.byKey(const Key('continue-button')));
-    await tester.pumpAndSettle();
   }
 
   testWidgets('welcome visual baseline', (tester) async {
@@ -35,6 +28,22 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/vawra_discovery.png'),
+    );
+  });
+
+  testWidgets('onboarding visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await startOnboarding(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-name')), 'Alex');
+    await tapNext(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('intent-open_to_long_term')));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_onboarding.png'),
     );
   });
 

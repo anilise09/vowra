@@ -18,15 +18,6 @@ class ProfileEditor extends StatefulWidget {
 }
 
 class _ProfileEditorState extends State<ProfileEditor> {
-  static const availableInterests = [
-    'Arts',
-    'Books',
-    'Cooking',
-    'Fitness',
-    'Music',
-    'Outdoors',
-    'Travel',
-  ];
   final formKey = GlobalKey<FormState>();
   late final TextEditingController nameController;
   late final TextEditingController ageController;
@@ -171,7 +162,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
             maxLines: 5,
             decoration: const InputDecoration(
               labelText: 'About you',
-              hintText: 'What would you enjoy talking about?',
+              hintText: 'Optional. What would you enjoy talking about?',
             ),
             validator: (value) => UserProfile.validateBio(value ?? ''),
           ),
@@ -181,7 +172,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
           const SizedBox(height: 6),
           Wrap(
             spacing: 8,
-            children: availableInterests
+            children: UserProfile.availableInterests
                 .map(
                   (value) => FilterChip(
                     label: Text(value),

@@ -1,19 +1,10 @@
 import 'package:ember_app/domain/discovery_preferences.dart';
-import 'package:ember_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void main() {
-  Future<void> enterDiscovery(WidgetTester tester) async {
-    await tester.pumpWidget(const VawraApp());
-    await tester.tap(find.byKey(const Key('adult-checkbox')));
-    await tester.tap(find.byKey(const Key('rules-checkbox')));
-    await tester.pump();
-    await tester.ensureVisible(find.byKey(const Key('continue-button')));
-    await tester.tap(find.byKey(const Key('continue-button')));
-    await tester.pumpAndSettle();
-  }
+import 'support/app_flow.dart';
 
+void main() {
   test('age limits and relationship intent are both respected', () {
     const preferences = DiscoveryPreferences(
       minAge: 30,

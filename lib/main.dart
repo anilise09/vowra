@@ -14,6 +14,7 @@ import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
 import 'features/discovery/discovery_deck.dart';
 import 'features/matches/match_tabs.dart';
+import 'features/onboarding/onboarding_flow.dart';
 import 'features/profile/profile_editor.dart';
 import 'theme/vawra_theme.dart';
 
@@ -132,14 +133,26 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       FilledButton.icon(
                         key: const Key('continue-button'),
                         onPressed: isAdult && acceptsRules
-                            ? () => Navigator.of(context).pushReplacement(
+                            ? () => Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) => const DiscoveryScreen(),
+                                  builder: (_) => OnboardingFlow(
+                                    onComplete: (profile) =>
+                                        Navigator.of(
+                                          context,
+                                        ).pushAndRemoveUntil(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => DiscoveryScreen(
+                                              initialProfile: profile,
+                                            ),
+                                          ),
+                                          (_) => false,
+                                        ),
+                                  ),
                                 ),
                               )
                             : null,
                         icon: const Icon(Icons.favorite_rounded),
-                        label: const Text('Start discovering'),
+                        label: const Text('Create my profile'),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -272,7 +285,9 @@ class _FloatingPortrait extends StatelessWidget {
 }
 
 class DiscoveryScreen extends StatefulWidget {
-  const DiscoveryScreen({super.key});
+  const DiscoveryScreen({super.key, this.initialProfile});
+
+  final UserProfile? initialProfile;
   @override
   State<DiscoveryScreen> createState() => _DiscoveryScreenState();
 }
@@ -298,6 +313,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   MatchConnection? connection;
 
   static const incomingLikeProfileAssets = {'assets/profiles/maya.png'};
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = widget.initialProfile;
+    if (profile != null) {
+      profileRepository.save(profile);
+      userProfile = profileRepository.load();
+    }
+  }
 
   bool _hasIncomingLike(DemoProfile profile) =>
       matchRepository.hasIncomingLike(profile);

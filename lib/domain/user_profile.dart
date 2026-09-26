@@ -28,6 +28,17 @@ class UserProfile {
   final bool showDistanceBand;
   final bool callReadyByDefault;
 
+  static const availableInterests = [
+    'Arts',
+    'Books',
+    'Cooking',
+    'Fitness',
+    'Music',
+    'Outdoors',
+    'Travel',
+  ];
+  static const maxInterests = 5;
+
   static String? validateName(String value) {
     final normalized = value.trim();
     if (normalized.length < 2) return 'Enter at least 2 characters.';
@@ -46,8 +57,10 @@ class UserProfile {
     return null;
   }
 
+  /// The bio is optional; when present it must say something meaningful.
   static String? validateBio(String value) {
     final normalized = value.trim();
+    if (normalized.isEmpty) return null;
     if (normalized.length < 20) return 'Write at least 20 characters.';
     if (normalized.length > 300) return 'Use 300 characters or fewer.';
     return null;

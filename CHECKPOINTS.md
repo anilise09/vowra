@@ -1,5 +1,23 @@
 # Checkpoints
 
+## CP-055 - Progressive one-question onboarding (2026-09-26)
+
+- Welcome now leads into a six-step profile setup instead of straight into discovery, following the
+  one-question-per-screen pattern observed in the CP-054 walkthrough: name, age, relationship intent (large
+  choice cards), interests (1-5), an optional short intro with Skip, and privacy/call defaults.
+- A coral progress bar, "Step N of 6" label, Back that keeps earlier answers, and a single full-width Continue
+  that stays disabled until the step is valid. Skip appears only on the optional intro.
+- Adult boundary held in setup: a typed age under 18 shows "Vawra is only for adults 18+." and cannot proceed;
+  the age field accepts digits only. Distance band defaults on (band only), calls default off.
+- The finished profile is saved to the in-memory profile repository and pre-fills the Profile tab. The bio is
+  now optional everywhere; a written bio still needs 20-300 characters. Interests share one domain list.
+- Fixed a screen-reader crash found by the tests: the progress bar reports a numeric value, not step text.
+- Verified: `flutter analyze` no issues, 68 tests pass (8 new onboarding tests), welcome/profile goldens
+  refreshed and an onboarding golden added, debug APK builds. Not yet installed on the Samsung.
+
+Next: install on the Samsung and walk the setup at normal and large text; then plain-language empty states for
+Matches and Chats, and a photo step once the media-upload pipeline exists.
+
 ## CP-054 - Tinder/Bumble walkthrough and photo-first discovery gestures (2026-09-26)
 
 - Walked through Tinder and Bumble on the owner's Samsung phone and recorded the observed discovery, navigation,
