@@ -800,7 +800,8 @@ class _DiscoveryStoryStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 88,
+    // Grows with the person's text size so the names are never clipped.
+    height: 70 + MediaQuery.textScalerOf(context).scale(16),
     child: ListView.separated(
       scrollDirection: Axis.horizontal,
       itemCount: profiles.length + 1,

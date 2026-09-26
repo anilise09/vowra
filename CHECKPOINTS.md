@@ -1,5 +1,18 @@
 # Checkpoints
 
+## CP-061 - Photos card, photo tips, and a large-text sweep (2026-09-26)
+
+- Profile tab: a Photos card states honestly that upload is coming and every photo will be checked first,
+  and opens Photo tips ("Works well" / "Best avoided") written in Vawra's words with icons, no stock photos.
+- New large-text test walks every main screen, sheet and dialog at 1.8x text on a 412x915 phone; it found
+  and fixed two real bugs: the Discover story row clipped names (now sized from the text scale) and the
+  Date-safely guide overflowed by 433 px (pages now scroll and the sheet height follows the screen).
+- Test helpers scroll to Welcome consent boxes before tapping, so they work at any text size.
+- Verified: `flutter analyze` no issues, 85 tests pass (2 new), goldens refreshed, debug APK builds.
+
+Next: install on a phone and walk every screen at normal and large text; photo upload waits for the
+media pipeline; Explore-style browsing waits for real users.
+
 ## CP-060 - Free "Likes you", free undo, distance filter, end of deck (2026-09-26)
 
 - Matches tab: a "Likes you · Free" row shows people who liked you (Tinder paywalls this) with Pass and

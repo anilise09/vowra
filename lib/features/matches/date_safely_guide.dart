@@ -102,41 +102,47 @@ class _DateSafelyGuideState extends State<DateSafelyGuide> {
           ),
           const SizedBox(height: 8),
           SizedBox(
-            height: 330,
+            // Tall enough for large text; each page also scrolls if needed.
+            height: (MediaQuery.sizeOf(context).height * 0.5).clamp(
+              300.0,
+              460.0,
+            ),
             child: PageView(
               key: const Key('safety-guide-pages'),
               controller: controller,
               onPageChanged: (value) => setState(() => page = value),
               children: [
                 for (final guide in _pages)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 96,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [VawraColors.blush, VawraColors.lavender],
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 96,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [VawraColors.blush, VawraColors.lavender],
+                            ),
+                            borderRadius: BorderRadius.circular(22),
                           ),
-                          borderRadius: BorderRadius.circular(22),
+                          child: Icon(
+                            guide.icon,
+                            size: 44,
+                            color: VawraColors.plum,
+                          ),
                         ),
-                        child: Icon(
-                          guide.icon,
-                          size: 44,
-                          color: VawraColors.plum,
-                        ),
-                      ),
-                      for (final (title, body) in guide.points) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(body),
+                        for (final (title, body) in guide.points) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(body),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
               ],
             ),

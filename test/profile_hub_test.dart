@@ -82,4 +82,18 @@ void main() {
     );
     expect(tester.widget<ChoiceChip>(daily).selected, isTrue);
   });
+
+  testWidgets('photos card is honest about upload and offers tips', (
+    tester,
+  ) async {
+    await enterDiscovery(tester);
+    await openProfile(tester);
+    await tester.ensureVisible(find.byKey(const Key('photo-tips')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Photo upload is coming'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('photo-tips')));
+    await tester.pumpAndSettle();
+    expect(find.text('Works well'), findsOneWidget);
+    expect(find.text('Your face, clearly'), findsOneWidget);
+  });
 }

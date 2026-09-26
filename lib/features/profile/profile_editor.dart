@@ -4,6 +4,7 @@ import '../../domain/lifestyle.dart';
 import '../../domain/user_profile.dart';
 import '../../theme/vawra_theme.dart';
 import '../shared/lifestyle_picker.dart';
+import 'photo_tips.dart';
 import 'profile_preview.dart';
 
 class ProfileEditor extends StatefulWidget {
@@ -142,6 +143,8 @@ class _ProfileEditorState extends State<ProfileEditor> {
             interestCount: interests.length,
             hasLifestyle: lifestyle.isNotEmpty,
           ),
+          const SizedBox(height: 12),
+          const PhotosCard(),
           const SizedBox(height: 22),
           TextFormField(
             key: const Key('profile-name'),

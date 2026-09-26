@@ -5,8 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// Accepts the welcome gate and opens profile setup.
 Future<void> startOnboarding(WidgetTester tester) async {
   await tester.pumpWidget(const VawraApp());
-  await tester.tap(find.byKey(const Key('adult-checkbox')));
-  await tester.tap(find.byKey(const Key('rules-checkbox')));
+  for (final key in ['adult-checkbox', 'rules-checkbox']) {
+    await tester.ensureVisible(find.byKey(Key(key)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key(key)));
+  }
   await tester.pump();
   await tester.ensureVisible(find.byKey(const Key('continue-button')));
   await tester.pumpAndSettle();
