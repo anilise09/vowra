@@ -58,7 +58,7 @@ class MatchCelebration extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xF2182465), Color(0xF25A274F), Color(0xF2F24F78)],
+          colors: [Color(0xFF182465), Color(0xFF5A274F), Color(0xFFF24F78)],
         ),
       ),
       child: SafeArea(

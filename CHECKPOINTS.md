@@ -1,5 +1,15 @@
 # Checkpoints
 
+## CP-063 - On-device fixes from a real Asus walkthrough (2026-09-26)
+
+- Walked the new build on the Asus: sign-up, tutorial, drag with LIKE stamp and tilt, match celebration,
+  swipe-up Super Like (count 3 -> 2). Found and fixed two bugs the widget tests could not see:
+  sign-up steps were vertically centred (large empty gap above the question), and the keyboard did not
+  open on the age step because the name field kept focus during the page transition. Steps now anchor to
+  the top and each text step requests focus explicitly; choice steps close the keyboard.
+- Match celebration background is now opaque, and the Welcome panel reaches the bottom edge.
+- Verified: `flutter analyze` no issues, 90 tests pass, goldens refreshed, APK installed on the Asus.
+
 ## CP-062 - Real swipe deck, Super Like, match celebration, swipe tutorial (2026-09-26)
 
 - Owner feedback: swiping had no motion and Super Like was missing. The teardown recorded screens but the

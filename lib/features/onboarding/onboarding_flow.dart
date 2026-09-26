@@ -21,6 +21,8 @@ enum _Step { name, age, intent, interests, lifestyle, bio, privacy }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
   final nameController = TextEditingController();
+  final nameFocus = FocusNode();
+  final ageFocus = FocusNode();
   final ageController = TextEditingController();
   final bioController = TextEditingController();
   var step = _Step.name;
@@ -33,6 +35,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   @override
   void dispose() {
     nameController.dispose();
+    nameFocus.dispose();
+    ageFocus.dispose();
     ageController.dispose();
     bioController.dispose();
     super.dispose();
@@ -65,14 +69,34 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       );
       return;
     }
-    setState(() => step = _Step.values[step.index + 1]);
+    _goTo(_Step.values[step.index + 1]);
+  }
+
+  /// Moves to a step and gives its text field the keyboard, or hides the
+  /// keyboard for choice steps. Autofocus alone fails while the previous
+  /// field still holds focus during the page transition.
+  void _goTo(_Step next) {
+    setState(() => step = next);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      switch (next) {
+        case _Step.name:
+          nameFocus.requestFocus();
+        case _Step.age:
+          ageFocus.requestFocus();
+        case _Step.bio:
+          break;
+        default:
+          FocusManager.instance.primaryFocus?.unfocus();
+      }
+    });
   }
 
   /// Skip leaves an optional step blank and moves on.
   void _skip() {
     if (step == _Step.bio) bioController.clear();
     if (step == _Step.lifestyle) lifestyle.clear();
-    setState(() => step = _Step.values[step.index + 1]);
+    _goTo(_Step.values[step.index + 1]);
   }
 
   bool get _optional => step == _Step.lifestyle || step == _Step.bio;
@@ -94,7 +118,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       Navigator.of(context).maybePop();
       return;
     }
-    setState(() => step = _Step.values[step.index - 1]);
+    _goTo(_Step.values[step.index - 1]);
   }
 
   @override
@@ -161,6 +185,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
+                      // Keep every step anchored to the top, not centred.
+                      layoutBuilder: (current, previous) => Stack(
+                        alignment: Alignment.topCenter,
+                        children: [...previous, ?current],
+                      ),
                       transitionBuilder: (child, animation) => FadeTransition(
                         opacity: animation,
                         child: SlideTransition(
@@ -249,6 +278,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           _Step.name => TextField(
             key: const Key('onboarding-name'),
             controller: nameController,
+            focusNode: nameFocus,
             autofocus: true,
             maxLength: 40,
             textCapitalization: TextCapitalization.words,
@@ -259,6 +289,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           ),
           _Step.age => _AgeField(
             controller: ageController,
+            focusNode: ageFocus,
             onChanged: () => setState(() {}),
             onSubmitted: _next,
           ),
@@ -330,11 +361,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 class _AgeField extends StatelessWidget {
   const _AgeField({
     required this.controller,
+    required this.focusNode,
     required this.onChanged,
     required this.onSubmitted,
   });
 
   final TextEditingController controller;
+  final FocusNode focusNode;
   final VoidCallback onChanged;
   final VoidCallback onSubmitted;
 
@@ -346,6 +379,7 @@ class _AgeField extends StatelessWidget {
     return TextField(
       key: const Key('onboarding-age'),
       controller: controller,
+      focusNode: focusNode,
       autofocus: true,
       keyboardType: TextInputType.number,
       inputFormatters: [
