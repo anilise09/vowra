@@ -47,101 +47,132 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF1EEF2),
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: MediaQuery.sizeOf(context).height < 700 ? 154 : 326,
-                  child: const FittedBox(
-                    fit: BoxFit.contain,
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: 520,
-                      height: 326,
-                      child: _WelcomeArtwork(),
-                    ),
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 18),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(38),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Find someone worth\nslowing down for.',
-                        style: Theme.of(context).textTheme.displaySmall
-                            ?.copyWith(
-                              color: const Color(0xFF182465),
-                              fontSize: 34,
-                            ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Intentional matches, safer conversations, and space to be yourself.',
-                        style: Theme.of(context).textTheme.bodyLarge
-                            ?.copyWith(color: const Color(0xFF737796)),
-                      ),
-                      const SizedBox(height: 16),
-                      Material(
-                        color: const Color(0xFFF8F5FA),
-                        borderRadius: BorderRadius.circular(22),
-                        child: Column(
-                          children: [
-                            CheckboxListTile(
-                              key: const Key('adult-checkbox'),
-                              value: isAdult,
-                              onChanged: (value) =>
-                                  setState(() => isAdult = value ?? false),
-                              title: const Text('I am 18 or older'),
-                              secondary: const Icon(Icons.cake_outlined),
-                              controlAffinity: ListTileControlAffinity.leading,
-                              dense: true,
-                              visualDensity: const VisualDensity(vertical: -2),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                            ),
-                            const Divider(height: 1, indent: 56, endIndent: 12),
-                            CheckboxListTile(
-                              key: const Key('rules-checkbox'),
-                              value: acceptsRules,
-                              onChanged: (value) =>
-                                  setState(() => acceptsRules = value ?? false),
-                              title: const Text('I choose respect and consent'),
-                              secondary: const Icon(
-                                Icons.favorite_border_rounded,
-                              ),
-                              controlAffinity: ListTileControlAffinity.leading,
-                              dense: true,
-                              visualDensity: const VisualDensity(vertical: -2),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                            ),
-                          ],
+    body: Stack(
+      children: [
+        // White behind the lower half so the panel reaches the bottom edge.
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          top: 0,
+          child: FractionallySizedBox(
+            alignment: Alignment.bottomCenter,
+            heightFactor: 0.5,
+            widthFactor: 1,
+            child: ColoredBox(color: Colors.white),
+          ),
+        ),
+        SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.sizeOf(context).height < 700
+                          ? 154
+                          : 326,
+                      child: const FittedBox(
+                        fit: BoxFit.contain,
+                        alignment: Alignment.topCenter,
+                        child: SizedBox(
+                          width: 520,
+                          height: 326,
+                          child: _WelcomeArtwork(),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      FilledButton.icon(
-                        key: const Key('continue-button'),
-                        onPressed: isAdult && acceptsRules
-                            ? () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => OnboardingFlow(
-                                    onComplete: (profile) =>
-                                        Navigator.of(context)
-                                            .pushAndRemoveUntil(
+                    ),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 18),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(38),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Find someone worth\nslowing down for.',
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(
+                                  color: const Color(0xFF182465),
+                                  fontSize: 34,
+                                ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Intentional matches, safer conversations, and space to be yourself.',
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: const Color(0xFF737796)),
+                          ),
+                          const SizedBox(height: 16),
+                          Material(
+                            color: const Color(0xFFF8F5FA),
+                            borderRadius: BorderRadius.circular(22),
+                            child: Column(
+                              children: [
+                                CheckboxListTile(
+                                  key: const Key('adult-checkbox'),
+                                  value: isAdult,
+                                  onChanged: (value) =>
+                                      setState(() => isAdult = value ?? false),
+                                  title: const Text('I am 18 or older'),
+                                  secondary: const Icon(Icons.cake_outlined),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  dense: true,
+                                  visualDensity: const VisualDensity(
+                                    vertical: -2,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                                const Divider(
+                                  height: 1,
+                                  indent: 56,
+                                  endIndent: 12,
+                                ),
+                                CheckboxListTile(
+                                  key: const Key('rules-checkbox'),
+                                  value: acceptsRules,
+                                  onChanged: (value) => setState(
+                                    () => acceptsRules = value ?? false,
+                                  ),
+                                  title: const Text(
+                                    'I choose respect and consent',
+                                  ),
+                                  secondary: const Icon(
+                                    Icons.favorite_border_rounded,
+                                  ),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  dense: true,
+                                  visualDensity: const VisualDensity(
+                                    vertical: -2,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          FilledButton.icon(
+                            key: const Key('continue-button'),
+                            onPressed: isAdult && acceptsRules
+                                ? () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => OnboardingFlow(
+                                        onComplete: (profile) =>
+                                            Navigator.of(
+                                              context,
+                                            ).pushAndRemoveUntil(
                                               MaterialPageRoute<void>(
                                                 builder: (_) => DiscoveryScreen(
                                                   initialProfile: profile,
@@ -149,30 +180,32 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                               ),
                                               (_) => false,
                                             ),
-                                  ),
-                                ),
-                              )
-                            : null,
-                        icon: const Icon(Icons.favorite_rounded),
-                        label: const Text('Create my profile'),
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                            icon: const Icon(Icons.favorite_rounded),
+                            label: const Text('Create my profile'),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Prototype only · no account or upload is created',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: VawraColors.muted,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Prototype only · no account or upload is created',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: VawraColors.muted,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+      ],
     ),
   );
 }
