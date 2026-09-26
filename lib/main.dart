@@ -3043,6 +3043,8 @@ class SafetySheet extends StatelessWidget {
               'Profiles show distance bands, never exact coordinates.',
             ),
           ),
+          const SizedBox(height: 16),
+          const ConversationAccessPreview(),
           const SizedBox(height: 8),
           FilledButton(
             onPressed: () => Navigator.pop(context),

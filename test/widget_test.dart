@@ -46,10 +46,15 @@ void main() {
     await tester.tap(find.byKey(const Key('continue-button')));
     await tester.pumpAndSettle();
     expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsOneWidget);
-    expect(find.textContaining('Exact location'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('open-profile-details')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('close-profile-details')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('close-profile-details')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Safety center'));
     await tester.pumpAndSettle();
     expect(find.text('Calls require mutual readiness'), findsOneWidget);
+    expect(find.textContaining('never exact coordinates'), findsOneWidget);
     expect(
       find.text('A match can always decline. Calls are not recorded.'),
       findsOneWidget,
@@ -121,7 +126,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('continue-button')));
     await tester.tap(find.byKey(const Key('continue-button')));
     await tester.pumpAndSettle();
-    await tester.flingFrom(const Offset(400, 320), const Offset(0, -500), 1000);
+    await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(

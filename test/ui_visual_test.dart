@@ -41,7 +41,7 @@ void main() {
   testWidgets('connections visual baseline', (tester) async {
     await usePhoneViewport(tester);
     await enterDiscovery(tester);
-    await tester.flingFrom(const Offset(380, 300), const Offset(0, -500), 1000);
+    await tester.flingFrom(const Offset(160, 300), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Matches'));
     await tester.pumpAndSettle();
@@ -55,7 +55,7 @@ void main() {
   testWidgets('chat visual baseline', (tester) async {
     await usePhoneViewport(tester);
     await enterDiscovery(tester);
-    await tester.flingFrom(const Offset(380, 300), const Offset(0, -500), 1000);
+    await tester.flingFrom(const Offset(160, 300), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Chats'));
     await tester.pumpAndSettle();

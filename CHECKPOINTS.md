@@ -1,5 +1,21 @@
 # Checkpoints
 
+## CP-054 - Tinder/Bumble walkthrough and photo-first discovery gestures (2026-09-26)
+
+- Walked through Tinder and Bumble on the owner's Samsung phone and recorded the observed discovery, navigation,
+  profile-detail, onboarding, and empty/premium-state patterns in `docs/COMPETITIVE_UI_RESEARCH.md`. No
+  competitor likes or messages were sent; the temporary Tinder account was deleted. Raw captures stay local in
+  the git-ignored `screenshots/` folder because they show the owner's own account screens.
+- Discovery now gives the photo about two thirds of the screen. Swipe right likes, swipe left passes, and swipe
+  up (or the visible arrow) opens a scrollable details sheet with bio, interests, intent, distance band, private
+  report, block, and Pass/Like. The separate "next profile" action is gone from the card.
+- The direct-intro preview moved from the discovery scroll into the Safety Center sheet; the precise-location
+  statement is shown there and in the details sheet.
+- Work started by Codex and finished and verified by Claude Code: `flutter analyze` no issues, all 60 tests pass,
+  discovery golden refreshed.
+
+Next: progressive one-question-per-screen onboarding with visible progress and skippable optional steps.
+
 ## CP-053 - Owner-directed welcome and discovery composition (2026-09-25)
 
 - Reworked welcome around the supplied dating-app reference: floating circular portraits, a central transparent

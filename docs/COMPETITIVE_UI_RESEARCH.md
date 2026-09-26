@@ -2,6 +2,20 @@
 
 Research date: 2026-09-24
 
+## Direct Android walkthrough (2026-09-25–26)
+
+The following observations came from Tinder and Bumble installed on the owner's Samsung phone. These describe the visible UI and interactions, not a claim about every account or region.
+
+| Area | Tinder | Bumble | Vawra decision |
+| --- | --- | --- | --- |
+| Discovery | A nearly full-screen portrait carries name, age, a few facts, and prominent Pass/Like buttons. An up-arrow opens a separate, vertically scrollable profile; a down-arrow closes it. | The People card is photo-led and scrolls vertically through bio and structured facts. | Keep the person dominant. Swipe up and a visible arrow open details; left passes and right likes. |
+| Navigation | Five stable destinations: Swipe, Explore, Likes, Chat, Profile. | Five stable destinations: Profile, Discover, People, Liked You, Chats. | Keep destinations clear and predictable; add destinations only when Vawra has real content for them. |
+| Profile detail | Large media first, followed by relationship intent, tags, bio, facts, and per-section response affordances. | Bio and structured facts are part of the vertical People profile. | Put biography and interests in a focused details view and retain visible safety controls. |
+| Onboarding | One question at a time with a progress indicator, large choice cards, and Skip on optional school, habits, interests, and bio screens. Photos precede optional bio/prompt. | Asks about gender, who to meet, intent, lifestyle, interests, a prompt, and photos. Optional items can be skipped. | Build progressive onboarding with obvious optional steps, while keeping adult access and consent explicit. |
+| Empty and premium states | Likes shows an upgrade invitation; Chat explains that matches appear there. | Chats explains matching; Liked You and Profile offer Spotlight and Premium. | Explain empty states plainly. Keep matching, messaging, block, and report free. |
+
+On Tinder, skipping Face Check allowed UI inspection but left the account hidden and Likes unavailable. Bumble required a live-photo check after its cartoon profile image was moderated. These gates are account-state observations, not UI patterns to copy. No competitor Likes or messages were sent. The temporary Tinder research account was deleted after the walkthrough; Bumble deletion could not be verified behind its live-photo gate.
+
 This review uses current first-party product pages, help material, and official Google Play screenshots. It identifies interaction principles; Vawra must not copy another product's trade dress, exact layout, icons, wording, or brand system.
 
 ## Products reviewed

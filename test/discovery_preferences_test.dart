@@ -126,11 +126,22 @@ void main() {
     expect(find.textContaining('prototype profiles'), findsOneWidget);
   });
 
-  testWidgets('swipe up likes a profile and advances the deck', (tester) async {
+  testWidgets('swipe up opens details without liking; right likes', (
+    tester,
+  ) async {
     await enterDiscovery(tester);
     expect(find.text('Maya, 29'), findsOneWidget);
 
-    await tester.flingFrom(const Offset(400, 320), const Offset(0, -500), 1000);
+    await tester.dragFrom(const Offset(200, 500), const Offset(0, -160));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('close-profile-details')), findsOneWidget);
+    expect(find.text('Maya, 29'), findsNWidgets(2));
+    expect(find.textContaining('Mutual like with Maya'), findsNothing);
+    await tester.tap(find.byKey(const Key('close-profile-details')));
+    await tester.pumpAndSettle();
+
+    await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
 
     expect(find.text('Maya, 29'), findsNothing);
@@ -168,7 +179,7 @@ void main() {
 
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
-    await tester.flingFrom(const Offset(400, 320), const Offset(0, -500), 1000);
+    await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
 
     await tester.tap(
@@ -192,11 +203,13 @@ void main() {
     tester,
   ) async {
     await enterDiscovery(tester);
+    await tester.tap(find.byTooltip('Safety center'));
+    await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('direct-intro-preview')),
       180,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find.byType(Scrollable).last,
     );
 
     final button = tester.widget<OutlinedButton>(
@@ -210,15 +223,13 @@ void main() {
     );
   });
 
-  testWidgets('swipe left rejects while swipe right only advances', (
-    tester,
-  ) async {
+  testWidgets('swipe left passes while swipe right likes', (tester) async {
     await enterDiscovery(tester);
 
-    await tester.flingFrom(const Offset(400, 320), const Offset(500, 0), 1000);
+    await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
     expect(find.text('Elena, 32'), findsOneWidget);
-    expect(find.text('260 prototype profiles'), findsOneWidget);
+    expect(find.textContaining('prototype profiles'), findsOneWidget);
 
     await tester.flingFrom(const Offset(400, 320), const Offset(-500, 0), 1000);
     await tester.pumpAndSettle();

@@ -46,3 +46,9 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Local competitor research captures (contain personal account screens)
+/screenshots/
+
+# Golden-test failure output
+/test/failures/
