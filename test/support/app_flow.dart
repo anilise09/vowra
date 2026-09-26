@@ -33,6 +33,9 @@ Future<void> enterDiscovery(WidgetTester tester) async {
   await tester.tap(find.byKey(const Key('interest-Books')));
   await tester.pump();
   await tapNext(tester);
+  // Lifestyle and intro are optional.
+  await tester.tap(find.byKey(const Key('onboarding-skip')));
+  await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('onboarding-skip')));
   await tester.pumpAndSettle();
   await tapNext(tester);

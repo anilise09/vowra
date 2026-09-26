@@ -252,6 +252,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
         interests: interests.toList()..sort(),
         showDistanceBand: showDistanceBand,
         callReadyByDefault: callReadyByDefault,
+        lifestyle: widget.initialProfile?.lifestyle ?? const {},
       ),
     );
   }

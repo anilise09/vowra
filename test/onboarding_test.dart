@@ -16,7 +16,7 @@ void main() {
       await startOnboarding(tester);
 
       expect(find.text('What should matches call you?'), findsOneWidget);
-      expect(find.text('Step 1 of 6'), findsOneWidget);
+      expect(find.text('Step 1 of 7'), findsOneWidget);
       expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsNothing);
     },
   );
@@ -110,6 +110,8 @@ void main() {
     await tester.tap(find.byKey(const Key('interest-Music')));
     await tester.pump();
     await tapNext(tester);
+    await tester.tap(find.byKey(const Key('onboarding-skip')));
+    await tester.pumpAndSettle();
 
     expect(nextEnabled(tester), isTrue, reason: 'an empty bio is allowed');
     await tester.enterText(find.byKey(const Key('onboarding-bio')), 'Hi');
@@ -143,5 +145,41 @@ void main() {
           ?.text,
       '28',
     );
+  });
+
+  testWidgets('headlines use the name; lifestyle is optional and counted', (
+    tester,
+  ) async {
+    await startOnboarding(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-name')), 'Alex');
+    await tapNext(tester);
+    expect(
+      find.text('Nice to meet you, Alex. How old are you?'),
+      findsOneWidget,
+    );
+    await tester.enterText(find.byKey(const Key('onboarding-age')), '30');
+    await tapNext(tester);
+    await tester.ensureVisible(find.byKey(const Key('intent-casual')));
+    await tester.tap(find.byKey(const Key('intent-casual')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('interest-Music')));
+    await tester.pump();
+    expect(find.text('Continue 1/5'), findsOneWidget);
+    await tapNext(tester);
+
+    expect(find.text('A few habits, Alex'), findsOneWidget);
+    expect(find.byKey(const Key('onboarding-skip')), findsOneWidget);
+    expect(nextEnabled(tester), isFalse);
+    await tester.tap(find.byKey(const Key('lifestyle-drinking-Socially')));
+    await tester.pump();
+    expect(find.text('Continue 1/4'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('lifestyle-drinking-Rarely')));
+    await tester.pump();
+    expect(find.text('Continue 1/4'), findsOneWidget, reason: 'one per topic');
+    await tester.tap(find.byKey(const Key('lifestyle-drinking-Rarely')));
+    await tester.pump();
+    expect(find.text('Continue 0/4'), findsOneWidget, reason: 'tap clears');
+    expect(nextEnabled(tester), isFalse);
   });
 }

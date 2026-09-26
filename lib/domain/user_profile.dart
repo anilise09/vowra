@@ -1,3 +1,5 @@
+import 'lifestyle.dart';
+
 enum RelationshipIntent {
   longTerm('long_term', 'Long-term relationship'),
   openToLongTerm('open_to_long_term', 'Open to long-term'),
@@ -18,6 +20,7 @@ class UserProfile {
     required this.interests,
     this.showDistanceBand = true,
     this.callReadyByDefault = false,
+    this.lifestyle = const {},
   });
 
   final String displayName;
@@ -27,6 +30,7 @@ class UserProfile {
   final List<String> interests;
   final bool showDistanceBand;
   final bool callReadyByDefault;
+  final Map<LifestyleTopic, String> lifestyle;
 
   static const availableInterests = [
     'Arts',

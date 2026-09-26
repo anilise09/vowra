@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../domain/lifestyle.dart';
 import '../../domain/user_profile.dart';
 import '../../theme/vawra_theme.dart';
 
@@ -15,7 +16,7 @@ class OnboardingFlow extends StatefulWidget {
   State<OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
-enum _Step { name, age, intent, interests, bio, privacy }
+enum _Step { name, age, intent, interests, lifestyle, bio, privacy }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
   final nameController = TextEditingController();
@@ -26,6 +27,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   final interests = <String>{};
   var showDistanceBand = true;
   var callReadyByDefault = false;
+  final lifestyle = <LifestyleTopic, String>{};
 
   @override
   void dispose() {
@@ -40,6 +42,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     _Step.age => UserProfile.validateAge(ageController.text) == null,
     _Step.intent => intent != null,
     _Step.interests => interests.isNotEmpty,
+    _Step.lifestyle => lifestyle.isNotEmpty,
     _Step.bio => UserProfile.validateBio(bioController.text) == null,
     _Step.privacy => true,
   };
@@ -56,6 +59,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           interests: interests.toList()..sort(),
           showDistanceBand: showDistanceBand,
           callReadyByDefault: callReadyByDefault,
+          lifestyle: Map.unmodifiable(lifestyle),
         ),
       );
       return;
@@ -63,10 +67,26 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     setState(() => step = _Step.values[step.index + 1]);
   }
 
-  void _skipBio() {
-    bioController.clear();
-    setState(() => step = _Step.privacy);
+  /// Skip leaves an optional step blank and moves on.
+  void _skip() {
+    if (step == _Step.bio) bioController.clear();
+    if (step == _Step.lifestyle) lifestyle.clear();
+    setState(() => step = _Step.values[step.index + 1]);
   }
+
+  bool get _optional => step == _Step.lifestyle || step == _Step.bio;
+
+  String get _firstName => nameController.text.trim();
+
+  /// Shows a running count where a step collects several answers.
+  String get _continueLabel => switch (step) {
+    _Step.privacy => 'Start discovering',
+    _Step.interests =>
+      'Continue ${interests.length}/${UserProfile.maxInterests}',
+    _Step.lifestyle =>
+      'Continue ${lifestyle.length}/${LifestyleTopic.values.length}',
+    _ => 'Continue',
+  };
 
   void _back() {
     if (step == _Step.name) {
@@ -121,12 +141,16 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                           ),
                         ),
                         SizedBox(
-                          width: 72,
-                          child: step == _Step.bio
+                          width: 92,
+                          child: _optional
                               ? TextButton(
                                   key: const Key('onboarding-skip'),
-                                  onPressed: _skipBio,
-                                  child: const Text('Skip'),
+                                  onPressed: _skip,
+                                  child: const Text(
+                                    'Skip',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                  ),
                                 )
                               : null,
                         ),
@@ -162,11 +186,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                         onPressed: _canContinue ? _next : null,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            step == _Step.privacy
-                                ? 'Start discovering'
-                                : 'Continue',
-                          ),
+                          child: Text(_continueLabel),
                         ),
                       ),
                     ),
@@ -187,7 +207,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         'Your first name or the name you go by.',
       ),
       _Step.age => (
-        'How old are you?',
+        'Nice to meet you, $_firstName. How old are you?',
         'Vawra is for adults 18 and over. Only your age is shown, never a birthday.',
       ),
       _Step.intent => (
@@ -197,6 +217,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       _Step.interests => (
         'What do you enjoy?',
         'Pick up to ${UserProfile.maxInterests}. They give matches an easy way to start talking.',
+      ),
+      _Step.lifestyle => (
+        'A few habits, $_firstName',
+        'Optional. Pick what fits, tap again to clear. Skip anything you would rather not share.',
       ),
       _Step.bio => (
         'Add a short intro',
@@ -256,18 +280,37 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   : interests.add(value),
             ),
           ),
-          _Step.bio => TextField(
-            key: const Key('onboarding-bio'),
-            controller: bioController,
-            maxLength: 300,
-            minLines: 4,
-            maxLines: 6,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: 'Weekend plans, a small obsession, a good first date…',
-              errorText: UserProfile.validateBio(bioController.text),
+          _Step.lifestyle => _LifestylePicker(
+            selected: lifestyle,
+            onChanged: (topic, option) => setState(
+              () => lifestyle[topic] == option
+                  ? lifestyle.remove(topic)
+                  : lifestyle[topic] = option,
             ),
-            onChanged: (_) => setState(() {}),
+          ),
+          _Step.bio => Column(
+            children: [
+              TextField(
+                key: const Key('onboarding-bio'),
+                controller: bioController,
+                maxLength: 300,
+                minLines: 4,
+                maxLines: 6,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  hintText:
+                      'Weekend plans, a small obsession, a good first date…',
+                  errorText: UserProfile.validateBio(bioController.text),
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 8),
+              const _TipCard(
+                text:
+                    'Mention something a match could ask about: a place you love, '
+                    'what you are learning, or your idea of a good weekend.',
+              ),
+            ],
           ),
           _Step.privacy => _PrivacyChoices(
             showDistanceBand: showDistanceBand,
@@ -513,5 +556,79 @@ class _PrivacyChoices extends StatelessWidget {
         ],
       ),
     ],
+  );
+}
+
+class _LifestylePicker extends StatelessWidget {
+  const _LifestylePicker({required this.selected, required this.onChanged});
+
+  final Map<LifestyleTopic, String> selected;
+  final void Function(LifestyleTopic topic, String option) onChanged;
+
+  static const _icons = {
+    LifestyleTopic.drinking: Icons.local_bar_outlined,
+    LifestyleTopic.smoking: Icons.smoke_free_rounded,
+    LifestyleTopic.exercise: Icons.directions_run_rounded,
+    LifestyleTopic.pets: Icons.pets_outlined,
+  };
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      for (final topic in LifestyleTopic.values) ...[
+        if (topic.index > 0) const Divider(height: 28),
+        Row(
+          children: [
+            Icon(_icons[topic], size: 20, color: VawraColors.plum),
+            const SizedBox(width: 8),
+            Text(topic.label, style: Theme.of(context).textTheme.titleMedium),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final option in topic.options)
+              ChoiceChip(
+                key: Key('lifestyle-${topic.name}-$option'),
+                label: Text(option),
+                selected: selected[topic] == option,
+                selectedColor: VawraColors.blush,
+                side: BorderSide(
+                  color: selected[topic] == option
+                      ? VawraColors.coral
+                      : const Color(0xFFE2D7DE),
+                ),
+                onSelected: (_) => onChanged(topic, option),
+              ),
+          ],
+        ),
+      ],
+    ],
+  );
+}
+
+class _TipCard extends StatelessWidget {
+  const _TipCard({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: VawraColors.lavender,
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.lightbulb_outline_rounded, color: VawraColors.plum),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text)),
+      ],
+    ),
   );
 }

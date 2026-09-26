@@ -1,5 +1,16 @@
 # Checkpoints
 
+## CP-057 - Sign-up additions from the teardown (2026-09-26)
+
+- New optional "A few habits" step (drinking, smoking, exercise, pets): one choice per topic, tap again to
+  clear, an icon and divider per group, Skip, and a live "Continue n/4" count. Answers are stored on the
+  local profile and kept through profile edits; they are not yet part of the server profile contract.
+- Headlines use the person's name after step 1; interests show "Continue n/5"; the intro step has a tip
+  card. Fixed the Skip label wrapping onto two lines at large text sizes.
+- Verified: `flutter analyze` no issues, 72 tests pass (1 new behaviour test, 1 new golden).
+
+Next: profile tab with "Preview my card" and completion prompts; then a settings page.
+
 ## CP-056 - Full Tinder teardown and first UI pass from it (2026-09-26)
 
 - Recorded Tinder 17.35.0 end to end on the owner's Asus: sign-in, all 21 onboarding steps, swipe deck,

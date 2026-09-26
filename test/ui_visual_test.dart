@@ -47,6 +47,29 @@ void main() {
     );
   });
 
+  testWidgets('onboarding lifestyle visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await startOnboarding(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-name')), 'Alex');
+    await tapNext(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('intent-open_to_long_term')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('interest-Books')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('lifestyle-drinking-Socially')));
+    await tester.tap(find.byKey(const Key('lifestyle-pets-Cat person')));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_onboarding_lifestyle.png'),
+    );
+  });
+
   testWidgets('connections visual baseline', (tester) async {
     await usePhoneViewport(tester);
     await enterDiscovery(tester);
