@@ -1,5 +1,25 @@
 # Checkpoints
 
+## CP-056 - Full Tinder teardown and first UI pass from it (2026-09-26)
+
+- Recorded Tinder 17.35.0 end to end on the owner's Asus: sign-in, all 21 onboarding steps, swipe deck,
+  expanded profile, Explore hubs, Likes, Chat and its safety guide, Safety Toolkit, profile hub, photo
+  editor and tips, every Settings row, all paywalls with prices, and the deletion flow. Findings, measured
+  colours and a take/change/refuse list are in `docs/TINDER_UI_TEARDOWN.md`; raw captures stay local and
+  git-ignored because they show other people. No likes or messages were sent; location stayed
+  approximate and one-time; tracking and contacts were refused.
+- Discovery card: name in bold with a lighter age, icon rows for intent and distance band, and the
+  details button beside the name.
+- Profile details: stacked section cards (Looking for, About, Interests, Distance, your report) ending in
+  full-width "Block [name]" and red "Report [name]" rows with "free and private, never told".
+- Chats: a header with a safety shield, a plainer empty state, and a three-page "Date safely" guide in
+  Vawra's own words that opens on the first visit to Chats and can be reopened from the shield.
+- Verified: `flutter analyze` no issues, 70 tests pass (2 new), discovery and chat goldens refreshed,
+  debug APK builds. Not yet installed on a phone.
+
+Next: install and walk through on a phone; then onboarding additions from the teardown (a promises step,
+optional lifestyle chip groups with icons, bio tip card) and a profile hub with a "Preview my card" view.
+
 ## CP-055 - Progressive one-question onboarding (2026-09-26)
 
 - Welcome now leads into a six-step profile setup instead of straight into discovery, following the

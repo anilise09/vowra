@@ -68,6 +68,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Chats'));
     await tester.pumpAndSettle();
+    await closeSafetyGuideIfShown(tester);
 
     await expectLater(
       find.byType(MaterialApp),

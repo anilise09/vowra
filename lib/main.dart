@@ -13,6 +13,7 @@ import 'domain/match_connection.dart';
 import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
 import 'features/discovery/discovery_deck.dart';
+import 'features/matches/date_safely_guide.dart';
 import 'features/matches/match_tabs.dart';
 import 'features/onboarding/onboarding_flow.dart';
 import 'features/profile/profile_editor.dart';
@@ -137,16 +138,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 MaterialPageRoute<void>(
                                   builder: (_) => OnboardingFlow(
                                     onComplete: (profile) =>
-                                        Navigator.of(
-                                          context,
-                                        ).pushAndRemoveUntil(
-                                          MaterialPageRoute<void>(
-                                            builder: (_) => DiscoveryScreen(
-                                              initialProfile: profile,
+                                        Navigator.of(context)
+                                            .pushAndRemoveUntil(
+                                              MaterialPageRoute<void>(
+                                                builder: (_) => DiscoveryScreen(
+                                                  initialProfile: profile,
+                                                ),
+                                              ),
+                                              (_) => false,
                                             ),
-                                          ),
-                                          (_) => false,
-                                        ),
                                   ),
                                 ),
                               )
@@ -294,6 +294,7 @@ class DiscoveryScreen extends StatefulWidget {
 
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
+  bool safetyGuideSeen = false;
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
   final DiscoveryInteractionRepository interactionRepository =
@@ -313,6 +314,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   MatchConnection? connection;
 
   static const incomingLikeProfileAssets = {'assets/profiles/maya.png'};
+
+  /// The first visit to Chats shows the date-safely guide once.
+  void _selectTab(int index) {
+    setState(() => selectedIndex = index);
+    if (index == 2 && !safetyGuideSeen) {
+      safetyGuideSeen = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) DateSafelyGuide.show(context);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -2834,10 +2846,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget build(BuildContext context) {
     final pages = [
       _discover(context),
-      MatchTab(
-        connection: connection,
-        onOpenChat: () => setState(() => selectedIndex = 2),
-      ),
+      MatchTab(connection: connection, onOpenChat: () => _selectTab(2)),
       ChatTab(
         connection: connection,
         messages: connection == null
@@ -2860,6 +2869,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         onBlock: () => setState(
           () => connection = matchRepository.update((match) => match.block()),
         ),
+        onOpenSafety: () => DateSafelyGuide.show(context),
       ),
       SafeArea(
         child: ProfileEditor(
@@ -2894,8 +2904,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           borderRadius: BorderRadius.circular(32),
           child: NavigationBar(
             selectedIndex: selectedIndex,
-            onDestinationSelected: (value) =>
-                setState(() => selectedIndex = value),
+            onDestinationSelected: _selectTab,
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.explore_outlined),

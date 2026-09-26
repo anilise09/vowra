@@ -4,19 +4,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/app_flow.dart';
 
 void main() {
-  bool nextEnabled(WidgetTester tester) => tester
-      .widget<FilledButton>(find.byKey(const Key('onboarding-next')))
-      .onPressed != null;
+  bool nextEnabled(WidgetTester tester) =>
+      tester
+          .widget<FilledButton>(find.byKey(const Key('onboarding-next')))
+          .onPressed !=
+      null;
 
-  testWidgets('welcome leads into one-question setup, not straight to discovery', (
-    tester,
-  ) async {
-    await startOnboarding(tester);
+  testWidgets(
+    'welcome leads into one-question setup, not straight to discovery',
+    (tester) async {
+      await startOnboarding(tester);
 
-    expect(find.text('What should matches call you?'), findsOneWidget);
-    expect(find.text('Step 1 of 6'), findsOneWidget);
-    expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsNothing);
-  });
+      expect(find.text('What should matches call you?'), findsOneWidget);
+      expect(find.text('Step 1 of 6'), findsOneWidget);
+      expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsNothing);
+    },
+  );
 
   testWidgets('required steps cannot be skipped or left blank', (tester) async {
     await startOnboarding(tester);

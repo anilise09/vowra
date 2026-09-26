@@ -37,3 +37,12 @@ Future<void> enterDiscovery(WidgetTester tester) async {
   await tester.pumpAndSettle();
   await tapNext(tester);
 }
+
+/// The first visit to Chats shows the date-safely guide; close it if open.
+Future<void> closeSafetyGuideIfShown(WidgetTester tester) async {
+  final close = find.byKey(const Key('safety-guide-close'));
+  if (close.evaluate().isNotEmpty) {
+    await tester.tap(close);
+    await tester.pumpAndSettle();
+  }
+}

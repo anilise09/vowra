@@ -179,6 +179,7 @@ class ChatTab extends StatelessWidget {
     required this.onReport,
     required this.onUnmatch,
     required this.onBlock,
+    required this.onOpenSafety,
   });
 
   final MatchConnection? connection;
@@ -189,23 +190,33 @@ class ChatTab extends StatelessWidget {
   final ValueChanged<SafetyReport> onReport;
   final VoidCallback onUnmatch;
   final VoidCallback onBlock;
+  final VoidCallback onOpenSafety;
+
+  Widget _withHeader(Widget body) => SafeArea(
+    child: Column(
+      children: [
+        _ChatsHeader(onOpenSafety: onOpenSafety),
+        Expanded(child: body),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final activeConnection = connection;
     if (activeConnection == null) {
-      return const SafeArea(
-        child: EmptyTab(
+      return _withHeader(
+        const EmptyTab(
           icon: Icons.chat_bubble_outline,
-          title: 'No chat yet',
-          message: 'Like someone who likes you back to open free messaging.',
+          title: 'No chats yet',
+          message: 'When you and someone both like each other, you can message here. Messaging is always free.',
         ),
       );
     }
     if (!activeConnection.isActive) {
       final blocked = activeConnection.status == ConnectionStatus.blocked;
-      return SafeArea(
-        child: EmptyTab(
+      return _withHeader(
+        EmptyTab(
           icon: blocked ? Icons.block : Icons.heart_broken_outlined,
           title: blocked ? 'Blocked' : 'Conversation closed',
           message: blocked
@@ -214,9 +225,9 @@ class ChatTab extends StatelessWidget {
         ),
       );
     }
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
+    return _withHeader(
+      ListView(
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
         children: [
           Row(
             children: [
@@ -507,4 +518,31 @@ class ChatTab extends StatelessWidget {
       onUnmatch();
     }
   }
+}
+
+class _ChatsHeader extends StatelessWidget {
+  const _ChatsHeader({required this.onOpenSafety});
+
+  final VoidCallback onOpenSafety;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 8, 10, 4),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Chats',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+        ),
+        IconButton.filledTonal(
+          key: const Key('chats-safety'),
+          tooltip: 'Safety tools',
+          onPressed: onOpenSafety,
+          icon: const Icon(Icons.shield_outlined),
+        ),
+      ],
+    ),
+  );
 }

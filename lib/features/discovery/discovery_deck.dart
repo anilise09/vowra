@@ -181,63 +181,54 @@ class DiscoveryDeck extends StatelessWidget {
                               ),
                             ),
                             Positioned(
-                              right: 16,
-                              bottom: 120,
-                              child: Material(
-                                color: Colors.white,
-                                shape: const CircleBorder(),
-                                elevation: 5,
-                                child: IconButton(
-                                  key: const Key('open-profile-details'),
-                                  tooltip: 'View profile details',
-                                  icon: const Icon(
-                                    Icons.keyboard_arrow_up_rounded,
-                                  ),
-                                  color: VawraColors.plum,
-                                  onPressed: () => _showProfileDetails(
-                                    context,
-                                    profile,
-                                    profileReport,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
                               left: 20,
-                              right: 20,
-                              bottom: 20,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              right: 14,
+                              bottom: 18,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text(
-                                    '${profile.name}, ${profile.age}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium
-                                        ?.copyWith(
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _NameAge(
+                                          name: profile.name,
+                                          age: profile.age,
                                           color: Colors.white,
-                                          shadows: const [
-                                            Shadow(
-                                              color: Colors.black45,
-                                              blurRadius: 12,
-                                            ),
-                                          ],
+                                          size: 30,
                                         ),
+                                        const SizedBox(height: 8),
+                                        _CardFact(
+                                          icon: Icons.favorite_outline_rounded,
+                                          label: profile.intent,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        _CardFact(
+                                          icon: Icons.near_me_outlined,
+                                          label: profile.distanceBand,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 10),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      _OverlayPill(
-                                        icon: Icons.favorite_outline_rounded,
-                                        label: profile.intent,
+                                  const SizedBox(width: 10),
+                                  Material(
+                                    color: Colors.white,
+                                    shape: const CircleBorder(),
+                                    elevation: 4,
+                                    child: IconButton(
+                                      key: const Key('open-profile-details'),
+                                      tooltip: 'View profile details',
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_up_rounded,
                                       ),
-                                      _OverlayPill(
-                                        icon: Icons.lock_outline_rounded,
-                                        label: profile.distanceBand,
+                                      color: VawraColors.plum,
+                                      onPressed: () => _showProfileDetails(
+                                        context,
+                                        profile,
+                                        profileReport,
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -332,9 +323,11 @@ class DiscoveryDeck extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    '${profile.name}, ${profile.age}',
-                    style: Theme.of(sheetContext).textTheme.headlineSmall,
+                  child: _NameAge(
+                    name: profile.name,
+                    age: profile.age,
+                    color: VawraColors.ink,
+                    size: 24,
                   ),
                 ),
                 IconButton.filledTonal(
@@ -363,87 +356,78 @@ class DiscoveryDeck extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    Chip(
-                      avatar: const Icon(
-                        Icons.favorite_outline_rounded,
-                        size: 17,
-                      ),
-                      label: Text(profile.intent),
-                    ),
-                    Chip(
-                      avatar: const Icon(Icons.location_on_outlined, size: 17),
-                      label: Text(profile.distanceBand),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'About ${profile.name}',
-                  style: Theme.of(sheetContext).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  profile.bio,
-                  style: Theme.of(sheetContext).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Interests',
-                  style: Theme.of(sheetContext).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: profile.interests
-                      .map((item) => Chip(label: Text(item)))
-                      .toList(),
-                ),
-                const SizedBox(height: 20),
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      size: 18,
-                      color: VawraColors.plum,
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Distance is approximate. Exact location is never shown.',
-                      ),
-                    ),
-                  ],
-                ),
-                if (profileReport != null) ...[
-                  const SizedBox(height: 18),
-                  Text(
-                    'Report recorded: ${profileReport.reason.label}. '
-                    '${profileReport.moderationState.label}. '
-                    'Saved on this device only; no review team is connected.',
+                const SizedBox(height: 12),
+                _DetailSection(
+                  icon: Icons.favorite_outline_rounded,
+                  title: 'Looking for',
+                  child: Text(
+                    profile.intent,
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
                   ),
-                ],
-                const SizedBox(height: 20),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    _handleSafetyAction(context, profile, 'report');
-                  },
-                  icon: const Icon(Icons.flag_outlined),
-                  label: const Text('Report privately'),
                 ),
-                TextButton.icon(
-                  onPressed: () {
+                _DetailSection(
+                  icon: Icons.format_quote_rounded,
+                  title: 'About ${profile.name}',
+                  child: Text(
+                    profile.bio,
+                    style: Theme.of(sheetContext).textTheme.bodyLarge,
+                  ),
+                ),
+                _DetailSection(
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'Interests',
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: profile.interests
+                        .map((item) => Chip(label: Text(item)))
+                        .toList(),
+                  ),
+                ),
+                _DetailSection(
+                  icon: Icons.near_me_outlined,
+                  title: 'Distance',
+                  child: Text(
+                    '${profile.distanceBand}. Shown as a band; '
+                    'exact location is never shown.',
+                  ),
+                ),
+                if (profileReport != null)
+                  _DetailSection(
+                    icon: Icons.flag_outlined,
+                    title: 'Your report',
+                    child: Text(
+                      '${profileReport.reason.label}. '
+                      '${profileReport.moderationState.label}. '
+                      'Saved on this device only; no review team is connected.',
+                    ),
+                  ),
+                const SizedBox(height: 6),
+                _SafetyRow(
+                  key: const Key('details-block'),
+                  label: 'Block ${profile.name}',
+                  onTap: () {
                     Navigator.pop(sheetContext);
                     _handleSafetyAction(context, profile, 'block');
                   },
-                  icon: const Icon(Icons.block_outlined),
-                  label: const Text('Block profile'),
+                ),
+                _SafetyRow(
+                  key: const Key('details-report'),
+                  label: 'Report ${profile.name}',
+                  destructive: true,
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _handleSafetyAction(context, profile, 'report');
+                  },
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(8, 4, 8, 0),
+                  child: Text(
+                    'Blocking and reporting are free and private. '
+                    'The other person is never told.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: VawraColors.muted),
+                  ),
                 ),
               ],
             ),
@@ -1083,4 +1067,163 @@ class ConversationAccessPreview extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Name in bold with the age lighter; reads as "Name, age".
+class _NameAge extends StatelessWidget {
+  const _NameAge({
+    required this.name,
+    required this.age,
+    required this.color,
+    required this.size,
+  });
+
+  final String name;
+  final int age;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Text.rich(
+    TextSpan(
+      children: [
+        TextSpan(
+          text: name,
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+        TextSpan(
+          text: ', $age',
+          style: const TextStyle(fontWeight: FontWeight.w400),
+        ),
+      ],
+    ),
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: TextStyle(
+      color: color,
+      fontSize: size,
+      height: 1.1,
+      letterSpacing: -0.5,
+      shadows: color == Colors.white
+          ? const [Shadow(color: Colors.black45, blurRadius: 12)]
+          : null,
+    ),
+  );
+}
+
+class _CardFact extends StatelessWidget {
+  const _CardFact({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 17, color: Colors.white),
+      const SizedBox(width: 7),
+      Flexible(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+class _DetailSection extends StatelessWidget {
+  const _DetailSection({
+    required this.icon,
+    required this.title,
+    required this.child,
+  });
+
+  final IconData icon;
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: const Color(0xFFF0E5EB)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 17, color: VawraColors.coral),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.labelLarge
+                    ?.copyWith(color: VawraColors.muted),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        child,
+      ],
+    ),
+  );
+}
+
+class _SafetyRow extends StatelessWidget {
+  const _SafetyRow({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: Color(0xFFF0E5EB)),
+      ),
+      child: InkWell(
+        customBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        onTap: onTap,
+        child: SizedBox(
+          height: 54,
+          width: double.infinity,
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15.5,
+                color: destructive ? VawraColors.coralDark : VawraColors.ink,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

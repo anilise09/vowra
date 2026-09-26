@@ -41,10 +41,14 @@ void main() {
   testWidgets('enters discovery and opens safety center', (tester) async {
     await enterDiscovery(tester);
     expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('open-profile-details')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open-profile-details')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('close-profile-details')), findsOneWidget);
     await tester.tap(find.byKey(const Key('close-profile-details')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byTooltip('Safety center'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Safety center'));
     await tester.pumpAndSettle();
@@ -118,6 +122,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await closeSafetyGuideIfShown(tester);
 
     FilledButton callButton() => tester.widget<FilledButton>(
       find.byKey(const Key('request-video-call')),

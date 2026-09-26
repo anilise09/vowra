@@ -42,7 +42,7 @@ void main() {
     tester,
   ) async {
     await enterDiscovery(tester);
-    expect(find.text('Maya, 29'), findsOneWidget);
+    expect(find.text('Maya, 29', findRichText: true), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('discovery-preferences')));
     await tester.pumpAndSettle();
@@ -50,14 +50,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('apply-discovery-preferences')));
     await tester.pumpAndSettle();
-    expect(find.text('Amina, 27'), findsOneWidget);
+    expect(find.text('Amina, 27', findRichText: true), findsOneWidget);
     expect(find.byTooltip('Edit preferences'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('discovery-preferences')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('reset-discovery-preferences')));
     await tester.pumpAndSettle();
-    expect(find.text('Maya, 29'), findsOneWidget);
+    expect(find.text('Maya, 29', findRichText: true), findsOneWidget);
   });
 
   testWidgets('discovery report needs a reason and stays local', (
@@ -103,7 +103,7 @@ void main() {
     tester,
   ) async {
     await enterDiscovery(tester);
-    expect(find.text('Maya, 29'), findsOneWidget);
+    expect(find.text('Maya, 29', findRichText: true), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('discovery-safety-menu')));
     await tester.pumpAndSettle();
@@ -112,8 +112,8 @@ void main() {
     await tester.tap(find.byKey(const Key('confirm-discovery-block')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Maya, 29'), findsNothing);
-    expect(find.text('Elena, 32'), findsOneWidget);
+    expect(find.text('Maya, 29', findRichText: true), findsNothing);
+    expect(find.text('Elena, 32', findRichText: true), findsOneWidget);
     expect(find.textContaining('prototype profiles'), findsOneWidget);
   });
 
@@ -121,13 +121,13 @@ void main() {
     tester,
   ) async {
     await enterDiscovery(tester);
-    expect(find.text('Maya, 29'), findsOneWidget);
+    expect(find.text('Maya, 29', findRichText: true), findsOneWidget);
 
     await tester.dragFrom(const Offset(200, 500), const Offset(0, -160));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('close-profile-details')), findsOneWidget);
-    expect(find.text('Maya, 29'), findsNWidgets(2));
+    expect(find.text('Maya, 29', findRichText: true), findsNWidgets(2));
     expect(find.textContaining('Mutual like with Maya'), findsNothing);
     await tester.tap(find.byKey(const Key('close-profile-details')));
     await tester.pumpAndSettle();
@@ -135,8 +135,8 @@ void main() {
     await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
 
-    expect(find.text('Maya, 29'), findsNothing);
-    expect(find.text('Elena, 32'), findsOneWidget);
+    expect(find.text('Maya, 29', findRichText: true), findsNothing);
+    expect(find.text('Elena, 32', findRichText: true), findsOneWidget);
     expect(find.textContaining('Mutual like with Maya'), findsWidgets);
 
     await tester.scrollUntilVisible(
@@ -166,7 +166,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('No chat yet'), findsOneWidget);
+    await closeSafetyGuideIfShown(tester);
+    expect(find.text('No chats yet'), findsOneWidget);
 
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
@@ -180,6 +181,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await closeSafetyGuideIfShown(tester);
     expect(find.text('Maya'), findsOneWidget);
     expect(find.text('Hi! What is your ideal Sunday?'), findsOneWidget);
     await tester.scrollUntilVisible(
@@ -219,14 +221,14 @@ void main() {
 
     await tester.flingFrom(const Offset(160, 320), const Offset(500, 0), 1000);
     await tester.pumpAndSettle();
-    expect(find.text('Elena, 32'), findsOneWidget);
+    expect(find.text('Elena, 32', findRichText: true), findsOneWidget);
     expect(find.textContaining('prototype profiles'), findsOneWidget);
 
     await tester.flingFrom(const Offset(400, 320), const Offset(-500, 0), 1000);
     await tester.pumpAndSettle();
 
-    expect(find.text('Elena, 32'), findsNothing);
-    expect(find.text('Amina, 27'), findsOneWidget);
+    expect(find.text('Elena, 32', findRichText: true), findsNothing);
+    expect(find.text('Amina, 27', findRichText: true), findsOneWidget);
     expect(find.textContaining('prototype profiles'), findsOneWidget);
   });
 }

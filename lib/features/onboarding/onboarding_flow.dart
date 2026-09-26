@@ -212,9 +212,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       children: [
         Text(
           'Step ${step.index + 1} of $total',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: VawraColors.coral,
-          ),
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: VawraColors.coral),
         ),
         const SizedBox(height: 8),
         Text(title, style: Theme.of(context).textTheme.headlineMedium),
