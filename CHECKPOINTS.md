@@ -1,5 +1,17 @@
 # Checkpoints
 
+## CP-059 - Settings page with free pause and honest deletion (2026-09-26)
+
+- A gear on the Profile tab opens Settings, grouped by purpose: Discover ("Show me on Discover"), Safety
+  (date-safely guide, Safety center), Privacy (plain statement of what the prototype keeps), Account.
+- Pausing is free: Discover shows a "Your profile is paused" banner with Resume; matches can still message.
+- Delete profile is one honest dialog that says exactly what is removed, offers "Pause instead" once (not
+  when already paused), then clears all in-memory data and returns to Welcome. No survey loop.
+- Verified: `flutter analyze` no issues, 78 tests pass (2 new behaviour tests, 1 new golden; profile
+  golden refreshed for the new header), debug APK builds.
+
+Next: install on a phone and walk every new screen at normal and large text.
+
 ## CP-058 - Profile preview, profile strength, and editable habits (2026-09-26)
 
 - "Preview my card" opens "How others see you": the person's own card built from the current form (name in

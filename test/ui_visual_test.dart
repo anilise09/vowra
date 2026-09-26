@@ -70,6 +70,20 @@ void main() {
     );
   });
 
+  testWidgets('settings visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await enterDiscovery(tester);
+    await tester.tap(find.byKey(const Key('profile-tab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-settings')));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_settings.png'),
+    );
+  });
+
   testWidgets('connections visual baseline', (tester) async {
     await usePhoneViewport(tester);
     await enterDiscovery(tester);

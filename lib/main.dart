@@ -17,6 +17,7 @@ import 'features/matches/date_safely_guide.dart';
 import 'features/matches/match_tabs.dart';
 import 'features/onboarding/onboarding_flow.dart';
 import 'features/profile/profile_editor.dart';
+import 'features/settings/settings_page.dart';
 import 'theme/vawra_theme.dart';
 
 void main() => runApp(const VawraApp());
@@ -295,6 +296,7 @@ class DiscoveryScreen extends StatefulWidget {
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int selectedIndex = 0;
   bool safetyGuideSeen = false;
+  bool profilePaused = false;
   int profileIndex = 0;
   DiscoveryPreferences discoveryPreferences = const DiscoveryPreferences();
   final DiscoveryInteractionRepository interactionRepository =
@@ -2845,7 +2847,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      _discover(context),
+      profilePaused ? _pausedDiscover(context) : _discover(context),
       MatchTab(connection: connection, onOpenChat: () => _selectTab(2)),
       ChatTab(
         connection: connection,
@@ -2872,17 +2874,44 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         onOpenSafety: () => DateSafelyGuide.show(context),
       ),
       SafeArea(
-        child: ProfileEditor(
-          initialProfile: userProfile,
-          onSaved: (profile) {
-            profileRepository.save(profile);
-            setState(() => userProfile = profileRepository.load());
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile saved on this device session only.'),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 10, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Profile',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                  IconButton.filledTonal(
+                    key: const Key('open-settings'),
+                    tooltip: 'Settings',
+                    onPressed: () => _openSettings(context),
+                    icon: const Icon(Icons.settings_outlined),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+            Expanded(
+              child: ProfileEditor(
+                initialProfile: userProfile,
+                onSaved: (profile) {
+                  profileRepository.save(profile);
+                  setState(() => userProfile = profileRepository.load());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Profile saved on this device session only.',
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     ];
@@ -2957,6 +2986,63 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       profileIndex = 0;
     }),
     onOpenSafety: () => _openSafety(context),
+  );
+
+  /// Discover with a banner while the person has paused their profile.
+  Widget _pausedDiscover(BuildContext context) => Column(
+    children: [
+      SafeArea(
+        bottom: false,
+        child: Container(
+          key: const Key('paused-banner'),
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+          decoration: BoxDecoration(
+            color: VawraColors.lavender,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.pause_circle_outline, color: VawraColors.plum),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Your profile is paused. New people cannot see you.',
+                ),
+              ),
+              TextButton(
+                key: const Key('resume-profile'),
+                onPressed: () => setState(() => profilePaused = false),
+                child: const Text('Resume'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      Expanded(
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          child: _discover(context),
+        ),
+      ),
+    ],
+  );
+
+  void _openSettings(BuildContext context) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => SettingsPage(
+        paused: profilePaused,
+        onPausedChanged: (value) => setState(() => profilePaused = value),
+        onOpenSafetyGuide: () => DateSafelyGuide.show(context),
+        onOpenSafetyCenter: () => _openSafety(context),
+        // Everything lives in this screen's memory; leaving it deletes it.
+        onDeleteProfile: () => Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute<void>(builder: (_) => const WelcomeScreen()),
+          (_) => false,
+        ),
+      ),
+    ),
   );
 
   void _openSafety(BuildContext context) => showModalBottomSheet<void>(
