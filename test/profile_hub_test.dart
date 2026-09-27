@@ -33,13 +33,13 @@ void main() {
     await enterDiscovery(tester);
     await openProfile(tester);
 
-    expect(find.text('0 of 3'), findsOneWidget);
+    expect(find.text('0 of 4'), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('profile-bio')),
       'Weekend hikes, secondhand bookshops, and slow breakfasts.',
     );
     await tester.pump();
-    expect(find.text('1 of 3'), findsOneWidget);
+    expect(find.text('1 of 4'), findsOneWidget);
   });
 
   testWidgets('lifestyle answers from sign-up appear in the editor', (
@@ -68,7 +68,7 @@ void main() {
     await tapNext(tester);
 
     await openProfile(tester);
-    expect(find.text('1 of 3'), findsOneWidget);
+    expect(find.text('1 of 4'), findsOneWidget);
     final daily = find.byKey(const Key('lifestyle-exercise-Daily'));
     await tester.scrollUntilVisible(
       daily,
@@ -95,5 +95,54 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Works well'), findsOneWidget);
     expect(find.text('Your face, clearly'), findsOneWidget);
+  });
+
+  testWidgets('a prompt can be added and shows on the preview', (tester) async {
+    await enterDiscovery(tester);
+    await openProfile(tester);
+    final scroll = find
+        .descendant(
+          of: find.byKey(const Key('profile-scroll')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('add-prompt')),
+      200,
+      scrollable: scroll,
+    );
+    await tester.tap(find.byKey(const Key('add-prompt')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ask me about…'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('prompt-answer')),
+      'The best bakery in town',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('prompt-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('The best bakery in town'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('preview-card')),
+      -200,
+      scrollable: scroll,
+    );
+    await tester.tap(find.byKey(const Key('preview-card')));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.descendant(
+        of: find.byKey(const Key('preview-scroll')),
+        matching: find.text('The best bakery in town'),
+      ),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('preview-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
   });
 }

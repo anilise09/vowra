@@ -121,6 +121,18 @@ void main() {
     );
   });
 
+  testWidgets('explore visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await enterDiscovery(tester);
+    await tester.tap(find.byKey(const Key('explore-tab')));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_explore.png'),
+    );
+  });
+
   testWidgets('connections visual baseline', (tester) async {
     await usePhoneViewport(tester);
     await enterDiscovery(tester);
@@ -145,6 +157,7 @@ void main() {
     await tester.tap(find.text('Chats'));
     await tester.pumpAndSettle();
     await closeSafetyGuideIfShown(tester);
+    await openConversation(tester);
 
     await expectLater(
       find.byType(MaterialApp),

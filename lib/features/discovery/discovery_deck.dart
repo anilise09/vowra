@@ -32,6 +32,8 @@ class DiscoveryDeck extends StatelessWidget {
     this.superLikesLeft = 0,
     this.showTutorial = false,
     this.onTutorialDone,
+    this.title = 'Find your match',
+    this.onBack,
   });
 
   final List<DemoProfile> profiles;
@@ -63,6 +65,10 @@ class DiscoveryDeck extends StatelessWidget {
   /// First-visit overlay explaining the three swipe directions.
   final bool showTutorial;
   final VoidCallback? onTutorialDone;
+
+  /// Header title; hub decks use their hub name and show a back arrow.
+  final String title;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +110,8 @@ class DiscoveryDeck extends StatelessWidget {
           return Column(
             children: [
               _DiscoveryHeader(
+                title: title,
+                onBack: onBack,
                 count: visibleProfiles.length,
                 filtersActive: !preferences.isDefault,
                 onPreferences: () => _showPreferences(context),
@@ -703,12 +711,16 @@ class DiscoveryDeck extends StatelessWidget {
 
 class _DiscoveryHeader extends StatelessWidget {
   const _DiscoveryHeader({
+    required this.title,
+    required this.onBack,
     required this.count,
     required this.filtersActive,
     required this.onPreferences,
     required this.onSafety,
   });
 
+  final String title;
+  final VoidCallback? onBack;
   final int count;
   final bool filtersActive;
   final VoidCallback onPreferences;
@@ -717,22 +729,30 @@ class _DiscoveryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      SizedBox(
-        width: 48,
-        height: 48,
-        child: Image.asset(
-          'assets/branding/vawra_company_mark_clean.png',
-          semanticLabel: 'Vawra logo',
-          fit: BoxFit.contain,
+      if (onBack != null)
+        IconButton(
+          key: const Key('hub-back'),
+          tooltip: 'Back to Explore',
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        )
+      else
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: Image.asset(
+            'assets/branding/vawra_company_mark_clean.png',
+            semanticLabel: 'Vawra logo',
+            fit: BoxFit.contain,
+          ),
         ),
-      ),
       const SizedBox(width: 10),
       Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Find your match',
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleMedium

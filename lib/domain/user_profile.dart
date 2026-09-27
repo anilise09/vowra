@@ -1,4 +1,5 @@
 import 'lifestyle.dart';
+import 'profile_prompt.dart';
 
 enum RelationshipIntent {
   longTerm('long_term', 'Long-term relationship'),
@@ -21,6 +22,7 @@ class UserProfile {
     this.showDistanceBand = true,
     this.callReadyByDefault = false,
     this.lifestyle = const {},
+    this.prompts = const [],
   });
 
   final String displayName;
@@ -31,6 +33,7 @@ class UserProfile {
   final bool showDistanceBand;
   final bool callReadyByDefault;
   final Map<LifestyleTopic, String> lifestyle;
+  final List<ProfilePrompt> prompts;
 
   static const availableInterests = [
     'Arts',

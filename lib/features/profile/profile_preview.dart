@@ -146,6 +146,14 @@ class ProfilePreviewSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 if (profile.bio.trim().isNotEmpty)
                   _Section(title: 'About $name', child: Text(profile.bio)),
+                for (final prompt in profile.prompts)
+                  _Section(
+                    title: prompt.question,
+                    child: Text(
+                      prompt.answer,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
                 if (profile.interests.isNotEmpty)
                   _Section(
                     title: 'Interests',
@@ -237,11 +245,13 @@ class ProfileStrengthCard extends StatelessWidget {
     required this.hasIntro,
     required this.interestCount,
     required this.hasLifestyle,
+    this.hasPrompt = false,
   });
 
   final bool hasIntro;
   final int interestCount;
   final bool hasLifestyle;
+  final bool hasPrompt;
 
   @override
   Widget build(BuildContext context) {
@@ -249,6 +259,7 @@ class ProfileStrengthCard extends StatelessWidget {
       ('Intro', hasIntro),
       ('3+ interests', interestCount >= 3),
       ('Habits', hasLifestyle),
+      ('A prompt', hasPrompt),
     ];
     final done = items.where((item) => item.$2).length;
     return Container(
@@ -309,7 +320,7 @@ class ProfileStrengthCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           const Text(
-            'All optional: a short intro, three or more interests, and a few habits give matches an easy way to start talking.',
+            'All optional: an intro, three or more interests, a few habits and a prompt give matches an easy way to start talking.',
             style: TextStyle(fontSize: 12.5),
           ),
         ],

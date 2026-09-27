@@ -9,10 +9,12 @@ import 'domain/chat_message.dart';
 import 'domain/demo_profile.dart';
 import 'domain/discovery_interaction.dart';
 import 'domain/discovery_preferences.dart';
+import 'domain/explore_hub.dart';
 import 'domain/match_connection.dart';
 import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
 import 'features/discovery/discovery_deck.dart';
+import 'features/explore/explore_tab.dart';
 import 'features/matches/date_safely_guide.dart';
 import 'features/matches/match_celebration.dart';
 import 'features/matches/match_tabs.dart';
@@ -328,7 +330,12 @@ class DiscoveryScreen extends StatefulWidget {
 }
 
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
-  int selectedIndex = 0;
+  static const tabDiscover = 0;
+  static const tabChats = 3; // Discover, Explore, Matches, Chats, Profile
+
+  int selectedIndex = tabDiscover;
+  ExploreHub? activeHub;
+  int openThreadRequest = 0;
   bool safetyGuideSeen = false;
   bool profilePaused = false;
   String? focusProfileAsset;
@@ -357,7 +364,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   /// The first visit to Chats shows the date-safely guide once.
   void _selectTab(int index) {
     setState(() => selectedIndex = index);
-    if (index == 2 && !safetyGuideSeen) {
+    if (index == tabChats && !safetyGuideSeen) {
       safetyGuideSeen = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) DateSafelyGuide.show(context);
@@ -2885,9 +2892,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget build(BuildContext context) {
     final pages = [
       profilePaused ? _pausedDiscover(context) : _discover(context),
+      _explore(context),
       MatchTab(
         connection: connection,
-        onOpenChat: () => _selectTab(2),
+        onOpenChat: () => _selectTab(tabChats),
         likesYou: _likesYou(),
         onRespond: _handleDiscoverySwipe,
         activity: interactionRepository.likeEvents(),
@@ -2915,6 +2923,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           () => connection = matchRepository.update((match) => match.block()),
         ),
         onOpenSafety: () => DateSafelyGuide.show(context),
+        openThreadRequest: openThreadRequest,
       ),
       SafeArea(
         child: Column(
@@ -2984,6 +2993,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 label: 'Discover',
               ),
               NavigationDestination(
+                key: Key('explore-tab'),
+                icon: Icon(Icons.grid_view_outlined),
+                selectedIcon: Icon(Icons.grid_view_rounded),
+                label: 'Explore',
+              ),
+              NavigationDestination(
                 icon: Icon(Icons.favorite_outline),
                 selectedIcon: Icon(Icons.favorite_rounded),
                 label: 'Matches',
@@ -3007,8 +3022,33 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  Widget _discover(BuildContext context) => DiscoveryDeck(
-    profiles: profiles,
+  /// Explore: hub grid, or the chosen hub's own swipe deck.
+  Widget _explore(BuildContext context) {
+    final hub = activeHub;
+    if (hub != null) return _discover(context, hub: hub);
+    final liked = interactionRepository.likedProfiles();
+    final passed = interactionRepository.rejectedProfileAssets();
+    final blocked = interactionRepository.blockedProfileAssets();
+    final available = profiles.where(
+      (p) =>
+          !liked.containsKey(p.assetPath) &&
+          !passed.contains(p.assetPath) &&
+          !blocked.contains(p.assetPath),
+    );
+    return ExploreTab(
+      counts: {
+        for (final hub in ExploreHub.all)
+          hub.id: available.where(hub.includes).length,
+      },
+      onOpen: (hub) => setState(() => activeHub = hub),
+    );
+  }
+
+  Widget _discover(BuildContext context, {ExploreHub? hub}) => DiscoveryDeck(
+    key: ValueKey('deck-${hub?.id ?? 'main'}'),
+    title: hub?.title ?? 'Find your match',
+    onBack: hub == null ? null : () => setState(() => activeHub = null),
+    profiles: hub == null ? profiles : profiles.where(hub.includes).toList(),
     preferences: discoveryPreferences,
     blockedProfileAssets: interactionRepository.blockedProfileAssets(),
     likedProfiles: interactionRepository.likedProfiles(),
@@ -3156,7 +3196,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         peerPhotoAsset: profile.assetPath,
         ownInitial: name.isEmpty ? 'You' : name.characters.first.toUpperCase(),
         superLike: superLike,
-        onMessage: () => _selectTab(2),
+        onMessage: () {
+          setState(() => openThreadRequest++);
+          _selectTab(tabChats);
+        },
       );
     }
   }

@@ -124,10 +124,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     await closeSafetyGuideIfShown(tester);
+    await openConversation(tester);
 
-    FilledButton callButton() => tester.widget<FilledButton>(
-      find.byKey(const Key('request-video-call')),
-    );
+    IconButton callButton() =>
+        tester.widget<IconButton>(find.byKey(const Key('request-video-call')));
     expect(callButton().onPressed, isNull);
     await tester.tap(find.byKey(const Key('call-ready-switch')));
     await tester.pump();

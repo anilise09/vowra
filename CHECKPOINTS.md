@@ -1,5 +1,22 @@
 # Checkpoints
 
+## CP-064 - Explore hubs, chat list and conversation, prompts; checked on an AVD (2026-09-26)
+
+- Explore tab (5th tab): nine hubs built only from what people chose (2 relationship goals, 7 interests)
+  with live counts; each opens its own swipe deck with a back arrow.
+- Chats: a list with a new-matches row and conversation rows (last message, time); the conversation has a
+  header with back, call and safety menu, a compact call-readiness switch, day and time labels, "Sent"
+  under own messages, double-tap heart reactions, and a composer pinned to the bottom with a send button.
+  A gentle "Are you sure?" appears before sending a message with hurtful words (edit or send anyway).
+  "Send a message" on the match screen opens the conversation directly.
+- Profile prompts: up to two, picked from Vawra's own questions, answered in 150 characters, shown on the
+  preview and counted in Profile strength (now 4 items).
+- Walked the build on Pixel_10_Pro_XL_34 (Android 14): sign-up, tutorial, deck, Explore, Foodies hub,
+  match, safety guide, conversation, prompt editing. The AVD went offline near the end without a crash
+  report; the prompt preview is covered by tests.
+- The teardown now ends with a gap table: what is done and what is blocked, and why.
+- Verified: `flutter analyze` no issues, 94 tests pass (4 new), goldens refreshed, debug APK builds.
+
 ## CP-063 - On-device fixes from a real Asus walkthrough (2026-09-26)
 
 - Walked the new build on the Asus: sign-up, tutorial, drag with LIKE stamp and tilt, match celebration,

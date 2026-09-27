@@ -189,3 +189,32 @@ Change:
 Refuse:
 - Fake "Active" status or counts without real data; message-before-match as a paid upsell; paywalled
   safety; forced biometric capture without provider and legal review.
+
+## 12. Gap check against Vawra (2026-09-26, after CP-064)
+
+| Tinder feature | Vawra status |
+| --- | --- |
+| One question per screen, progress, Skip on optional steps | Done (7 steps, habits and intro optional) |
+| Card drag with tilt, LIKE / NOPE / SUPER LIKE stamps, fly-off, spring-back, next card reveal | Done (`SwipeCardStack`), buttons use the same motion |
+| Super Like | Done: swipe up or star, 3 free a day |
+| Rewind | Done as a free Undo for the last pass |
+| "It's a Match!" screen | Done, "Send a message" opens the conversation |
+| First-swipe tutorial | Done |
+| Expanded profile with sections, Block and Report at the end | Done |
+| Explore hubs with counts and their own decks | Done: 2 goal hubs and 7 interest hubs from real profile data |
+| Likes You | Done and free (Tinder paywalls it) |
+| Chat list with new matches, conversation with pinned composer, timestamps | Done |
+| Message reactions | Done (double-tap heart) |
+| "Are you sure?" before a hurtful message | Done |
+| Date-safely guide and safety shield in Chats | Done |
+| Profile prompts | Done (up to 2, shown on the preview) |
+| Profile completion, photo tips, preview my card | Done |
+| Settings with pause and delete | Done: free pause, one honest delete confirmation |
+| Several photos per person with tap-to-flip | Blocked: synthetic profiles have one portrait each and portrait generation is paused by the owner |
+| Photo upload and crop | Blocked: waits for the reviewed media pipeline (`MEDIA_UPLOAD_CONTRACT.md`) |
+| Face Check / photo verification badge | Blocked: needs provider and legal review; Vawra never claims verification it has not done |
+| Boost, paid tiers, paywalls | Blocked: monetization is legally on hold |
+| Active now / recently active | Blocked: needs a server; never faked |
+| GIFs, stickers, Spotify, Instagram | Blocked: third-party providers not reviewed |
+| Passport, Missed Connections | Blocked: needs location services and a privacy review |
+| Double Date, notifications settings | Blocked: need accounts and a push service |

@@ -352,7 +352,7 @@ class _MatchPill extends StatelessWidget {
   );
 }
 
-class ChatTab extends StatelessWidget {
+class ChatTab extends StatefulWidget {
   const ChatTab({
     super.key,
     required this.connection,
@@ -364,6 +364,8 @@ class ChatTab extends StatelessWidget {
     required this.onUnmatch,
     required this.onBlock,
     required this.onOpenSafety,
+    this.startInThread = false,
+    this.openThreadRequest = 0,
   });
 
   final MatchConnection? connection;
@@ -376,18 +378,88 @@ class ChatTab extends StatelessWidget {
   final VoidCallback onBlock;
   final VoidCallback onOpenSafety;
 
+  /// Opens straight into the conversation (used by focused widget tests).
+  final bool startInThread;
+
+  /// Increase to jump into the conversation, e.g. from "Send a message".
+  final int openThreadRequest;
+
+  @override
+  State<ChatTab> createState() => _ChatTabState();
+}
+
+class _ChatTabState extends State<ChatTab> {
+  late bool inThread = widget.startInThread;
+  final composer = TextEditingController();
+  final reactions = <String>{};
+
+  /// Words that trigger a gentle "are you sure?" before sending. The message
+  /// is never blocked or reported; the sender decides.
+  static final _hurtful = RegExp(
+    r'\b(stupid|idiot|ugly|loser|shut up|hate you|worthless|pathetic|fat)\b',
+    caseSensitive: false,
+  );
+
+  @override
+  void didUpdateWidget(ChatTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.openThreadRequest != oldWidget.openThreadRequest) {
+      inThread = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    composer.dispose();
+    super.dispose();
+  }
+
   Widget _withHeader(Widget body) => SafeArea(
     child: Column(
       children: [
-        _ChatsHeader(onOpenSafety: onOpenSafety),
+        _ChatsHeader(onOpenSafety: widget.onOpenSafety),
         Expanded(child: body),
       ],
     ),
   );
 
+  Future<void> _send() async {
+    final text = composer.text.trim();
+    if (text.isEmpty) return;
+    if (_hurtful.hasMatch(text)) {
+      final send = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          key: const Key('are-you-sure'),
+          title: const Text('Are you sure?'),
+          content: const Text(
+            'This might come across as hurtful. Kind first messages get far '
+            'more replies.',
+          ),
+          actions: [
+            TextButton(
+              key: const Key('are-you-sure-edit'),
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Edit message'),
+            ),
+            TextButton(
+              key: const Key('are-you-sure-send'),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Send anyway'),
+            ),
+          ],
+        ),
+      );
+      if (send != true) return;
+    }
+    widget.onSend(text);
+    composer.clear();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final activeConnection = connection;
+    final activeConnection = widget.connection;
     if (activeConnection == null) {
       return _withHeader(
         const EmptyTab(
@@ -409,46 +481,109 @@ class ChatTab extends StatelessWidget {
         ),
       );
     }
-    return _withHeader(
-      ListView(
-        padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 25,
-                backgroundImage: AssetImage(
-                  activeConnection.peerProfileAssetPath,
+    return inThread
+        ? _thread(context, activeConnection)
+        : _withHeader(_list(context, activeConnection));
+  }
+
+  Widget _list(BuildContext context, MatchConnection match) {
+    final last = widget.messages.lastOrNull;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
+      children: [
+        Text('New matches', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Column(
+              children: [
+                CircleAvatar(
+                  radius: 34,
+                  backgroundColor: VawraColors.coral,
+                  child: CircleAvatar(
+                    radius: 31,
+                    backgroundImage: AssetImage(match.peerProfileAssetPath),
+                  ),
                 ),
+                const SizedBox(height: 6),
+                Text(match.peerName),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
+        Text('Messages', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 6),
+        ListTile(
+          key: Key('conversation-${match.peerName}'),
+          contentPadding: EdgeInsets.zero,
+          leading: CircleAvatar(
+            radius: 28,
+            backgroundImage: AssetImage(match.peerProfileAssetPath),
+          ),
+          title: Text(
+            match.peerName,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(
+            last == null
+                ? 'Say hello'
+                : '${last.author == MessageAuthor.currentUser ? 'You: ' : ''}${last.text}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: last == null ? null : Text(_time(last.sentAt)),
+          onTap: () => setState(() => inThread = true),
+        ),
+        const Divider(),
+        const Text(
+          'Synthetic prototype chat · not a real person.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _thread(BuildContext context, MatchConnection match) => SafeArea(
+    child: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+          child: Row(
+            children: [
+              IconButton(
+                key: const Key('thread-back'),
+                tooltip: 'Back to chats',
+                onPressed: () => setState(() => inThread = false),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
-              const SizedBox(width: 11),
+              CircleAvatar(
+                radius: 21,
+                backgroundImage: AssetImage(match.peerProfileAssetPath),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      activeConnection.peerName,
-                      style: Theme.of(context).textTheme.titleLarge,
+                      match.peerName,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const Row(
-                      children: [
-                        Icon(Icons.circle, color: Color(0xFF39B56A), size: 9),
-                        SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
-                            'Matched · prototype chat',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      'Matched · prototype chat',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
               ),
-              FilledButton(
+              IconButton.filled(
                 key: const Key('request-video-call'),
-                onPressed: activeConnection.canRequestCall
+                tooltip: 'Video call',
+                onPressed: match.canRequestCall
                     ? () => ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text(
@@ -457,13 +592,7 @@ class ChatTab extends StatelessWidget {
                         ),
                       )
                     : null,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(48, 48),
-                  maximumSize: const Size(48, 48),
-                  padding: EdgeInsets.zero,
-                  shape: const CircleBorder(),
-                ),
-                child: const Icon(Icons.videocam_outlined),
+                icon: const Icon(Icons.videocam_outlined),
               ),
               PopupMenuButton<String>(
                 tooltip: 'Conversation safety actions',
@@ -479,107 +608,213 @@ class ChatTab extends StatelessWidget {
               ),
             ],
           ),
-          if (report != null)
-            Card(
-              color: const Color(0xFFFFF1D6),
-              child: ListTile(
-                leading: const Icon(Icons.flag_outlined),
-                title: Text('Report recorded: ${report!.reason.label}'),
-                subtitle: Text(
-                  '${report!.moderationState.label}. Saved in this device session only. No review team is connected. The other person is not notified.',
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
-          Material(
-            color: VawraColors.blush,
-            borderRadius: BorderRadius.circular(22),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SwitchListTile(
-                    key: const Key('call-ready-switch'),
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Open to a call'),
-                    subtitle: const Text(
-                      'Both people opt in before either can request one.',
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView(
+            key: const Key('thread-scroll'),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            children: [
+              if (widget.report != null)
+                Card(
+                  color: const Color(0xFFFFF1D6),
+                  child: ListTile(
+                    leading: const Icon(Icons.flag_outlined),
+                    title: Text(
+                      'Report recorded: ${widget.report!.reason.label}',
                     ),
-                    value: activeConnection.currentUserCallReady,
-                    onChanged: onCallReadinessChanged,
-                  ),
-                  Text(
-                    activeConnection.peerCallReady
-                        ? '${activeConnection.peerName} is also open to a call.'
-                        : '${activeConnection.peerName} has not opted in.',
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          ...messages.map(
-            (message) => Align(
-              alignment: message.author == MessageAuthor.currentUser
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 290),
-                margin: const EdgeInsets.only(bottom: 9),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: message.author == MessageAuthor.currentUser
-                      ? const Color(0xFFDCDCE9)
-                      : Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
-                    bottomLeft: Radius.circular(
-                      message.author == MessageAuthor.currentUser ? 20 : 5,
-                    ),
-                    bottomRight: Radius.circular(
-                      message.author == MessageAuthor.currentUser ? 5 : 20,
+                    subtitle: Text(
+                      '${widget.report!.moderationState.label}. Saved in this device session only. No review team is connected.',
                     ),
                   ),
-                  border: message.author == MessageAuthor.currentUser
-                      ? null
-                      : Border.all(color: VawraColors.coral, width: 1.2),
                 ),
-                child: Text(
-                  message.text,
-                  style: TextStyle(color: const Color(0xFF182465)),
+              Material(
+                color: VawraColors.blush,
+                borderRadius: BorderRadius.circular(18),
+                child: SwitchListTile(
+                  key: const Key('call-ready-switch'),
+                  title: const Text('Open to a call'),
+                  subtitle: Text(
+                    match.peerCallReady
+                        ? '${match.peerName} is also open to a call. Both must opt in.'
+                        : 'Both people opt in first. ${match.peerName} has not yet.',
+                  ),
+                  value: match.currentUserCallReady,
+                  onChanged: widget.onCallReadinessChanged,
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+              if (widget.messages.isNotEmpty)
+                Center(
+                  child: Text(
+                    _day(widget.messages.first.sentAt),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: VawraColors.muted,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 10),
+              for (final message in widget.messages) _bubble(message),
+            ],
           ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('message-composer'),
-            enabled: activeConnection.canMessage,
-            maxLength: MessagePolicy.maxCharacters,
-            textInputAction: TextInputAction.send,
-            onSubmitted: onSend,
-            decoration: const InputDecoration(
-              hintText: 'Write something thoughtful…',
-              helperText: 'Press send on the keyboard. Anti-spam limits apply.',
-              prefixIcon: Icon(Icons.add_circle_outline_rounded),
-              suffixIcon: Icon(Icons.send_rounded, color: VawraColors.coral),
-            ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 10),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xFFF0E5EB))),
           ),
-        ],
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const Key('message-composer'),
+                  controller: composer,
+                  enabled: match.canMessage,
+                  maxLength: MessagePolicy.maxCharacters,
+                  minLines: 1,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.send,
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) => _send(),
+                  decoration: const InputDecoration(
+                    hintText: 'Write something thoughtful…',
+                    counterText: '',
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filled(
+                key: const Key('send-message'),
+                tooltip: 'Send',
+                style: IconButton.styleFrom(backgroundColor: VawraColors.coral),
+                onPressed: composer.text.trim().isEmpty ? null : _send,
+                icon: const Icon(Icons.send_rounded),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _bubble(ChatMessage message) {
+    final mine = message.author == MessageAuthor.currentUser;
+    final reacted = reactions.contains(message.id);
+    return Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: GestureDetector(
+        key: Key('bubble-${message.id}'),
+        onDoubleTap: () => setState(
+          () => reacted
+              ? reactions.remove(message.id)
+              : reactions.add(message.id),
+        ),
+        child: Column(
+          crossAxisAlignment: mine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 290),
+                  margin: const EdgeInsets.only(bottom: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: mine ? const Color(0xFFDCDCE9) : Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(mine ? 20 : 5),
+                      bottomRight: Radius.circular(mine ? 5 : 20),
+                    ),
+                    border: mine
+                        ? null
+                        : Border.all(color: VawraColors.coral, width: 1.2),
+                  ),
+                  child: Text(
+                    message.text,
+                    style: const TextStyle(color: Color(0xFF182465)),
+                  ),
+                ),
+                if (reacted)
+                  Positioned(
+                    bottom: -8,
+                    right: mine ? null : -6,
+                    left: mine ? -6 : null,
+                    child: const CircleAvatar(
+                      key: Key('reaction-heart'),
+                      radius: 12,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.favorite_rounded,
+                        size: 15,
+                        color: VawraColors.coral,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+              child: Text(
+                mine
+                    ? '${_time(message.sentAt)} · Sent'
+                    : _time(message.sentAt),
+                style: const TextStyle(fontSize: 11, color: VawraColors.muted),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  static String _two(int value) => value.toString().padLeft(2, '0');
+
+  static String _time(DateTime at) {
+    final local = at.toLocal();
+    return '${_two(local.hour)}:${_two(local.minute)}';
+  }
+
+  static String _day(DateTime at) {
+    final local = at.toLocal();
+    final now = DateTime.now();
+    if (local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day) {
+      return 'Today';
+    }
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${local.day} ${months[local.month - 1]} ${local.year}';
+  }
+
   Future<SafetyReport?> _chooseReport(BuildContext context) {
-    final activeConnection = connection;
+    final activeConnection = widget.connection;
     if (activeConnection == null) return Future.value();
     ReportReason? reason;
-    final latestPeerMessage = messages
+    final latestPeerMessage = widget.messages
         .where((message) => message.author == MessageAuthor.peer)
         .lastOrNull;
     var includeMessageReference = false;
@@ -663,11 +898,11 @@ class ChatTab extends StatelessWidget {
   }
 
   Future<void> _confirmAction(BuildContext context, String action) async {
-    final activeConnection = connection;
+    final activeConnection = widget.connection;
     if (activeConnection == null) return;
     if (action == 'report') {
       final report = await _chooseReport(context);
-      if (report != null) onReport(report);
+      if (report != null) widget.onReport(report);
       return;
     }
     final verb = action == 'block' ? 'Block' : 'Unmatch';
@@ -697,9 +932,9 @@ class ChatTab extends StatelessWidget {
       return;
     }
     if (action == 'block') {
-      onBlock();
+      widget.onBlock();
     } else {
-      onUnmatch();
+      widget.onUnmatch();
     }
   }
 }

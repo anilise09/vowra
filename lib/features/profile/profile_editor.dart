@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/lifestyle.dart';
+import '../../domain/profile_prompt.dart';
 import '../../domain/user_profile.dart';
 import '../../theme/vawra_theme.dart';
 import '../shared/lifestyle_picker.dart';
 import 'photo_tips.dart';
 import 'profile_preview.dart';
+import 'prompts_section.dart';
 
 class ProfileEditor extends StatefulWidget {
   const ProfileEditor({
@@ -31,6 +33,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
   late bool showDistanceBand;
   late bool callReadyByDefault;
   late Map<LifestyleTopic, String> lifestyle;
+  late List<ProfilePrompt> prompts;
 
   @override
   void initState() {
@@ -44,6 +47,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
     showDistanceBand = profile?.showDistanceBand ?? true;
     callReadyByDefault = profile?.callReadyByDefault ?? false;
     lifestyle = {...?profile?.lifestyle};
+    prompts = [...?profile?.prompts];
     bioController.addListener(_refresh);
   }
 
@@ -142,6 +146,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
             hasIntro: bioController.text.trim().isNotEmpty,
             interestCount: interests.length,
             hasLifestyle: lifestyle.isNotEmpty,
+            hasPrompt: prompts.isNotEmpty,
           ),
           const SizedBox(height: 12),
           const PhotosCard(),
@@ -220,6 +225,11 @@ class _ProfileEditorState extends State<ProfileEditor> {
               ),
             ),
           const SizedBox(height: 18),
+          PromptsSection(
+            prompts: prompts,
+            onChanged: (updated) => setState(() => prompts = updated),
+          ),
+          const SizedBox(height: 18),
           Text('Lifestyle', style: Theme.of(context).textTheme.titleMedium),
           const Text('Optional. Tap a chosen answer again to clear it.'),
           const SizedBox(height: 12),
@@ -286,6 +296,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
     showDistanceBand: showDistanceBand,
     callReadyByDefault: callReadyByDefault,
     lifestyle: Map.unmodifiable(lifestyle),
+    prompts: List.unmodifiable(prompts),
   );
 
   void _save() {
@@ -302,6 +313,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
         showDistanceBand: showDistanceBand,
         callReadyByDefault: callReadyByDefault,
         lifestyle: Map.unmodifiable(lifestyle),
+        prompts: List.unmodifiable(prompts),
       ),
     );
   }

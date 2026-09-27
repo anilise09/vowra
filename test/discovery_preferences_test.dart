@@ -171,6 +171,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     await closeSafetyGuideIfShown(tester);
+    await openConversation(tester);
     expect(find.text('No chats yet'), findsOneWidget);
 
     await tester.tap(find.text('Discover'));
@@ -187,6 +188,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     await closeSafetyGuideIfShown(tester);
+    await openConversation(tester);
     expect(find.text('Maya'), findsOneWidget);
     expect(find.text('Hi! What is your ideal Sunday?'), findsOneWidget);
     await tester.scrollUntilVisible(

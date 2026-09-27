@@ -71,3 +71,12 @@ Future<void> closeSafetyGuideIfShown(WidgetTester tester) async {
     await tester.pumpAndSettle();
   }
 }
+
+/// Chats opens on the list; tap into the conversation if it is there.
+Future<void> openConversation(WidgetTester tester) async {
+  final row = find.byKey(const Key('conversation-Maya'));
+  if (row.evaluate().isNotEmpty) {
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+  }
+}
