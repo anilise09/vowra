@@ -26,7 +26,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     enabled: env.VAWRA_SERVER_ENABLED === '1',
     host: env.VAWRA_HOST ?? '127.0.0.1',
-    port: Number(env.VAWRA_PORT ?? 8787),
+    port: Number(env.VAWRA_PORT ?? 8797),
     databaseUrl: env.DATABASE_URL,
     dataDir: env.VAWRA_DATA_DIR ?? '.data/pglite',
     dataKey: key('VAWRA_DATA_KEY'),

@@ -228,6 +228,112 @@ void main() {
     expect(find.text('Continue with email'), findsOneWidget);
   });
 
+  group('nudges', () {
+    Future<String> openChatWithMaya(
+      WidgetTester tester,
+      FakeVawraServer server,
+    ) async {
+      server
+        ..verified = true
+        ..addPerson('Maya', likesMe: true)
+        ..profile = {
+          'display_name': 'Alex',
+          'relationship_intent': 'casual',
+          'bio': '',
+          'interests': <String>[],
+          'show_distance_band': true,
+          'call_ready_by_default': false,
+          'public_age': 28,
+        };
+      await _signIn(tester, server);
+      await _settle(tester);
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('action-like')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('match-send-message')));
+      await _settle(tester);
+      return server.matches.keys.single;
+    }
+
+    testWidgets('a reply shows at once from its nudge, not from a timer', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final matchId = await openChatWithMaya(tester, server);
+      expect(server.openStreams, 1);
+      server.peerSays(matchId, 'Nudged in');
+      // Far less than any safety refresh (3 s without, 30 s with a stream).
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.text('Nudged in'), findsOneWidget);
+    });
+
+    testWidgets('while the stream is up, silent changes wait for the safety '
+        'refresh', (tester) async {
+      final server = FakeVawraServer();
+      final matchId = await openChatWithMaya(tester, server);
+      server.peerSays(matchId, 'No nudge for this one', nudge: false);
+      await tester.pump(const Duration(seconds: 6));
+      expect(find.text('No nudge for this one'), findsNothing);
+      await tester.pump(const Duration(seconds: 30));
+      await _settle(tester);
+      expect(find.text('No nudge for this one'), findsOneWidget);
+    });
+
+    testWidgets('without a stream, the chat falls back to quick refreshes', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()..eventsEnabled = false;
+      final matchId = await openChatWithMaya(tester, server);
+      expect(server.openStreams, 0);
+      server.peerSays(matchId, 'Found by the fallback', nudge: false);
+      await tester.pump(const Duration(seconds: 3));
+      await _settle(tester);
+      expect(find.text('Found by the fallback'), findsOneWidget);
+    });
+
+    testWidgets('a dropped stream reconnects and catches up', (tester) async {
+      final server = FakeVawraServer();
+      final matchId = await openChatWithMaya(tester, server);
+      await server.dropStreams();
+      server.peerSays(matchId, 'Sent while disconnected', nudge: false);
+      // Retry within the first back-off ceiling (2 s), then catch up.
+      await tester.pump(const Duration(seconds: 2));
+      await _settle(tester);
+      expect(server.eventsOpened, 2);
+      expect(find.text('Sent while disconnected'), findsOneWidget);
+    });
+
+    testWidgets('the background closes the stream; returning reconnects', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final matchId = await openChatWithMaya(tester, server);
+      for (final state in [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
+      await tester.pump(const Duration(seconds: 2));
+      expect(server.openStreams, 0);
+      server.peerSays(matchId, 'While away', nudge: false);
+      await tester.pump(const Duration(seconds: 40));
+      expect(find.text('While away'), findsNothing);
+      for (final state in [
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
+      await _settle(tester);
+      expect(server.openStreams, 1);
+      expect(find.text('While away'), findsOneWidget);
+    });
+  });
+
   testWidgets('profile details show their habits and prompts', (tester) async {
     final server = FakeVawraServer()
       ..verified = true

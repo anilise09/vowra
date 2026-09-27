@@ -11,7 +11,7 @@ import '../../domain/profile_prompt.dart';
 import '../../domain/safety_report.dart';
 import '../../domain/user_profile.dart';
 
-/// Server address, set at build time: --dart-define=VAWRA_API=http://10.0.2.2:8787
+/// Server address, set at build time: --dart-define=VAWRA_API=http://10.0.2.2:8797
 /// Empty means the app runs as the offline prototype.
 const vawraApiBase = String.fromEnvironment('VAWRA_API');
 
@@ -292,6 +292,25 @@ class VawraApi {
     _accessExpires = DateTime.parse(session['access_expires_at'] as String);
     accountId = (session['account_id'] as String?) ?? accountId;
     await _store.write(_refresh!, accountId);
+  }
+
+  /// Opens the nudge stream (`GET /v1/events`) and returns its text as it
+  /// arrives. Throws [ApiException] when the server refuses it.
+  Future<Stream<String>> openEvents() async {
+    await _ensureFresh();
+    final request = http.Request('GET', base.resolve('/v1/events'));
+    request.headers['accept'] = 'text/event-stream';
+    if (_access != null) request.headers['authorization'] = 'Bearer $_access';
+    final response = await _client.send(request);
+    if (response.statusCode != 200) {
+      final body = await response.stream.bytesToString();
+      String code = 'error';
+      try {
+        code = (jsonDecode(body) as Map<String, dynamic>)['error'] as String;
+      } catch (_) {}
+      throw ApiException(response.statusCode, code);
+    }
+    return response.stream.transform(utf8.decoder);
   }
 
   /// Picks up a saved session after an app restart. False when there is none

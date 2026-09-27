@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../data/api/nudges.dart';
 import '../data/api/vawra_api.dart';
 import '../data/discovery_interaction_repository.dart';
 import '../domain/chat_message.dart';
@@ -654,12 +656,18 @@ class ServerHome extends StatefulWidget {
     super.key,
     required this.api,
     required this.me,
-    this.pollEvery = const Duration(seconds: 10),
+    this.checkEvery = const Duration(seconds: 10),
   });
 
   final VawraApi api;
   final MeState me;
-  final Duration pollEvery;
+
+  /// How often to consider a safety refresh. With the nudge stream up a
+  /// refresh happens at most every [ServerHome.safetyRefresh]; without it, on
+  /// every check.
+  final Duration checkEvery;
+
+  static const safetyRefresh = Duration(seconds: 60);
 
   @override
   State<ServerHome> createState() => _ServerHomeState();
@@ -692,19 +700,75 @@ class _ServerHomeState extends State<ServerHome> {
     'Likes you': true,
     'Safety tips': true,
   };
-  Timer? poll;
+  Timer? check;
+
+  /// Nudges fan out to open chat threads.
+  final _nudges = StreamController<Nudge>.broadcast();
+  late final NudgeLink link = NudgeLink(api, onNudge: _onNudge);
+
+  /// False while the app is in the background: no stream, no refreshes.
+  final foreground = ValueNotifier<bool>(true);
+  AppLifecycleListener? _lifecycle;
+  Timer? _pendingStop;
+
+  /// Checks since the last refresh; counting ticks keeps this testable.
+  int _checksSinceRefresh = 0;
 
   @override
   void initState() {
     super.initState();
     _refreshAll();
-    poll = Timer.periodic(widget.pollEvery, (_) => _refreshMatches());
+    link.start();
+    check = Timer.periodic(widget.checkEvery, (_) => _safetyCheck());
+    _lifecycle = AppLifecycleListener(
+      onResume: _resumed,
+      onHide: _backgrounded,
+      onPause: _backgrounded,
+    );
   }
 
   @override
   void dispose() {
-    poll?.cancel();
+    check?.cancel();
+    _pendingStop?.cancel();
+    _lifecycle?.dispose();
+    link.dispose();
+    _nudges.close();
+    foreground.dispose();
     super.dispose();
+  }
+
+  /// A system dialog or a quick app switch should not drop the stream, so
+  /// stopping waits a second (the same smoothing Tinder's Scarlet applies).
+  void _backgrounded() {
+    _pendingStop ??= Timer(const Duration(seconds: 1), () {
+      _pendingStop = null;
+      foreground.value = false;
+      link.stop();
+    });
+  }
+
+  void _resumed() {
+    _pendingStop?.cancel();
+    _pendingStop = null;
+    if (foreground.value) return;
+    foreground.value = true;
+    link.start(); // reconnecting sends a catch-up
+  }
+
+  void _onNudge(Nudge nudge) {
+    if (!_nudges.isClosed) _nudges.add(nudge);
+    _refreshMatches();
+  }
+
+  /// A missed nudge costs at most a minute; without the stream this falls
+  /// back to refreshing on every check.
+  void _safetyCheck() {
+    if (!foreground.value) return;
+    _checksSinceRefresh++;
+    final since = widget.checkEvery * _checksSinceRefresh;
+    if (link.connected && since < ServerHome.safetyRefresh) return;
+    _refreshMatches();
   }
 
   /// A revoked or expired session goes back to the start.
@@ -746,6 +810,7 @@ class _ServerHomeState extends State<ServerHome> {
   }
 
   Future<void> _refreshMatches() async {
+    _checksSinceRefresh = 0;
     try {
       final results = await Future.wait([_likes(), api.matches()]);
       if (!mounted) return;
@@ -842,7 +907,13 @@ class _ServerHomeState extends State<ServerHome> {
   Future<void> _openThread(ServerMatch match) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ServerThreadPage(api: api, match: match),
+        builder: (_) => ServerThreadPage(
+          api: api,
+          match: match,
+          nudges: _nudges.stream,
+          streaming: () => link.connected,
+          foreground: foreground,
+        ),
       ),
     );
     if (mounted) _refreshMatches();
@@ -1289,19 +1360,27 @@ class ServerChatList extends StatelessWidget {
   }
 }
 
-/// One conversation, refreshed every few seconds until real-time delivery
-/// exists.
+/// One conversation. It reloads on a nudge for this match; the timer is only
+/// a safety net (every 30 s with the stream up, every few seconds without).
 class ServerThreadPage extends StatefulWidget {
   const ServerThreadPage({
     super.key,
     required this.api,
     required this.match,
-    this.pollEvery = const Duration(seconds: 3),
+    this.nudges,
+    this.streaming,
+    this.foreground,
+    this.checkEvery = const Duration(seconds: 3),
   });
 
   final VawraApi api;
   final ServerMatch match;
-  final Duration pollEvery;
+  final Stream<Nudge>? nudges;
+  final bool Function()? streaming;
+  final ValueListenable<bool>? foreground;
+  final Duration checkEvery;
+
+  static const safetyRefresh = Duration(seconds: 30);
 
   @override
   State<ServerThreadPage> createState() => _ServerThreadPageState();
@@ -1313,17 +1392,30 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
   bool callReady = false;
   SafetyReport? report;
   Timer? poll;
+  StreamSubscription<Nudge>? _nudgeSub;
+  int _checksSinceLoad = 0;
 
   @override
   void initState() {
     super.initState();
     _load();
-    poll = Timer.periodic(widget.pollEvery, (_) => _load());
+    _nudgeSub = widget.nudges?.listen((nudge) {
+      if (nudge.isCatchUp || nudge.matchId == widget.match.matchId) _load();
+    });
+    poll = Timer.periodic(widget.checkEvery, (_) {
+      if (widget.foreground?.value == false) return;
+      _checksSinceLoad++;
+      final since = widget.checkEvery * _checksSinceLoad;
+      final streaming = widget.streaming?.call() ?? false;
+      if (streaming && since < ServerThreadPage.safetyRefresh) return;
+      _load();
+    });
   }
 
   @override
   void dispose() {
     poll?.cancel();
+    _nudgeSub?.cancel();
     super.dispose();
   }
 
@@ -1343,6 +1435,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
 
   Future<void> _load() async {
     if (status != ConnectionStatus.active) return;
+    _checksSinceLoad = 0;
     try {
       final loaded = await widget.api.messages(widget.match.matchId);
       if (mounted) setState(() => messages = loaded.map(_message).toList());

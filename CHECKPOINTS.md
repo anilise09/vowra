@@ -1,5 +1,35 @@
 # Checkpoints
 
+## BE-4 - Learned from Tinder's open source: nudges instead of polling (2026-09-27)
+
+- Researched all 18 public repositories at github.com/Tinder and their linked engineering
+  articles; findings and what Vawra does with each are in `docs/TINDER_GITHUB_LEARNINGS.md`.
+  Ideas only: their code is Match Group's (modified BSD-3) and nothing was copied.
+- Biggest lesson applied: Tinder replaced 2-second polling with "nudges", tiny content-free "something
+  changed" pushes after which the app fetches normally. Vawra now has `GET /v1/events`, an
+  authenticated Server-Sent Events stream of `{kind: message|match|like, match_id}`, with no text,
+  names or photos. A like nudges the person liked, a match both people, a message the other person
+  and the sender's other devices; blocking is never announced; a stream ends with its access token;
+  five streams per account; an in-process bus behind an interface for a shared broker later.
+- App: the connection is a pure state machine (idea from Tinder's StateMachine/Scarlet) run by a
+  small driver; reconnects use exponential back-off with full jitter (1 s base, 60 s cap); every
+  (re)connect triggers a catch-up refresh; the stream and timers stop a second after the app goes to
+  the background and resume when it returns (Scarlet's lifecycle idea). Chats reload on their nudge;
+  timers remain only as a safety net (30 s per chat and 60 s for matches while streaming, the old 3 s
+  and 10 s when the stream is down).
+- Measured live against the local server with the real Dart client: a message reached the other
+  app as a nudge in 25-39 ms (three runs), where polling took up to 3 s.
+- Tests: 7 backend stream tests (auth, no content, isolation, the sender's other devices, like and
+  match, block silence, token expiry, stream limit), 7 app unit tests (state machine table,
+  back-off bounds and spread, SSE parser) and 5 app flows (instant reply, silent change waits for
+  the safety refresh, fallback without a stream, reconnect with catch-up, background and resume),
+  plus an opt-in live test. Injected defects (announcing a block, putting text in a nudge, a chat
+  ignoring nudges, not stopping in the background) each made a test fail.
+- Found while testing: the safety timers measured wall-clock time, which tests cannot advance; they
+  now count ticks, same behaviour on devices.
+- The dev server's default port moved from 8787 to 8797: QuietWall's website dev server uses 8787
+  on this laptop and silently answered Vawra's requests.
+
 ## BE-3c - Habits and prompts are saved to the account and shown to others (2026-09-27)
 
 - Profile contract gains two optional public fields: `lifestyle` (one answer per topic from the

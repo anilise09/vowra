@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -8,7 +9,60 @@ import 'package:http/testing.dart';
 /// widget tests. The real routes are tested in backend/test.
 class FakeVawraServer {
   FakeVawraServer() {
-    client = MockClient(_handle);
+    client = MockClient.streaming((request, bodyStream) async {
+      final body = await bodyStream.bytesToString();
+      if (request.url.path == '/v1/events') return _events(request);
+      final copy = http.Request(request.method, request.url)
+        ..headers.addAll(request.headers);
+      if (body.isNotEmpty) copy.body = body;
+      final response = await _handle(copy);
+      return http.StreamedResponse(
+        Stream.value(response.bodyBytes),
+        response.statusCode,
+        headers: response.headers,
+        request: request,
+      );
+    });
+  }
+
+  /// Whether `GET /v1/events` accepts connections.
+  bool eventsEnabled = true;
+  final _streams = <StreamController<List<int>>>[];
+  int eventsOpened = 0;
+  int get openStreams => _streams.length;
+
+  Future<http.StreamedResponse> _events(http.BaseRequest request) async {
+    final authorized =
+        !_revoked &&
+        request.headers['authorization'] == 'Bearer access-token-000000000000';
+    if (!eventsEnabled || !authorized) {
+      final r = _error(authorized ? 503 : 401, authorized ? 'down' : 'no');
+      return http.StreamedResponse(Stream.value(r.bodyBytes), r.statusCode);
+    }
+    eventsOpened++;
+    late final StreamController<List<int>> controller;
+    controller = StreamController<List<int>>(
+      onCancel: () => _streams.remove(controller),
+    );
+    _streams.add(controller);
+    controller.add(utf8.encode(': connected\n\n'));
+    return http.StreamedResponse(controller.stream, 200);
+  }
+
+  /// Pushes a nudge to every open stream, like the real server.
+  void nudge(String kind, {String? matchId}) {
+    final data = jsonEncode({'kind': kind, 'match_id': ?matchId});
+    for (final stream in [..._streams]) {
+      stream.add(utf8.encode('event: nudge\ndata: $data\n\n'));
+    }
+  }
+
+  /// Ends every open stream, as a server restart would.
+  Future<void> dropStreams() async {
+    for (final stream in [..._streams]) {
+      await stream.close();
+    }
+    _streams.clear();
   }
 
   late final http.Client client;
@@ -72,15 +126,17 @@ class FakeVawraServer {
       people.values.firstWhere((p) => p['display_name'] == name)['account_id']
           as String;
 
-  void peerSays(String matchId, String text) =>
-      messages.putIfAbsent(matchId, () => []).add({
-        'id': _id(),
-        'mine': false,
-        'text': text,
-        'sent_at': (_clock = _clock.add(
-          const Duration(minutes: 1),
-        )).toIso8601String(),
-      });
+  void peerSays(String matchId, String text, {bool nudge = true}) {
+    messages.putIfAbsent(matchId, () => []).add({
+      'id': _id(),
+      'mine': false,
+      'text': text,
+      'sent_at': (_clock = _clock.add(
+        const Duration(minutes: 1),
+      )).toIso8601String(),
+    });
+    if (nudge) this.nudge('message', matchId: matchId);
+  }
 
   http.Response _json(int status, Object body) => http.Response(
     jsonEncode(body),

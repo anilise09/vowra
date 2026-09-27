@@ -22,7 +22,7 @@ set VAWRA_SERVER_ENABLED=1
 set VAWRA_DEV_OUTBOX=1                 # development only: sign-in proofs go to .data/outbox.log
 set VAWRA_DATA_KEY=<32 random bytes, base64>
 set VAWRA_LOOKUP_KEY=<32 random bytes, base64>
-npm start                               # http://127.0.0.1:8787
+npm start                               # http://127.0.0.1:8797
 ```
 
 Without `DATABASE_URL` it stores data in `.data/pglite` (PostgreSQL compiled to WebAssembly: no
@@ -37,8 +37,8 @@ at once.
 ## Run the app against it
 
 ```
-flutter build apk --profile --dart-define=VAWRA_API=http://127.0.0.1:8787
-adb reverse tcp:8787 tcp:8787          # per device; phones and emulators reach the laptop
+flutter build apk --profile --dart-define=VAWRA_API=http://127.0.0.1:8797
+adb reverse tcp:8797 tcp:8797          # per device; phones and emulators reach the laptop
 ```
 
 Debug and profile builds allow plain HTTP only to 127.0.0.1, localhost and 10.0.2.2
@@ -65,6 +65,11 @@ signs the account out everywhere, hides it and closes its chats, and returns the
 (`VAWRA_DELETION_GRACE`, default 7 days, a placeholder until counsel sets it). Signing in before then
 allows `DELETE /v1/me/deletion`. The server runs the deletion job at start and hourly.
 
+Nudges (BE-4): `GET /v1/events` is a Server-Sent Events stream of content-free nudges
+(`message`, `match`, `like`); the app refetches through the normal routes. See
+`docs/TINDER_GITHUB_LEARNINGS.md`. `test/live/nudge_live_test.dart` checks it end to end against a
+running server.
+
 Security properties covered by tests: no account-existence oracle; emails sealed with AES-256-GCM
 and looked up by keyed hash; tokens and proofs stored only as hashes; proofs single-use even when
 the attempt fails; refresh reuse revokes the family; age gate on every dating feature; mutual
@@ -75,5 +80,5 @@ matches in one transaction; reports keep only a valid message reference; logs ca
 ## Not built yet
 
 Email delivery provider, OIDC providers, age-assurance provider, location service and privacy
-zones, media uploads, real-time delivery, push notifications, calls, data export,
+zones, media uploads, push notifications (the nudge stream covers an open app), calls, data export,
 entitlements. Each waits for its provider review as the contracts require.
