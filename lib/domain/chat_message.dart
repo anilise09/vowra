@@ -6,12 +6,16 @@ class ChatMessage {
     required this.author,
     required this.text,
     required this.sentAt,
+    this.seen,
   });
 
   final String id;
   final MessageAuthor author;
   final String text;
   final DateTime sentAt;
+
+  /// For your own messages when you both share read receipts; else null.
+  final bool? seen;
 }
 
 class MessagePolicy {

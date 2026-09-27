@@ -293,6 +293,151 @@ void main() {
     );
   });
 
+  group('conversations', () {
+    Future<String> matchedWithMaya(
+      WidgetTester tester,
+      FakeVawraServer server,
+    ) async {
+      server
+        ..verified = true
+        ..addPerson('Maya', likesMe: true)
+        ..profile = {
+          'display_name': 'Alex',
+          'relationship_intent': 'casual',
+          'bio': '',
+          'interests': <String>[],
+          'show_distance_band': true,
+          'call_ready_by_default': false,
+          'public_age': 28,
+        };
+      await _signIn(tester, server);
+      await _settle(tester);
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('action-like')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('match-keep-swiping')));
+      await _settle(tester);
+      return server.matches.keys.single;
+    }
+
+    Future<void> openChats(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('chat-tab')));
+      await _settle(tester);
+      await closeSafetyGuideIfShown(tester);
+      await _settle(tester);
+    }
+
+    testWidgets('unread counts, then "Your turn" once read', (tester) async {
+      final server = FakeVawraServer();
+      final matchId = await matchedWithMaya(tester, server);
+      server
+        ..peerSays(matchId, 'Hi Alex!')
+        ..peerSays(matchId, 'Free this weekend?');
+      await _settle(tester);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('chats-unread')),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
+      await openChats(tester);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('unread-Maya')),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('conversation-Maya')));
+      await _settle(tester);
+      expect(server.myRead[matchId], 2);
+      await tester.tap(find.byKey(const Key('thread-back')));
+      await _settle(tester);
+      expect(find.byKey(const Key('unread-Maya')), findsNothing);
+      expect(find.byKey(const Key('your-turn-Maya')), findsOneWidget);
+    });
+
+    testWidgets('Seen and typing appear only when both share', (tester) async {
+      final server = FakeVawraServer();
+      final matchId = await matchedWithMaya(tester, server);
+      await openChats(tester);
+      await tester.tap(find.byKey(const Key('new-match-Maya')));
+      await _settle(tester);
+
+      Future<void> send(String text) async {
+        await tester.enterText(find.byKey(const Key('message-composer')), text);
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('send-message')));
+        await _settle(tester);
+      }
+
+      // Not shared: typing is never sent, Seen never shown.
+      await send('First');
+      server.peerReads(matchId);
+      server.peerTypes(matchId);
+      await _settle(tester);
+      expect(server.typingSent, 0);
+      expect(find.textContaining('Seen'), findsNothing);
+      expect(find.byKey(const Key('peer-typing')), findsNothing);
+
+      server
+        ..shareReceipts = true
+        ..peerShares = true;
+      // The app learns the setting when Settings are opened; here the fake
+      // stands in for both people having switched it on.
+      server.peerTypes(matchId);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Maya is typing…'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 7));
+      expect(find.byKey(const Key('peer-typing')), findsNothing);
+
+      server.peerReads(matchId);
+      await _settle(tester);
+      expect(find.textContaining('· Seen'), findsOneWidget);
+    });
+
+    testWidgets('your typing is signalled only when you share, and throttled', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()..shareReceipts = true;
+      await matchedWithMaya(tester, server);
+      await openChats(tester);
+      await tester.tap(find.byKey(const Key('new-match-Maya')));
+      await _settle(tester);
+      for (final text in ['H', 'He', 'Hey']) {
+        await tester.enterText(find.byKey(const Key('message-composer')), text);
+        await tester.pump();
+      }
+      expect(server.typingSent, 1);
+    });
+
+    testWidgets('the settings switch saves to the account', (tester) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = {
+          'display_name': 'Alex',
+          'relationship_intent': 'casual',
+          'bio': '',
+          'interests': <String>[],
+          'show_distance_band': true,
+          'call_ready_by_default': false,
+          'public_age': 28,
+        };
+      await _signIn(tester, server);
+      await _settle(tester);
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('profile-tab')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('open-settings')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('settings-read-receipts')));
+      await _settle(tester);
+      expect(server.shareReceipts, isTrue);
+    });
+  });
+
   group('nudges', () {
     Future<String> openChatWithMaya(
       WidgetTester tester,

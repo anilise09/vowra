@@ -712,6 +712,9 @@ class _ServerHomeState extends State<ServerHome> {
   AppLifecycleListener? _lifecycle;
   Timer? _pendingStop;
 
+  /// Read receipts and typing; null until loaded.
+  bool? shareReceipts;
+
   /// Checks since the last refresh; counting ticks keeps this testable.
   int _checksSinceRefresh = 0;
 
@@ -719,6 +722,12 @@ class _ServerHomeState extends State<ServerHome> {
   void initState() {
     super.initState();
     _refreshAll();
+    api
+        .shareReadReceipts()
+        .then((on) {
+          if (mounted) setState(() => shareReceipts = on);
+        })
+        .catchError((Object _) {});
     link.start();
     check = Timer.periodic(widget.checkEvery, (_) => _safetyCheck());
     _lifecycle = AppLifecycleListener(
@@ -759,7 +768,8 @@ class _ServerHomeState extends State<ServerHome> {
 
   void _onNudge(Nudge nudge) {
     if (!_nudges.isClosed) _nudges.add(nudge);
-    _refreshMatches();
+    // Typing is only for an open chat; everything else can change the list.
+    if (nudge.kind != 'typing') _refreshMatches();
   }
 
   /// A missed nudge costs at most a minute; without the stream this falls
@@ -914,6 +924,7 @@ class _ServerHomeState extends State<ServerHome> {
           nudges: _nudges.stream,
           streaming: () => link.connected,
           foreground: foreground,
+          sharesReceipts: () => shareReceipts == true,
         ),
       ),
     );
@@ -967,6 +978,15 @@ class _ServerHomeState extends State<ServerHome> {
       );
     } catch (e) {
       if (mounted) _toast(context, describeApiError(e));
+    }
+  }
+
+  Future<void> _setShareReceipts(bool on) async {
+    try {
+      final saved = await api.setShareReadReceipts(on);
+      if (mounted) setState(() => shareReceipts = saved);
+    } catch (e) {
+      if (mounted && !_signedOutBy(e)) _toast(context, describeApiError(e));
     }
   }
 
@@ -1092,6 +1112,8 @@ class _ServerHomeState extends State<ServerHome> {
           onOpenSafetyCenter: () => _openSafety(context),
           onDeleteProfile: () => _deleteAccount(navigator),
           onSignOut: () => _signOut(navigator, api),
+          shareReadReceipts: shareReceipts ?? false,
+          onShareReadReceiptsChanged: _setShareReceipts,
         ),
       ),
     );
@@ -1143,6 +1165,8 @@ class _ServerHomeState extends State<ServerHome> {
       ],
     ),
   );
+
+  int get _unreadTotal => matches.fold(0, (sum, m) => sum + m.unread);
 
   @override
   Widget build(BuildContext context) {
@@ -1205,10 +1229,19 @@ class _ServerHomeState extends State<ServerHome> {
                 selectedIcon: const Icon(Icons.favorite_rounded),
                 label: 'Matches',
               ),
-              const NavigationDestination(
-                key: Key('chat-tab'),
-                icon: Icon(Icons.chat_bubble_outline),
-                selectedIcon: Icon(Icons.chat_bubble_rounded),
+              NavigationDestination(
+                key: const Key('chat-tab'),
+                icon: Badge(
+                  key: const Key('chats-unread'),
+                  isLabelVisible: _unreadTotal > 0,
+                  label: Text('$_unreadTotal'),
+                  child: const Icon(Icons.chat_bubble_outline),
+                ),
+                selectedIcon: Badge(
+                  isLabelVisible: _unreadTotal > 0,
+                  label: Text('$_unreadTotal'),
+                  child: const Icon(Icons.chat_bubble_rounded),
+                ),
                 label: 'Chats',
               ),
               const NavigationDestination(
@@ -1348,10 +1381,44 @@ class ServerChatList extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
                 subtitle: Text(
-                  match.lastMessage!,
+                  '${match.lastMessageMine == true ? 'You: ' : ''}'
+                  '${match.lastMessage!}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: match.unread > 0
+                      ? const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: VawraColors.ink,
+                        )
+                      : null,
                 ),
+                trailing: match.unread > 0
+                    ? Badge(
+                        key: Key('unread-${match.peerName}'),
+                        backgroundColor: VawraColors.coral,
+                        label: Text('${match.unread}'),
+                      )
+                    : match.yourTurn
+                    ? Container(
+                        key: Key('your-turn-${match.peerName}'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: VawraColors.blush,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Your turn',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: VawraColors.coralDark,
+                          ),
+                        ),
+                      )
+                    : null,
                 onTap: () => onOpen(match),
               ),
           ],
@@ -1371,6 +1438,7 @@ class ServerThreadPage extends StatefulWidget {
     this.nudges,
     this.streaming,
     this.foreground,
+    this.sharesReceipts,
     this.checkEvery = const Duration(seconds: 3),
   });
 
@@ -1379,7 +1447,13 @@ class ServerThreadPage extends StatefulWidget {
   final Stream<Nudge>? nudges;
   final bool Function()? streaming;
   final ValueListenable<bool>? foreground;
+
+  /// Whether this person shares read receipts and typing.
+  final bool Function()? sharesReceipts;
   final Duration checkEvery;
+
+  /// How long "is typing…" stays without a fresh signal.
+  static const typingShownFor = Duration(seconds: 6);
 
   static const safetyRefresh = Duration(seconds: 30);
 
@@ -1395,13 +1469,23 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
   Timer? poll;
   StreamSubscription<Nudge>? _nudgeSub;
   int _checksSinceLoad = 0;
+  bool peerTyping = false;
+  Timer? _typingTimer;
+  String? _markedUpTo;
+  DateTime? _lastTypingSent;
 
   @override
   void initState() {
     super.initState();
     _load();
     _nudgeSub = widget.nudges?.listen((nudge) {
-      if (nudge.isCatchUp || nudge.matchId == widget.match.matchId) _load();
+      final forThis = nudge.matchId == widget.match.matchId;
+      if (forThis && nudge.kind == 'typing') {
+        _showTyping();
+      } else if (nudge.isCatchUp || forThis) {
+        if (nudge.kind == 'message') _hideTyping();
+        _load();
+      }
     });
     poll = Timer.periodic(widget.checkEvery, (_) {
       if (widget.foreground?.value == false) return;
@@ -1417,7 +1501,43 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
   void dispose() {
     poll?.cancel();
     _nudgeSub?.cancel();
+    _typingTimer?.cancel();
     super.dispose();
+  }
+
+  void _showTyping() {
+    _typingTimer?.cancel();
+    _typingTimer = Timer(ServerThreadPage.typingShownFor, _hideTyping);
+    if (!peerTyping) setState(() => peerTyping = true);
+  }
+
+  void _hideTyping() {
+    _typingTimer?.cancel();
+    if (mounted && peerTyping) setState(() => peerTyping = false);
+  }
+
+  /// Tells the other person you are typing, at most every 3 seconds, and only
+  /// when you share receipts (the server also checks that they do).
+  void _composing() {
+    if (widget.sharesReceipts?.call() != true) return;
+    final now = DateTime.now();
+    final last = _lastTypingSent;
+    if (last != null && now.difference(last) < const Duration(seconds: 3)) {
+      return;
+    }
+    _lastTypingSent = now;
+    widget.api.typing(widget.match.matchId).catchError((Object _) {});
+  }
+
+  /// Marks the chat read once a new message from them is on screen.
+  void _markRead() {
+    final newest = messages
+        .where((m) => m.author == MessageAuthor.peer)
+        .lastOrNull;
+    if (newest == null || newest.id == _markedUpTo) return;
+    if (widget.foreground?.value == false) return;
+    _markedUpTo = newest.id;
+    widget.api.markRead(widget.match.matchId).catchError((Object _) {});
   }
 
   ChatMessage _message(ServerMessage m) => ChatMessage(
@@ -1425,6 +1545,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
     author: m.mine ? MessageAuthor.currentUser : MessageAuthor.peer,
     text: m.text,
     sentAt: m.sentAt,
+    seen: m.seen,
   );
 
   void _closed() {
@@ -1439,7 +1560,9 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
     _checksSinceLoad = 0;
     try {
       final loaded = await widget.api.messages(widget.match.matchId);
-      if (mounted) setState(() => messages = loaded.map(_message).toList());
+      if (!mounted) return;
+      setState(() => messages = loaded.map(_message).toList());
+      _markRead();
     } on ApiException catch (e) {
       if (!mounted) return;
       if (e.code == 'conversation_closed' || e.status == 404) _closed();
@@ -1479,6 +1602,8 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
       messages: messages,
       report: report,
       startInThread: true,
+      peerTyping: peerTyping,
+      onComposing: _composing,
       onBack: () => Navigator.of(context).pop(),
       onSend: _send,
       onCallReadinessChanged: (value) => setState(() => callReady = value),

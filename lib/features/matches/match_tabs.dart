@@ -369,6 +369,8 @@ class ChatTab extends StatefulWidget {
     this.startInThread = false,
     this.openThreadRequest = 0,
     this.onBack,
+    this.peerTyping = false,
+    this.onComposing,
   });
 
   final MatchConnection? connection;
@@ -389,6 +391,12 @@ class ChatTab extends StatefulWidget {
 
   /// Replaces the thread's back action, e.g. when the thread is its own page.
   final VoidCallback? onBack;
+
+  /// Shows "Name is typing…" under the last message.
+  final bool peerTyping;
+
+  /// Called as the person types (the thread decides whether to signal it).
+  final VoidCallback? onComposing;
 
   @override
   State<ChatTab> createState() => _ChatTabState();
@@ -732,6 +740,19 @@ class _ChatTabState extends State<ChatTab> {
                 ),
               const SizedBox(height: 10),
               for (final message in widget.messages) _bubble(message),
+              if (widget.peerTyping)
+                Padding(
+                  key: const Key('peer-typing'),
+                  padding: const EdgeInsets.fromLTRB(6, 2, 6, 10),
+                  child: Text(
+                    '${match.peerName} is typing…',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      color: VawraColors.muted,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -769,7 +790,10 @@ class _ChatTabState extends State<ChatTab> {
                   minLines: 1,
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (text) {
+                    setState(() {});
+                    if (text.trim().isNotEmpty) widget.onComposing?.call();
+                  },
                   onTap: () => setState(() => showPicker = false),
                   onSubmitted: (_) => _send(),
                   decoration: const InputDecoration(
@@ -932,7 +956,8 @@ class _ChatTabState extends State<ChatTab> {
               padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
               child: Text(
                 mine
-                    ? '${_time(message.sentAt)} · Sent'
+                    ? '${_time(message.sentAt)} · '
+                          '${message.seen == true ? 'Seen' : 'Sent'}'
                     : _time(message.sentAt),
                 style: const TextStyle(fontSize: 11, color: VawraColors.muted),
               ),

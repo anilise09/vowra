@@ -4,7 +4,7 @@
  * text, names or photos, so nothing private travels through the push path.
  */
 export interface Nudge {
-  kind: 'message' | 'match' | 'like';
+  kind: 'message' | 'match' | 'like' | 'read' | 'typing';
   match_id?: string;
 }
 

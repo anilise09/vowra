@@ -5,6 +5,9 @@ import type { Db } from '../db.js';
 import { messageRules, normalizeMessage } from '../rules.js';
 
 const uuid = z.string().uuid();
+
+/** One typing signal per person per conversation every few seconds. */
+const typingEveryMs = 3000;
 const sendBody = z.object({ text: z.string().max(5000) }).strict();
 const pageQuery = z.object({
   before: z.string().datetime().optional(),
@@ -51,17 +54,36 @@ async function openConversation(db: Db, me: string, rawId: string): Promise<Matc
   return match;
 }
 
+/** Read receipts and typing flow only when both people share them. */
+async function bothShare(db: Db, me: string, peer: string): Promise<boolean> {
+  const rows = await db.query<{ n: number }>(
+    'SELECT count(*)::int AS n FROM accounts WHERE id IN ($1, $2) AND share_read_receipts',
+    [me, peer],
+  );
+  return rows[0]?.n === 2;
+}
+
 export function chatRoutes(app: FastifyInstance, services: Services) {
   const { db, clock } = services;
+  const lastTyping = new Map<string, number>();
 
   app.get('/v1/matches', async (request) => {
     const me = requireDatingAccess(request, { allowPaused: true });
-    const matches = await db.query(
+    const matches = await db.query<
+      Record<string, unknown> & { last_message_mine: boolean | null; last_message_at: Date | null }
+    >(
       `SELECT m.id AS match_id, m.created_at, p.account_id AS peer_account_id,
               p.display_name AS peer_name, p.public_age AS peer_age,
-              (SELECT body FROM messages WHERE match_id = m.id ORDER BY created_at DESC LIMIT 1)
-                AS last_message
+              last.body AS last_message, last.author_id = $1 AS last_message_mine,
+              last.created_at AS last_message_at,
+              (SELECT count(*)::int FROM messages u
+                WHERE u.match_id = m.id AND u.author_id <> $1
+                  AND u.created_at > COALESCE(
+                    (SELECT read_at FROM match_reads r WHERE r.match_id = m.id AND r.account_id = $1),
+                    '-infinity'::timestamptz)) AS unread
        FROM matches m
+       LEFT JOIN LATERAL (SELECT body, author_id, created_at FROM messages
+                          WHERE match_id = m.id ORDER BY created_at DESC LIMIT 1) last ON true
        JOIN profiles p ON p.account_id =
             CASE WHEN m.account_low = $1 THEN m.account_high ELSE m.account_low END
        JOIN accounts peer ON peer.id = p.account_id AND peer.lifecycle <> 'deletion_scheduled'
@@ -69,10 +91,16 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
          AND NOT EXISTS (SELECT 1 FROM blocks b WHERE
                (b.blocker = m.account_low AND b.blocked = m.account_high)
             OR (b.blocker = m.account_high AND b.blocked = m.account_low))
-       ORDER BY m.created_at DESC`,
+       ORDER BY COALESCE(last.created_at, m.created_at) DESC`,
       [me.id],
     );
-    return { matches };
+    return {
+      matches: matches.map((m) => ({
+        ...m,
+        last_message_mine: m.last_message_mine ?? null,
+        last_message_at: m.last_message_at ? new Date(m.last_message_at).toISOString() : null,
+      })),
+    };
   });
 
   app.delete('/v1/matches/:matchId', async (request, reply) => {
@@ -100,14 +128,70 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
        ORDER BY created_at DESC LIMIT $3`,
       [match.id, before ?? null, limit],
     );
+    // "Seen" appears on your messages only when both of you share receipts.
+    const [peerRead] = (await bothShare(db, me.id, match.peer))
+      ? await db.query<{ read_at: Date }>(
+          'SELECT read_at FROM match_reads WHERE match_id = $1 AND account_id = $2',
+          [match.id, match.peer],
+        )
+      : [];
+    const seenUntil = peerRead ? new Date(peerRead.read_at).getTime() : null;
     return {
-      messages: rows.reverse().map((m) => ({
-        id: m.id,
-        mine: m.author_id === me.id,
-        text: m.body,
-        sent_at: new Date(m.created_at).toISOString(),
-      })),
+      messages: rows.reverse().map((m) => {
+        const mine = m.author_id === me.id;
+        return {
+          id: m.id,
+          mine,
+          text: m.body,
+          sent_at: new Date(m.created_at).toISOString(),
+          ...(mine && seenUntil !== null
+            ? { seen: new Date(m.created_at).getTime() <= seenUntil }
+            : {}),
+        };
+      }),
     };
+  });
+
+  /** Marks the conversation read up to now. */
+  app.post('/v1/matches/:matchId/read', async (request, reply) => {
+    const me = requireDatingAccess(request, { allowPaused: true });
+    const match = await openConversation(
+      db,
+      me.id,
+      (request.params as { matchId: string }).matchId,
+    );
+    await db.query(
+      `INSERT INTO match_reads (match_id, account_id, read_at) VALUES ($1, $2, $3)
+       ON CONFLICT (match_id, account_id) DO UPDATE SET read_at = GREATEST(match_reads.read_at, $3)`,
+      [match.id, me.id, clock.now()],
+    );
+    // Your other devices clear their badge; the other person hears only if
+    // you both share receipts.
+    services.nudges.publish(me.id, { kind: 'read', match_id: match.id });
+    if (await bothShare(db, me.id, match.peer)) {
+      services.nudges.publish(match.peer, { kind: 'read', match_id: match.id });
+    }
+    return noContent(reply);
+  });
+
+  /** A content-free "typing" signal, delivered only when both share. */
+  app.post('/v1/matches/:matchId/typing', async (request, reply) => {
+    const me = requireDatingAccess(request, { allowPaused: true });
+    const match = await openConversation(
+      db,
+      me.id,
+      (request.params as { matchId: string }).matchId,
+    );
+    const key = `${me.id}:${match.id}`;
+    const now = clock.now().getTime();
+    if (now - (lastTyping.get(key) ?? 0) >= typingEveryMs) {
+      lastTyping.set(key, now);
+      if (await bothShare(db, me.id, match.peer)) {
+        services.nudges.publish(match.peer, { kind: 'typing', match_id: match.id });
+      }
+    }
+    // The same answer either way: it never reveals the other person's setting.
+    return noContent(reply);
   });
 
   app.post('/v1/matches/:matchId/messages', async (request, reply) => {

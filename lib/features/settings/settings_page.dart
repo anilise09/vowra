@@ -17,7 +17,13 @@ class SettingsPage extends StatefulWidget {
     this.travelCity,
     this.onTravelCityChanged,
     this.onSignOut,
+    this.shareReadReceipts,
+    this.onShareReadReceiptsChanged,
   });
+
+  /// Read receipts and typing; null hides the switch (prototype).
+  final bool? shareReadReceipts;
+  final ValueChanged<bool>? onShareReadReceiptsChanged;
 
   /// Present for a signed-in server account; the page then describes what the
   /// server keeps instead of the prototype's in-memory session.
@@ -59,6 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late bool paused = widget.paused;
   late final notifications = {...widget.notifications};
   late String? travelCity = widget.travelCity;
+  late bool? shareReadReceipts = widget.shareReadReceipts;
 
   Future<void> _pickCity() async {
     final choice = await showModalBottomSheet<String>(
@@ -196,6 +203,27 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
           ],
         ),
+        if (shareReadReceipts case final share?) ...[
+          const _Heading('Chats'),
+          _Group(
+            children: [
+              SwitchListTile(
+                key: const Key('settings-read-receipts'),
+                title: const Text('Read receipts and typing'),
+                subtitle: const Text(
+                  'Show when you have read a message and when you are typing. '
+                  'It only works when both of you turn it on, and it is '
+                  'always free.',
+                ),
+                value: share,
+                onChanged: (on) {
+                  setState(() => shareReadReceipts = on);
+                  widget.onShareReadReceiptsChanged?.call(on);
+                },
+              ),
+            ],
+          ),
+        ],
         const _Heading('Notifications'),
         _Group(
           children: [

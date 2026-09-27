@@ -1,5 +1,24 @@
 # Checkpoints
 
+## BE-6 - Better conversations: unread, "Your turn", mutual read receipts and typing (2026-09-27)
+
+- Chats now show an unread count per conversation and in the Chats tab, and "Your turn" when the
+  other person wrote last; conversations are ordered by the latest message. Opening a chat marks it
+  read once a new message from them is on screen (not while the app is in the background), and your
+  other devices clear their badge through a nudge.
+- Read receipts and typing are free and mutual: they appear only when both people turn on "Read
+  receipts and typing" in Settings (Tinder sells read receipts). The server checks both settings for
+  every "Seen" and every typing signal, answers the same whether or not the other person shares, and
+  lets typing through at most every 3 seconds per chat. Typing travels as a content-free nudge;
+  "Maya is typing..." clears after 6 s or when her message arrives.
+- Server: `match_reads` table, `unread`, `last_message_mine` and latest-first order on
+  `/v1/matches`, `seen` on your messages only when both share, `POST /v1/matches/{id}/read`,
+  `POST /v1/matches/{id}/typing`, `GET`/`PATCH /v1/me/settings`.
+- Tests: 6 backend (unread and turn, ordering, Seen needs both, typing needs both and is throttled,
+  settings strictness, participants only; making receipts one-sided fails a test) and 4 app flows
+  (unread then Your turn, Seen and typing only when shared, typing throttled, settings switch;
+  removing mark-as-read fails a test).
+
 ## BE-5 - "Why you might click": Discover ranked by what people share, and says so (2026-09-27)
 
 - Tinder's ranking is a black box. Vawra now orders Discover by visible, additive compatibility

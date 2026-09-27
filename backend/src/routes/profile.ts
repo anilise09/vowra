@@ -149,6 +149,34 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
     return { profile: await load(account.id) };
   });
 
+  const settingsBody = z.object({ share_read_receipts: z.boolean() }).partial().strict();
+
+  app.get('/v1/me/settings', async (request) => {
+    const account = requireAccount(request);
+    const [row] = await db.query<{ share_read_receipts: boolean }>(
+      'SELECT share_read_receipts FROM accounts WHERE id = $1',
+      [account.id],
+    );
+    return { share_read_receipts: row?.share_read_receipts ?? false };
+  });
+
+  app.patch('/v1/me/settings', async (request) => {
+    const account = requireAccount(request);
+    const parsed = settingsBody.safeParse(request.body);
+    if (!parsed.success) fail(400, 'invalid_request');
+    if (parsed.data!.share_read_receipts !== undefined) {
+      await db.query('UPDATE accounts SET share_read_receipts = $2 WHERE id = $1', [
+        account.id,
+        parsed.data!.share_read_receipts,
+      ]);
+    }
+    const [row] = await db.query<{ share_read_receipts: boolean }>(
+      'SELECT share_read_receipts FROM accounts WHERE id = $1',
+      [account.id],
+    );
+    return { share_read_receipts: row!.share_read_receipts };
+  });
+
   // Pause is free and always reachable; resume repeats the eligibility checks.
   app.post('/v1/me/pause', async (request, reply) => {
     const account = requireAccount(request);

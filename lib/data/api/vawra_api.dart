@@ -72,6 +72,8 @@ class ServerMatch {
     required this.peerName,
     required this.peerAge,
     required this.lastMessage,
+    this.lastMessageMine,
+    this.unread = 0,
   });
 
   final String matchId;
@@ -80,12 +82,21 @@ class ServerMatch {
   final int? peerAge;
   final String? lastMessage;
 
+  /// Who wrote the last message; null when there is none.
+  final bool? lastMessageMine;
+  final int unread;
+
+  /// The other person wrote last: it is your turn to reply.
+  bool get yourTurn => lastMessage != null && lastMessageMine == false;
+
   factory ServerMatch.fromJson(Map<String, dynamic> json) => ServerMatch(
     matchId: json['match_id'] as String,
     peerAccountId: json['peer_account_id'] as String,
     peerName: json['peer_name'] as String,
     peerAge: json['peer_age'] as int?,
     lastMessage: json['last_message'] as String?,
+    lastMessageMine: json['last_message_mine'] as bool?,
+    unread: (json['unread'] as int?) ?? 0,
   );
 }
 
@@ -95,18 +106,21 @@ class ServerMessage {
     required this.mine,
     required this.text,
     required this.sentAt,
+    this.seen,
   });
 
   final String id;
   final bool mine;
   final String text;
   final DateTime sentAt;
+  final bool? seen;
 
   factory ServerMessage.fromJson(Map<String, dynamic> json) => ServerMessage(
     id: json['id'] as String,
     mine: json['mine'] as bool,
     text: json['text'] as String,
     sentAt: DateTime.parse(json['sent_at'] as String),
+    seen: json['seen'] as bool?,
   );
 }
 
@@ -506,6 +520,24 @@ class VawraApi {
           body: {'text': text},
         ),
       );
+
+  Future<void> markRead(String matchId) =>
+      _send('POST', '/v1/matches/$matchId/read');
+
+  Future<void> typing(String matchId) =>
+      _send('POST', '/v1/matches/$matchId/typing');
+
+  /// Read receipts and typing, shown only when both people share them.
+  Future<bool> shareReadReceipts() async =>
+      (await _send('GET', '/v1/me/settings'))['share_read_receipts'] as bool;
+
+  Future<bool> setShareReadReceipts(bool on) async =>
+      (await _send(
+            'PATCH',
+            '/v1/me/settings',
+            body: {'share_read_receipts': on},
+          ))['share_read_receipts']
+          as bool;
 
   Future<void> unmatch(String matchId) =>
       _send('DELETE', '/v1/matches/$matchId');

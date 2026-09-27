@@ -74,6 +74,25 @@ class FakeVawraServer {
   bool verified = false;
   int rotations = 0;
 
+  /// Read receipts and typing: this person, and every peer.
+  bool shareReceipts = false;
+  bool peerShares = false;
+
+  /// How many messages of each match this person / the peer has read.
+  final myRead = <String, int>{};
+  final peerRead = <String, int>{};
+  int typingSent = 0;
+
+  /// The peer reads everything so far (and is told nothing unless both share).
+  void peerReads(String matchId) {
+    peerRead[matchId] = messages[matchId]?.length ?? 0;
+    if (shareReceipts && peerShares) nudge('read', matchId: matchId);
+  }
+
+  void peerTypes(String matchId) {
+    if (shareReceipts && peerShares) nudge('typing', matchId: matchId);
+  }
+
   /// Whether the current session came from a sign-in inside the server's
   /// reauthentication window. Tests set it false to age the sign-in.
   bool recentSignIn = true;
@@ -243,6 +262,11 @@ class FakeVawraServer {
       return http.Response('', 204);
     }
     if (deletionAt != null) return _error(409, 'deletion_scheduled');
+    if (path == '/v1/me/settings') {
+      if (method == 'PATCH')
+        shareReceipts = body['share_read_receipts'] as bool;
+      return _json(200, {'share_read_receipts': shareReceipts});
+    }
     if (path == '/v1/me/pause') {
       paused = method == 'POST';
       return http.Response('', 204);
@@ -296,9 +320,24 @@ class FakeVawraServer {
                 'peer_name': people[m.value]!['display_name'],
                 'peer_age': people[m.value]!['public_age'],
                 'last_message': messages[m.key]?.lastOrNull?['text'],
+                'last_message_mine': messages[m.key]?.lastOrNull?['mine'],
+                'unread': [...?messages[m.key]?.skip(myRead[m.key] ?? 0)]
+                    .where((x) => x['mine'] == false)
+                    .length,
               },
         ],
       });
+    }
+    final action = RegExp(r'^/v1/matches/([^/]+)/(read|typing)$')
+        .firstMatch(path);
+    if (action != null) {
+      final matchId = action.group(1)!;
+      if (action.group(2) == 'read') {
+        myRead[matchId] = messages[matchId]?.length ?? 0;
+      } else {
+        typingSent++;
+      }
+      return http.Response('', 204);
     }
     final thread = RegExp(r'^/v1/matches/([^/]+)/messages$').firstMatch(path);
     if (thread != null) {
@@ -318,7 +357,18 @@ class FakeVawraServer {
         messages.putIfAbsent(matchId, () => []).add(message);
         return _json(201, message);
       }
-      return _json(200, {'messages': messages[matchId] ?? []});
+      final list = messages[matchId] ?? [];
+      final both = shareReceipts && peerShares;
+      return _json(200, {
+        'messages': [
+          for (final (i, m) in list.indexed)
+            {
+              ...m,
+              if (both && m['mine'] == true)
+                'seen': i < (peerRead[matchId] ?? 0),
+            },
+        ],
+      });
     }
     if (path == '/v1/blocks' && method == 'POST') {
       blocked.add(body['account_id'] as String);
