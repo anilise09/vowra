@@ -210,7 +210,7 @@ Refuse:
 | Profile prompts | Done (up to 2, shown on the preview) |
 | Profile completion, photo tips, preview my card | Done |
 | Settings with pause and delete | Done: free pause, one honest delete confirmation |
-| Several photos per person with tap-to-flip | Blocked: synthetic profiles have one portrait each and portrait generation is paused by the owner |
+| Several photos per person with tap-to-flip | UI done (segment bar, tap left/right, detail pager; `lib/data/profile_photos.dart`). Hidden until photos exist: the owner chose not to spend image-generation credits (2026-09-27) |
 | Photo upload and crop | Blocked: waits for the reviewed media pipeline (`MEDIA_UPLOAD_CONTRACT.md`) |
 | Face Check / photo verification badge | Blocked: needs provider and legal review; Vawra never claims verification it has not done |
 | Boost, paid tiers, paywalls | Blocked: monetization is legally on hold |

@@ -1,5 +1,13 @@
 # Checkpoints
 
+## CP-065 - Several photos per card, ready but unused (2026-09-27)
+
+- Cards show a segment bar and flip photos on a tap to the right or left of the photo; the details sheet
+  has a swipeable photo pager with dots. Photos come from `lib/data/profile_photos.dart`, empty for now.
+- The owner chose not to spend Higgsfield credits on extra portraits, so every profile still has one
+  photo and the bar stays hidden. Adding entries to the map turns the feature on with no other change.
+- Verified: `flutter analyze` no issues, 96 tests pass (2 new).
+
 ## CP-064 - Explore hubs, chat list and conversation, prompts; checked on an AVD (2026-09-26)
 
 - Explore tab (5th tab): nine hubs built only from what people chose (2 relationship goals, 7 interests)
