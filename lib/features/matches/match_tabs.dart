@@ -392,6 +392,72 @@ class _ChatTabState extends State<ChatTab> {
   late bool inThread = widget.startInThread;
   final composer = TextEditingController();
   final reactions = <String>{};
+  var showPicker = false;
+
+  static const _emoji = [
+    '😀',
+    '😂',
+    '😊',
+    '😍',
+    '🥰',
+    '😘',
+    '😉',
+    '😎',
+    '🤔',
+    '😅',
+    '🙈',
+    '🥲',
+    '😴',
+    '🤗',
+    '👋',
+    '👍',
+    '🙏',
+    '👏',
+    '🔥',
+    '✨',
+    '❤️',
+    '💛',
+    '💜',
+    '💯',
+    '☕',
+    '🍕',
+    '🌮',
+    '🍜',
+    '🍷',
+    '🎶',
+    '📚',
+    '🏔️',
+    '🌸',
+    '🌞',
+    '🌙',
+    '🐶',
+    '🐱',
+    '🎉',
+    '✈️',
+    '🥾',
+  ];
+
+  static const _quickReplies = [
+    'Hi! How is your week going?',
+    'What are you reading at the moment?',
+    'Best food spot in your area?',
+    'Coffee or tea person?',
+    'What does your ideal weekend look like?',
+  ];
+
+  /// Messages that are only a few emoji show large, without a bubble.
+  static bool _emojiOnly(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed.characters.length > 3) return false;
+    return !RegExp(r'[A-Za-z0-9]').hasMatch(trimmed) &&
+        trimmed.runes.every((r) => r >= 0x2000 || r == 0x20);
+  }
+
+  void _insert(String value) {
+    composer.text = '${composer.text}$value';
+    composer.selection = TextSelection.collapsed(offset: composer.text.length);
+    setState(() {});
+  }
 
   /// Words that trigger a gentle "are you sure?" before sending. The message
   /// is never blocked or reported; the sender decides.
@@ -668,6 +734,23 @@ class _ChatTabState extends State<ChatTab> {
           ),
           child: Row(
             children: [
+              IconButton(
+                key: const Key('emoji-toggle'),
+                tooltip: showPicker
+                    ? 'Show keyboard'
+                    : 'Emoji and quick replies',
+                onPressed: match.canMessage
+                    ? () {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        setState(() => showPicker = !showPicker);
+                      }
+                    : null,
+                icon: Icon(
+                  showPicker
+                      ? Icons.keyboard_alt_outlined
+                      : Icons.emoji_emotions_outlined,
+                ),
+              ),
               Expanded(
                 child: TextField(
                   key: const Key('message-composer'),
@@ -678,6 +761,7 @@ class _ChatTabState extends State<ChatTab> {
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
                   onChanged: (_) => setState(() {}),
+                  onTap: () => setState(() => showPicker = false),
                   onSubmitted: (_) => _send(),
                   decoration: const InputDecoration(
                     hintText: 'Write something thoughtful…',
@@ -697,7 +781,69 @@ class _ChatTabState extends State<ChatTab> {
             ],
           ),
         ),
+        if (showPicker) _picker(),
       ],
+    ),
+  );
+
+  Widget _picker() => DefaultTabController(
+    length: 2,
+    child: Container(
+      key: const Key('emoji-panel'),
+      height: 250,
+      color: Colors.white,
+      child: Column(
+        children: [
+          const TabBar(
+            tabs: [
+              Tab(text: 'Emoji'),
+              Tab(text: 'Quick replies'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                GridView.count(
+                  crossAxisCount: 8,
+                  padding: const EdgeInsets.all(8),
+                  children: [
+                    for (final emoji in _emoji)
+                      InkResponse(
+                        key: Key('emoji-$emoji'),
+                        onTap: () => _insert(emoji),
+                        child: Center(
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 26),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                ListView(
+                  padding: const EdgeInsets.all(12),
+                  children: [
+                    for (final reply in _quickReplies)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: ActionChip(
+                          label: Text(reply),
+                          onPressed: () {
+                            composer.text = reply;
+                            composer.selection = TextSelection.collapsed(
+                              offset: reply.length,
+                            );
+                            setState(() => showPicker = false);
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
 
@@ -721,30 +867,40 @@ class _ChatTabState extends State<ChatTab> {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 290),
-                  margin: const EdgeInsets.only(bottom: 2),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: mine ? const Color(0xFFDCDCE9) : Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(20),
-                      topRight: const Radius.circular(20),
-                      bottomLeft: Radius.circular(mine ? 20 : 5),
-                      bottomRight: Radius.circular(mine ? 5 : 20),
+                if (_emojiOnly(message.text))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      message.text,
+                      key: const Key('big-emoji'),
+                      style: const TextStyle(fontSize: 44),
                     ),
-                    border: mine
-                        ? null
-                        : Border.all(color: VawraColors.coral, width: 1.2),
+                  )
+                else
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 290),
+                    margin: const EdgeInsets.only(bottom: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: mine ? const Color(0xFFDCDCE9) : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(20),
+                        topRight: const Radius.circular(20),
+                        bottomLeft: Radius.circular(mine ? 20 : 5),
+                        bottomRight: Radius.circular(mine ? 5 : 20),
+                      ),
+                      border: mine
+                          ? null
+                          : Border.all(color: VawraColors.coral, width: 1.2),
+                    ),
+                    child: Text(
+                      message.text,
+                      style: const TextStyle(color: Color(0xFF182465)),
+                    ),
                   ),
-                  child: Text(
-                    message.text,
-                    style: const TextStyle(color: Color(0xFF182465)),
-                  ),
-                ),
                 if (reacted)
                   Positioned(
                     bottom: -8,

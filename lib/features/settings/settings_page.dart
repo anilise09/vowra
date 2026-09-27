@@ -12,7 +12,32 @@ class SettingsPage extends StatefulWidget {
     required this.onOpenSafetyGuide,
     required this.onOpenSafetyCenter,
     required this.onDeleteProfile,
+    this.notifications = const {},
+    this.onNotificationChanged,
+    this.travelCity,
+    this.onTravelCityChanged,
   });
+
+  /// Notification kinds and whether each is on. Nothing is sent yet.
+  final Map<String, bool> notifications;
+  final void Function(String kind, bool on)? onNotificationChanged;
+
+  /// A city chosen by hand for browsing; null means home. No GPS is used.
+  final String? travelCity;
+  final ValueChanged<String?>? onTravelCityChanged;
+
+  static const travelCities = [
+    'Winnipeg',
+    'Toronto',
+    'Vancouver',
+    'Montreal',
+    'Calgary',
+    'London',
+    'New York',
+    'Mumbai',
+    'Kathmandu',
+    'Sydney',
+  ];
 
   final bool paused;
   final ValueChanged<bool> onPausedChanged;
@@ -26,6 +51,54 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late bool paused = widget.paused;
+  late final notifications = {...widget.notifications};
+  late String? travelCity = widget.travelCity;
+
+  Future<void> _pickCity() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          key: const Key('travel-picker'),
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          children: [
+            Text(
+              'Browse in another city',
+              style: Theme.of(sheetContext).textTheme.titleLarge,
+            ),
+            const Text(
+              'Chosen by you, never from GPS. Prototype: the sample profiles '
+              'stay the same for now.',
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              key: const Key('travel-home'),
+              leading: const Icon(Icons.home_outlined),
+              title: const Text('Home (turn travel mode off)'),
+              onTap: () => Navigator.pop(sheetContext, ''),
+            ),
+            for (final city in SettingsPage.travelCities)
+              ListTile(
+                key: Key('travel-$city'),
+                leading: const Icon(Icons.location_city_outlined),
+                title: Text(city),
+                trailing: travelCity == city
+                    ? const Icon(Icons.check_rounded, color: VawraColors.coral)
+                    : null,
+                onTap: () => Navigator.pop(sheetContext, city),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null) return;
+    final city = choice.isEmpty ? null : choice;
+    setState(() => travelCity = city);
+    widget.onTravelCityChanged?.call(city);
+  }
 
   void _setPaused(bool value) {
     setState(() => paused = value);
@@ -95,6 +168,37 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               value: !paused,
               onChanged: (value) => _setPaused(!value),
+            ),
+            _Row(
+              key: const Key('settings-travel'),
+              icon: Icons.flight_takeoff_rounded,
+              title: travelCity == null
+                  ? 'Travel mode: off'
+                  : 'Travel mode: $travelCity',
+              onTap: _pickCity,
+            ),
+          ],
+        ),
+        const _Heading('Notifications'),
+        _Group(
+          children: [
+            for (final entry in notifications.entries)
+              SwitchListTile(
+                key: Key('notify-${entry.key}'),
+                title: Text(entry.key),
+                value: entry.value,
+                onChanged: (on) {
+                  setState(() => notifications[entry.key] = on);
+                  widget.onNotificationChanged?.call(entry.key, on);
+                },
+              ),
+            const ListTile(
+              leading: Icon(Icons.info_outline_rounded),
+              title: Text('Nothing is sent yet'),
+              subtitle: Text(
+                'This prototype has no notification service. Your choices '
+                'are kept and will apply when notifications arrive.',
+              ),
             ),
           ],
         ),

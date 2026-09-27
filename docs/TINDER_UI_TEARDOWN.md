@@ -215,6 +215,6 @@ Refuse:
 | Face Check / photo verification badge | Blocked: needs provider and legal review; Vawra never claims verification it has not done |
 | Boost, paid tiers, paywalls | Blocked: monetization is legally on hold |
 | Active now / recently active | Blocked: needs a server; never faked |
-| GIFs, stickers, Spotify, Instagram | Blocked: third-party providers not reviewed |
-| Passport, Missed Connections | Blocked: needs location services and a privacy review |
-| Double Date, notifications settings | Blocked: need accounts and a push service |
+| GIFs, stickers, Spotify, Instagram | Emoji panel and quick replies done on-device (CP-066); GIFs, Spotify and Instagram still need reviewed providers |
+| Passport, Missed Connections | Travel mode done with a hand-picked city, no GPS (CP-066). Missed Connections refused: it needs precise location, which Vawra never uses |
+| Double Date, notifications | Notification settings done with an honest note (CP-066); sending notifications and Double Date need accounts and a push service |

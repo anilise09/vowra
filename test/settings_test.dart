@@ -40,13 +40,43 @@ void main() {
     await enterDiscovery(tester);
     await openSettings(tester);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-delete')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('settings-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.byKey(const Key('settings-delete')));
     await tester.pumpAndSettle();
     expect(find.text('Delete your profile?'), findsOneWidget);
     await tester.tap(find.byKey(const Key('delete-pause-instead')));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.textContaining('Paused.'),
+      -200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('settings-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     expect(find.textContaining('Paused.'), findsOneWidget);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-delete')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('settings-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.byKey(const Key('settings-delete')));
     await tester.pumpAndSettle();
     expect(

@@ -339,6 +339,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int openThreadRequest = 0;
   bool safetyGuideSeen = false;
   bool profilePaused = false;
+  String? travelCity;
+  final notificationPrefs = <String, bool>{
+    'New matches': true,
+    'Messages': true,
+    'Likes you': true,
+    'Safety tips': true,
+  };
   String? focusProfileAsset;
   int superLikesLeft = 3;
   bool swipeTutorialSeen = false;
@@ -2892,7 +2899,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      profilePaused ? _pausedDiscover(context) : _discover(context),
+      profilePaused || travelCity != null
+          ? _discoverWithBanners(context)
+          : _discover(context),
       _explore(context),
       MatchTab(
         connection: connection,
@@ -3086,36 +3095,71 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   );
 
   /// Discover with a banner while the person has paused their profile.
-  Widget _pausedDiscover(BuildContext context) => Column(
+  Widget _discoverWithBanners(BuildContext context) => Column(
     children: [
-      SafeArea(
-        bottom: false,
-        child: Container(
-          key: const Key('paused-banner'),
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
-          decoration: BoxDecoration(
-            color: VawraColors.lavender,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.pause_circle_outline, color: VawraColors.plum),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Your profile is paused. New people cannot see you.',
+      if (travelCity case final city?)
+        SafeArea(
+          bottom: false,
+          child: Container(
+            key: const Key('travel-banner'),
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
+            decoration: BoxDecoration(
+              color: VawraColors.blush,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.flight_takeoff_rounded,
+                  color: VawraColors.coral,
                 ),
-              ),
-              TextButton(
-                key: const Key('resume-profile'),
-                onPressed: () => setState(() => profilePaused = false),
-                child: const Text('Resume'),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Browsing in $city · sample profiles stay the same for now',
+                  ),
+                ),
+                IconButton(
+                  key: const Key('travel-off'),
+                  tooltip: 'Back home',
+                  onPressed: () => setState(() => travelCity = null),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
+      if (profilePaused)
+        SafeArea(
+          bottom: false,
+          top: travelCity == null,
+          child: Container(
+            key: const Key('paused-banner'),
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+            decoration: BoxDecoration(
+              color: VawraColors.lavender,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.pause_circle_outline, color: VawraColors.plum),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Your profile is paused. New people cannot see you.',
+                  ),
+                ),
+                TextButton(
+                  key: const Key('resume-profile'),
+                  onPressed: () => setState(() => profilePaused = false),
+                  child: const Text('Resume'),
+                ),
+              ],
+            ),
+          ),
+        ),
       Expanded(
         child: MediaQuery.removePadding(
           context: context,
@@ -3144,6 +3188,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       builder: (_) => SettingsPage(
         paused: profilePaused,
         onPausedChanged: (value) => setState(() => profilePaused = value),
+        notifications: notificationPrefs,
+        onNotificationChanged: (kind, on) =>
+            setState(() => notificationPrefs[kind] = on),
+        travelCity: travelCity,
+        onTravelCityChanged: (city) => setState(() => travelCity = city),
         onOpenSafetyGuide: () => DateSafelyGuide.show(context),
         onOpenSafetyCenter: () => _openSafety(context),
         // Everything lives in this screen's memory; leaving it deletes it.

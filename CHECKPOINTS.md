@@ -1,5 +1,20 @@
 # Checkpoints
 
+## CP-066 - On-device extras: emoji and quick replies, notifications, travel mode (2026-09-27)
+
+- Chat: an emoji button opens a panel with an Emoji grid and Quick replies (conversation starters that
+  fill the message box). Messages made only of up to three emoji show large without a bubble.
+- Settings > Notifications: New matches, Messages, Likes you, Safety tips switches, kept between visits,
+  with an honest "Nothing is sent yet" note (no notification service exists).
+- Settings > Travel mode: pick a city by hand, never from GPS; Discover shows "Browsing in <city>" with a
+  close button. The banner says plainly that sample profiles stay the same for now.
+- The owner declined spending image credits and chose these on-device items over starting the backend
+  or paywall mock-ups. Monetization, verification, photo upload, active status, Missed Connections and
+  Double Date remain blocked for the reasons in the teardown gap table.
+- Checked on Pixel_10_Pro_XL_34: emoji panel, big-emoji message, Settings sections, travel city. The
+  emulator crashed twice with an access violation in qemu itself (not the app; config already stable).
+- Verified: `flutter analyze` no issues, 99 tests pass (3 new), goldens refreshed, debug APK builds.
+
 ## CP-065 - Several photos per card, ready but unused (2026-09-27)
 
 - Cards show a segment bar and flip photos on a tap to the right or left of the photo; the details sheet
