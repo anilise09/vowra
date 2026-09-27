@@ -34,6 +34,7 @@ class DiscoveryDeck extends StatelessWidget {
     this.onTutorialDone,
     this.title = 'Find your match',
     this.onBack,
+    this.extraPhotos = const {},
   });
 
   final List<DemoProfile> profiles;
@@ -69,6 +70,14 @@ class DiscoveryDeck extends StatelessWidget {
   /// Header title; hub decks use their hub name and show a back arrow.
   final String title;
   final VoidCallback? onBack;
+
+  /// Further photos per profile, keyed by the main portrait's asset path.
+  final Map<String, List<String>> extraPhotos;
+
+  List<String> _photosOf(DemoProfile profile) => [
+    profile.assetPath,
+    ...?extraPhotos[profile.assetPath],
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -187,29 +196,30 @@ class DiscoveryDeck extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            profile.assetPath,
-            key: ValueKey(profile.assetPath),
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-            semanticLabel: 'Synthetic portrait of ${profile.name}',
+          _CardPhotos(
+            key: ValueKey('photos-${profile.assetPath}'),
+            photos: _photosOf(profile),
+            name: profile.name,
+            interactive: !preview,
           ),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: [0, 0.5, 1],
-                colors: [
-                  Color(0x24000000),
-                  Colors.transparent,
-                  Color(0xE0000000),
-                ],
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0, 0.5, 1],
+                  colors: [
+                    Color(0x24000000),
+                    Colors.transparent,
+                    Color(0xE0000000),
+                  ],
+                ),
               ),
             ),
           ),
           const Positioned(
-            top: 16,
+            top: 22,
             left: 16,
             child: _OverlayPill(
               icon: Icons.science_outlined,
@@ -346,18 +356,7 @@ class DiscoveryDeck extends StatelessWidget {
               key: const Key('profile-details-scroll'),
               padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(26),
-                  child: AspectRatio(
-                    aspectRatio: 0.9,
-                    child: Image.asset(
-                      profile.assetPath,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      semanticLabel: 'Synthetic portrait of ${profile.name}',
-                    ),
-                  ),
-                ),
+                _DetailPhotos(photos: _photosOf(profile), name: profile.name),
                 const SizedBox(height: 12),
                 _DetailSection(
                   icon: Icons.favorite_outline_rounded,
@@ -1557,5 +1556,149 @@ class _TutorialRow extends StatelessWidget {
         ),
       ],
     ),
+  );
+}
+
+/// The card's photos: a segment bar when there is more than one, and taps on
+/// the right or left of the photo flip forward or back.
+class _CardPhotos extends StatefulWidget {
+  const _CardPhotos({
+    super.key,
+    required this.photos,
+    required this.name,
+    required this.interactive,
+  });
+
+  final List<String> photos;
+  final String name;
+  final bool interactive;
+
+  @override
+  State<_CardPhotos> createState() => _CardPhotosState();
+}
+
+class _CardPhotosState extends State<_CardPhotos> {
+  var index = 0;
+
+  void _flip(TapUpDetails details, double width) {
+    if (widget.photos.length < 2) return;
+    setState(() {
+      index = details.localPosition.dx > width / 2
+          ? (index + 1).clamp(0, widget.photos.length - 1)
+          : (index - 1).clamp(0, widget.photos.length - 1);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          widget.photos[index],
+          key: ValueKey(widget.photos[index]),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          gaplessPlayback: true,
+          semanticLabel:
+              'Synthetic portrait of ${widget.name}, photo ${index + 1} of ${widget.photos.length}',
+        ),
+        if (widget.interactive && widget.photos.length > 1)
+          Positioned.fill(
+            bottom: constraints.maxHeight * 0.3,
+            child: GestureDetector(
+              key: const Key('card-photo-tap'),
+              behavior: HitTestBehavior.translucent,
+              onTapUp: (details) => _flip(details, constraints.maxWidth),
+            ),
+          ),
+        if (widget.photos.length > 1)
+          Positioned(
+            top: 8,
+            left: 12,
+            right: 12,
+            child: Row(
+              key: const Key('photo-segments'),
+              children: [
+                for (var i = 0; i < widget.photos.length; i++)
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: i == index
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+/// Swipeable photos at the top of the details sheet.
+class _DetailPhotos extends StatefulWidget {
+  const _DetailPhotos({required this.photos, required this.name});
+
+  final List<String> photos;
+  final String name;
+
+  @override
+  State<_DetailPhotos> createState() => _DetailPhotosState();
+}
+
+class _DetailPhotosState extends State<_DetailPhotos> {
+  var page = 0;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: AspectRatio(
+          aspectRatio: 0.9,
+          child: PageView(
+            key: const Key('detail-photos'),
+            onPageChanged: (value) => setState(() => page = value),
+            children: [
+              for (final (i, photo) in widget.photos.indexed)
+                Image.asset(
+                  photo,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  semanticLabel:
+                      'Synthetic portrait of ${widget.name}, photo ${i + 1} of ${widget.photos.length}',
+                ),
+            ],
+          ),
+        ),
+      ),
+      if (widget.photos.length > 1)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < widget.photos.length; i++)
+                Container(
+                  width: i == page ? 16 : 7,
+                  height: 7,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: i == page
+                        ? VawraColors.coral
+                        : const Color(0xFFE2D7DE),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+            ],
+          ),
+        ),
+    ],
   );
 }

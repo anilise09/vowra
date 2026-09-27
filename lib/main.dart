@@ -4,6 +4,7 @@ import 'data/discovery_interaction_repository.dart';
 import 'data/discovery_safety_service.dart';
 import 'data/match_repository.dart';
 import 'data/message_repository.dart';
+import 'data/profile_photos.dart';
 import 'data/profile_repository.dart';
 import 'domain/chat_message.dart';
 import 'domain/demo_profile.dart';
@@ -3047,6 +3048,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget _discover(BuildContext context, {ExploreHub? hub}) => DiscoveryDeck(
     key: ValueKey('deck-${hub?.id ?? 'main'}'),
     title: hub?.title ?? 'Find your match',
+    extraPhotos: extraProfilePhotos,
     onBack: hub == null ? null : () => setState(() => activeHub = null),
     profiles: hub == null ? profiles : profiles.where(hub.includes).toList(),
     preferences: discoveryPreferences,
