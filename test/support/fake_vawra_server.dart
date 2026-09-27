@@ -263,8 +263,9 @@ class FakeVawraServer {
     }
     if (deletionAt != null) return _error(409, 'deletion_scheduled');
     if (path == '/v1/me/settings') {
-      if (method == 'PATCH')
+      if (method == 'PATCH') {
         shareReceipts = body['share_read_receipts'] as bool;
+      }
       return _json(200, {'share_read_receipts': shareReceipts});
     }
     if (path == '/v1/me/pause') {
