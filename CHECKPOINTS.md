@@ -1,5 +1,29 @@
 # Checkpoints
 
+## BE-1 - Backend core: sign-in, sessions, profile, discovery, matches, chat, safety (2026-09-27)
+
+- New `backend/` (TypeScript, Node 22, Fastify, zod). PostgreSQL through PGlite for development and
+  tests (no install or admin rights); `DATABASE_URL` switches to a real PostgreSQL server.
+- Ships switched off: refuses to start without `VAWRA_SERVER_ENABLED=1`, binds 127.0.0.1, requires
+  data and lookup keys. No production deployment exists.
+- Implements the contracts' first slice: non-enumerating passwordless requests, one-time PKCE-bound
+  proofs, rotating refresh with family revocation on reuse, sign out and sign out everywhere,
+  recovery revoking sessions; own-profile read/patch limited to the six contract fields with the
+  app's validation; pause/resume; age gate on all dating features; eligible-only discovery,
+  idempotent swipes (like, super like, pass), reciprocal-only matches, free likes-you; participant-
+  only chat with validation and 5-a-minute limit; block fan-out in one transaction; private reports
+  with a checked message reference; bounded audit events.
+- Emails are sealed (AES-256-GCM) and looked up by keyed hash; tokens and proofs are stored hashed.
+- 21 tests over real HTTP routes. They caught and fixed three real bugs before commit: an SQL
+  alias clash that leaked paused and unverified people into discovery, a failed proof exchange
+  being rolled back to unused, and refresh-reuse revocation being rolled back.
+- Smoke-tested the built server: off by default, health, sign-in, age-gated discovery, no tokens or
+  emails in logs, listening on 127.0.0.1 only.
+
+Next (BE-2): connect the app to the backend behind a development switch; the app keeps its
+synthetic prototype when the server is unavailable. Providers (email, OIDC, age assurance,
+location, media) wait for review.
+
 ## CP-066 - On-device extras: emoji and quick replies, notifications, travel mode (2026-09-27)
 
 - Chat: an emoji button opens a panel with an Emoji grid and Quick replies (conversation starters that
