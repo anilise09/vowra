@@ -5,6 +5,7 @@ import { Sealer } from './crypto.js';
 import { migrate, openPglite, openPostgres } from './db.js';
 import type { Delivery } from './context.js';
 import { runDueDeletions } from './jobs/deletions.js';
+import { MemoryNudgeBus } from './nudges.js';
 
 const config = loadConfig();
 if (!config.enabled) {
@@ -38,6 +39,7 @@ const app = buildApp(
     sealer: new Sealer(config.dataKey, config.lookupKey),
     clock: { now: () => new Date() },
     delivery,
+    nudges: new MemoryNudgeBus(),
     accessTtlSeconds: config.accessTtlSeconds,
     proofTtlSeconds: config.proofTtlSeconds,
     reauthWindowSeconds: config.reauthWindowSeconds,

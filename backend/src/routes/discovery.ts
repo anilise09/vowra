@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { fail, requireDatingAccess, type Services } from '../context.js';
 import type { Db } from '../db.js';
@@ -60,6 +60,23 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
   });
 
   app.post('/v1/discovery/:accountId/swipe', async (request) => {
+    const result = await swipe(request);
+    const me = request.account!.id;
+    const other = (request.params as { accountId: string }).accountId;
+    if (result.matched) {
+      services.nudges.publish(me, { kind: 'match', match_id: result.match_id });
+      services.nudges.publish(other, { kind: 'match', match_id: result.match_id });
+    } else if (result.liked) {
+      services.nudges.publish(other, { kind: 'like' });
+    }
+    return result.matched
+      ? { matched: true, match_id: result.match_id }
+      : { matched: false };
+  });
+
+  async function swipe(
+    request: FastifyRequest,
+  ): Promise<{ matched: boolean; match_id?: string; liked?: boolean }> {
     const me = requireDatingAccess(request);
     await requireProfile(db, me.id);
     const target = uuid.safeParse((request.params as { accountId: string }).accountId);
@@ -82,9 +99,9 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
         if ((spent?.count ?? 0) >= swipeRules.superLikesPerDay) fail(429, 'super_like_limit');
       }
       // Idempotent: the first decision stands.
-      await tx.query(
+      const fresh = await tx.query(
         `INSERT INTO swipes (from_account, to_account, kind, created_at) VALUES ($1, $2, $3, $4)
-         ON CONFLICT (from_account, to_account) DO NOTHING`,
+         ON CONFLICT (from_account, to_account) DO NOTHING RETURNING 1`,
         [me.id, other, kind, now],
       );
       const [mine] = await tx.query<{ kind: string }>(
@@ -96,7 +113,10 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
         [other, me.id],
       );
       const liked = (kind?: string) => kind === 'like' || kind === 'super_like';
-      if (!liked(mine?.kind) || !liked(theirs?.kind)) return { matched: false };
+      if (!liked(mine?.kind) || !liked(theirs?.kind)) {
+        // A new like is news for them; a repeated or pass decision is not.
+        return { matched: false, liked: fresh.length > 0 && liked(mine?.kind) };
+      }
       const [low, high] = me.id < other ? [me.id, other] : [other, me.id];
       await tx.query(
         `INSERT INTO matches (id, account_low, account_high, created_at) VALUES ($1, $2, $3, $4)
@@ -109,7 +129,7 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
       );
       return match?.status === 'active' ? { matched: true, match_id: match.id } : { matched: false };
     });
-  });
+  }
 
   /** People who liked me and whom I have not answered. Free in Vawra. */
   app.get('/v1/likes-you', async (request) => {

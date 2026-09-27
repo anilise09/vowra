@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
 import { pkceChallenge, Sealer } from '../src/crypto.js';
 import { migrate, openPglite, type Db } from '../src/db.js';
+import { MemoryNudgeBus } from '../src/nudges.js';
 
 export interface Harness {
   app: FastifyInstance;
@@ -10,6 +11,7 @@ export interface Harness {
   sealer: Sealer;
   clock: { now(): Date; advance(ms: number): void };
   outbox: { email: string; proof: string; purpose: string }[];
+  nudges: MemoryNudgeBus;
   close(): Promise<void>;
 }
 
@@ -20,7 +22,9 @@ export async function startHarness(): Promise<Harness> {
   const clock = { now: () => new Date(now), advance: (ms: number) => void (now += ms) };
   const outbox: Harness['outbox'] = [];
   const sealer = new Sealer(randomBytes(32), randomBytes(32));
+  const nudges = new MemoryNudgeBus();
   const app = buildApp({
+    nudges,
     db,
     sealer,
     clock,
@@ -31,7 +35,7 @@ export async function startHarness(): Promise<Harness> {
     deletionGraceSeconds: 7 * 24 * 60 * 60,
   });
   await app.ready();
-  return { app, db, sealer, clock, outbox, close: async () => (await app.close(), await db.close()) };
+  return { app, db, sealer, clock, outbox, nudges, close: async () => (await app.close(), await db.close()) };
 }
 
 export const verifier = () => randomBytes(32).toString('base64url');

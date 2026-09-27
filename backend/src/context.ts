@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Db } from './db.js';
 import type { Sealer } from './crypto.js';
+import type { NudgeBus } from './nudges.js';
 
 export interface Clock {
   now(): Date;
@@ -16,6 +17,7 @@ export interface Services {
   sealer: Sealer;
   clock: Clock;
   delivery: Delivery;
+  nudges: NudgeBus;
   accessTtlSeconds: number;
   proofTtlSeconds: number;
   /** How recent a sign-in must be for deletion and similar account actions. */
@@ -28,6 +30,7 @@ export interface Account {
   id: string;
   sessionId: string;
   familyId: string;
+  accessExpiresAt: Date;
   ageState: 'assurance_required' | 'pending_review' | 'adult_verified' | 'rejected';
   lifecycle: 'active' | 'paused' | 'deletion_scheduled';
 }

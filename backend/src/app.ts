@@ -4,6 +4,7 @@ import { ApiError, type Account, type Services } from './context.js';
 import { authRoutes } from './routes/auth.js';
 import { chatRoutes } from './routes/chat.js';
 import { discoveryRoutes } from './routes/discovery.js';
+import { eventRoutes } from './routes/events.js';
 import { lifecycleRoutes } from './routes/lifecycle.js';
 import { profileRoutes } from './routes/profile.js';
 import { safetyRoutes } from './routes/safety.js';
@@ -30,10 +31,11 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
       id: string;
       session_id: string;
       family_id: string;
+      access_expires_at: Date;
       age_state: Account['ageState'];
       lifecycle: Account['lifecycle'];
     }>(
-      `SELECT a.id, s.id AS session_id, s.family_id, a.age_state, a.lifecycle
+      `SELECT a.id, s.id AS session_id, s.family_id, s.access_expires_at, a.age_state, a.lifecycle
        FROM sessions s
        JOIN session_families f ON f.id = s.family_id
        JOIN accounts a ON a.id = s.account_id
@@ -46,6 +48,7 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
         id: row.id,
         sessionId: row.session_id,
         familyId: row.family_id,
+        accessExpiresAt: new Date(row.access_expires_at),
         ageState: row.age_state,
         lifecycle: row.lifecycle,
       };
@@ -72,5 +75,6 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
   chatRoutes(app, services);
   safetyRoutes(app, services);
   lifecycleRoutes(app, services);
+  eventRoutes(app, services);
   return app;
 }

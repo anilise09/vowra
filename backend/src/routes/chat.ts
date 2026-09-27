@@ -80,6 +80,8 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
     const match = await participantMatch(db, me.id, (request.params as { matchId: string }).matchId);
     if (match.status === 'active') {
       await db.query("UPDATE matches SET status = 'unmatched' WHERE id = $1", [match.id]);
+      services.nudges.publish(me.id, { kind: 'match', match_id: match.id });
+      services.nudges.publish(match.peer, { kind: 'match', match_id: match.id });
     }
     return noContent(reply);
   });
@@ -115,7 +117,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
     const normalized = normalizeMessage(body.data!.text);
     if ('error' in normalized) return fail(422, normalized.error);
     const now = clock.now();
-    return db.transaction(async (tx) => {
+    const sent = await db.transaction(async (tx) => {
       const match = await openConversation(
         tx,
         me.id,
@@ -132,9 +134,13 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
         'INSERT INTO messages (id, match_id, author_id, body, created_at) VALUES ($1, $2, $3, $4, $5)',
         [id, match.id, me.id, normalized.text, now],
       );
-      return reply
-        .code(201)
-        .send({ id, mine: true, text: normalized.text, sent_at: now.toISOString() });
+      return { id, match, text: normalized.text };
     });
+    // The other person and this person's other devices.
+    services.nudges.publish(sent.match.peer, { kind: 'message', match_id: sent.match.id });
+    services.nudges.publish(me.id, { kind: 'message', match_id: sent.match.id });
+    return reply
+      .code(201)
+      .send({ id: sent.id, mine: true, text: sent.text, sent_at: now.toISOString() });
   });
 }

@@ -39,6 +39,8 @@ export function safetyRoutes(app: FastifyInstance, services: Services) {
       );
       await audit(tx, me.id, 'block', now);
     });
+    // Only the blocker's own devices: the blocked person is never told.
+    services.nudges.publish(me.id, { kind: 'match' });
     return noContent(reply);
   });
 
