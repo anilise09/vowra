@@ -8,6 +8,8 @@ export interface Config {
   lookupKey: Buffer;
   accessTtlSeconds: number;
   proofTtlSeconds: number;
+  reauthWindowSeconds: number;
+  deletionGraceSeconds: number;
   devOutbox: boolean;
 }
 
@@ -31,6 +33,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     lookupKey: key('VAWRA_LOOKUP_KEY'),
     accessTtlSeconds: Number(env.VAWRA_ACCESS_TTL ?? 900),
     proofTtlSeconds: Number(env.VAWRA_PROOF_TTL ?? 600),
+    reauthWindowSeconds: Number(env.VAWRA_REAUTH_WINDOW ?? 600),
+    // Placeholder until privacy counsel sets the recovery window.
+    deletionGraceSeconds: Number(env.VAWRA_DELETION_GRACE ?? 7 * 24 * 60 * 60),
     devOutbox: env.VAWRA_DEV_OUTBOX === '1',
   };
 }

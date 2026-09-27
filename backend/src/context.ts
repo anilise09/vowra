@@ -18,6 +18,10 @@ export interface Services {
   delivery: Delivery;
   accessTtlSeconds: number;
   proofTtlSeconds: number;
+  /** How recent a sign-in must be for deletion and similar account actions. */
+  reauthWindowSeconds: number;
+  /** Time between asking for deletion and the data being removed. */
+  deletionGraceSeconds: number;
 }
 
 export interface Account {
@@ -25,7 +29,7 @@ export interface Account {
   sessionId: string;
   familyId: string;
   ageState: 'assurance_required' | 'pending_review' | 'adult_verified' | 'rejected';
-  lifecycle: 'active' | 'paused';
+  lifecycle: 'active' | 'paused' | 'deletion_scheduled';
 }
 
 declare module 'fastify' {
@@ -63,6 +67,7 @@ export function requireDatingAccess(
 ): Account {
   const account = requireAccount(request);
   if (account.ageState !== 'adult_verified') fail(403, 'age_assurance_required');
+  if (account.lifecycle === 'deletion_scheduled') fail(409, 'deletion_scheduled');
   if (account.lifecycle === 'paused' && allowPaused) return account;
   if (account.lifecycle !== 'active') fail(409, 'account_paused');
   return account;

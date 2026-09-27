@@ -41,9 +41,16 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
 
   app.get('/v1/me/profile', async (request) => {
     const account = requireAccount(request);
+    const [row] = await db.query<{ deletion_effective_at: Date | null }>(
+      'SELECT deletion_effective_at FROM accounts WHERE id = $1',
+      [account.id],
+    );
     return {
       age_state: account.ageState,
       lifecycle: account.lifecycle,
+      deletion_effective_at: row?.deletion_effective_at
+        ? new Date(row.deletion_effective_at).toISOString()
+        : null,
       profile: await load(account.id),
     };
   });
@@ -112,7 +119,10 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
   // Pause is free and always reachable; resume repeats the eligibility checks.
   app.post('/v1/me/pause', async (request, reply) => {
     const account = requireAccount(request);
-    await db.query("UPDATE accounts SET lifecycle = 'paused' WHERE id = $1", [account.id]);
+    if (account.lifecycle === 'deletion_scheduled') fail(409, 'deletion_scheduled');
+    await db.query("UPDATE accounts SET lifecycle = 'paused' WHERE id = $1 AND lifecycle = 'active'", [
+      account.id,
+    ]);
     await audit(db, account.id, 'paused', clock.now());
     return noContent(reply);
   });
@@ -120,7 +130,11 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
   app.delete('/v1/me/pause', async (request, reply) => {
     const account = requireAccount(request);
     if (account.ageState !== 'adult_verified') fail(403, 'age_assurance_required');
-    await db.query("UPDATE accounts SET lifecycle = 'active' WHERE id = $1", [account.id]);
+    // Resuming never undoes a scheduled deletion; only DELETE /v1/me/deletion does.
+    if (account.lifecycle === 'deletion_scheduled') fail(409, 'deletion_scheduled');
+    await db.query("UPDATE accounts SET lifecycle = 'active' WHERE id = $1 AND lifecycle = 'paused'", [
+      account.id,
+    ]);
     await audit(db, account.id, 'resumed', clock.now());
     return noContent(reply);
   });

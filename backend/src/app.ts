@@ -4,6 +4,7 @@ import { ApiError, type Account, type Services } from './context.js';
 import { authRoutes } from './routes/auth.js';
 import { chatRoutes } from './routes/chat.js';
 import { discoveryRoutes } from './routes/discovery.js';
+import { lifecycleRoutes } from './routes/lifecycle.js';
 import { profileRoutes } from './routes/profile.js';
 import { safetyRoutes } from './routes/safety.js';
 
@@ -70,5 +71,6 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
   discoveryRoutes(app, services);
   chatRoutes(app, services);
   safetyRoutes(app, services);
+  lifecycleRoutes(app, services);
   return app;
 }

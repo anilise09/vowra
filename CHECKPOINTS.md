@@ -1,5 +1,28 @@
 # Checkpoints
 
+## BE-3b - Account deletion from inside the app (2026-09-27)
+
+- Server: `POST /v1/me/deletion` needs a sign-in within the last 10 minutes (server setting); an
+  older session gets `reauthentication_required` and the app asks for an email code first. It then
+  signs the account out on every device, hides it from discovery, likes-you and match lists,
+  closes its chats for the other person, and returns the server's date (7-day placeholder until
+  counsel sets it). `DELETE /v1/me/deletion` keeps the account (paused stays paused) until that
+  date; after it, `410`. Resuming from pause can't undo a deletion (checked by removing the guard:
+  the test fails).
+- Deletion job (at server start and hourly) removes the account and everything tied to it,
+  including both people's messages in its matches, its sign-in requests and the account id in audit
+  rows; the same email can later start a new account.
+- App: Settings > Delete profile explains the waiting period, confirms the person with a code when
+  the sign-in is old, then shows "Your account will be deleted on <server date>" and that they are
+  signed out everywhere. Signing in before the date shows the date with "Keep my account".
+- Contract updated: pause keeps existing chats (recorded as a decision; the app always promised
+  it); deletion implementation details; reports against a deleted account are removed with it
+  until counsel decides on narrow abuse-evidence retention.
+- Tests: 6 backend deletion tests (29 backend total) and 3 app flows (schedule, confirm with a
+  code first, keep the account). The confirm flow test fails when confirming skips the deletion.
+- Backend tests' setup timeout raised to 60 s: each test starts its own database and the laptop
+  was at 99% CPU, which timed out setup, not the code.
+
 ## BE-3a - Stay signed in across restarts; one refresh at a time (2026-09-27)
 
 - The refresh token (and account id) is kept in platform-protected storage

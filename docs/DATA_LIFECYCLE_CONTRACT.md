@@ -1,6 +1,6 @@
 # Account data lifecycle and location contract
 
-Status: design contract only. No production account, export worker, deletion job, location collection, privacy-zone service, or network client exists.
+Status: pause and deletion are implemented in `backend/` (switched off, never deployed); export, location and privacy zones are still design only.
 
 ## Principles
 
@@ -12,7 +12,9 @@ Status: design contract only. No production account, export worker, deletion job
 
 ## Pause and resume
 
-`POST /v1/me/pause` removes the account from discovery and stops new likes, matches, non-safety notifications, and call invitations before returning success. Existing conversations become unavailable to the paused account, but block/report and account controls remain reachable. Pause does not erase data or cancel a store subscription; those facts are disclosed separately.
+`POST /v1/me/pause` removes the account from discovery and stops new likes, matches, non-safety notifications, and call invitations before returning success. Existing conversations stay available to both people, and block/report and account controls remain reachable.
+
+Decision (2026-09-27, BE-2): pause keeps existing chats. Pausing is a break from meeting new people, not from people already matched; this is what the app has always told people ("Your matches can still message you") and how leading dating apps treat pausing. Anyone who wants no contact at all can unmatch, block, or delete the account. Pause does not erase data or cancel a store subscription; those facts are disclosed separately.
 
 `DELETE /v1/me/pause` resumes only after the server repeats age, moderation, session, and eligibility checks. A client cannot set lifecycle state directly.
 
@@ -25,6 +27,10 @@ The client receives an opaque request ID and state. A ready export is downloaded
 ## Deletion
 
 `POST /v1/me/deletion` schedules deletion after recent reauthentication and returns the server-configured effective time. Scheduling immediately pauses discovery/contact, revokes provider-link attempts, and queues session revocation. The client displays the server time rather than assuming a recovery window.
+
+Implemented (BE-3b): "recent" means a sign-in (a new session family) within `VAWRA_REAUTH_WINDOW`, default 10 minutes; otherwise the answer is `403 reauthentication_required` and the app asks for a new email code. Scheduling revokes every session, this device included, hides the account from discovery, likes-you and match lists, and closes its conversations for the other person. The grace period is `VAWRA_DELETION_GRACE`, a 7-day placeholder until counsel sets it. Resuming from pause cannot undo a scheduled deletion. An hourly job then deletes the account row, which cascades to the profile, sessions, swipes, blocks, reports, and every match with both people's messages; audit rows lose the account id and pending sign-in requests for the email are removed.
+
+Open decision for counsel: reports filed against a deleted account are removed with it today. Keeping narrow abuse evidence needs the documented purpose, access policy and expiry described below before it is built.
 
 `DELETE /v1/me/deletion` cancels only while the server says the request is reversible and requires reauthentication. After deletion becomes effective, recovery must not silently reconstruct the account from analytics, backups, purchase records, or another person's conversation copy.
 

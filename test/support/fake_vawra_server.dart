@@ -19,6 +19,14 @@ class FakeVawraServer {
 
   bool verified = false;
   int rotations = 0;
+
+  /// Whether the current session came from a sign-in inside the server's
+  /// reauthentication window. Tests set it false to age the sign-in.
+  bool recentSignIn = true;
+
+  /// The server's deletion date while a deletion is scheduled.
+  DateTime? deletionAt;
+  bool _revoked = false;
   bool paused = false;
   Map<String, dynamic>? profile;
   final people = <String, Map<String, dynamic>>{};
@@ -102,6 +110,8 @@ class FakeVawraServer {
         return _error(400, 'invalid_proof');
       }
       outbox.clear();
+      _revoked = false;
+      recentSignIn = true;
       return _json(200, {
         'session_id': 's1',
         'access_token': 'access-token-000000000000',
@@ -115,7 +125,7 @@ class FakeVawraServer {
       });
     }
     if (method == 'POST' && path == '/v1/session/rotate') {
-      if (body['refresh_token'] != 'refresh-token-00000000000') {
+      if (_revoked || body['refresh_token'] != 'refresh-token-00000000000') {
         return _error(401, 'session_revoked');
       }
       rotations++;
@@ -129,8 +139,9 @@ class FakeVawraServer {
         'refresh_token': 'refresh-token-00000000000',
       });
     }
-    if (request.headers['authorization'] !=
-        'Bearer access-token-000000000000') {
+    if (_revoked ||
+        request.headers['authorization'] !=
+            'Bearer access-token-000000000000') {
       return _error(401, 'unauthenticated');
     }
     if (path == '/v1/session' && method == 'DELETE') {
@@ -142,10 +153,30 @@ class FakeVawraServer {
       }
       return _json(200, {
         'age_state': verified ? 'adult_verified' : 'assurance_required',
-        'lifecycle': paused ? 'paused' : 'active',
+        'lifecycle': deletionAt != null
+            ? 'deletion_scheduled'
+            : paused
+            ? 'paused'
+            : 'active',
+        'deletion_effective_at': deletionAt?.toIso8601String(),
         'profile': profile,
       });
     }
+    if (path == '/v1/me/deletion') {
+      if (!recentSignIn) return _error(403, 'reauthentication_required');
+      if (method == 'POST') {
+        deletionAt ??= DateTime.utc(2026, 10, 4, 12);
+        _revoked = true;
+        return _json(202, {
+          'state': 'scheduled',
+          'effective_at': deletionAt!.toIso8601String(),
+        });
+      }
+      if (deletionAt == null) return _error(409, 'no_deletion_scheduled');
+      deletionAt = null;
+      return http.Response('', 204);
+    }
+    if (deletionAt != null) return _error(409, 'deletion_scheduled');
     if (path == '/v1/me/pause') {
       paused = method == 'POST';
       return http.Response('', 204);

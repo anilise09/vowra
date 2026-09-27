@@ -40,7 +40,14 @@ async function openConversation(db: Db, me: string, rawId: string): Promise<Matc
     `SELECT 1 FROM blocks WHERE (blocker = $1 AND blocked = $2) OR (blocker = $2 AND blocked = $1)`,
     [me, match.peer],
   );
-  if (match.status !== 'active' || blocked.length > 0) fail(409, 'conversation_closed');
+  // Someone who asked to be deleted can no longer be contacted.
+  const leaving = await db.query(
+    "SELECT 1 FROM accounts WHERE id = $1 AND lifecycle = 'deletion_scheduled'",
+    [match.peer],
+  );
+  if (match.status !== 'active' || blocked.length > 0 || leaving.length > 0) {
+    fail(409, 'conversation_closed');
+  }
   return match;
 }
 
@@ -57,6 +64,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
        FROM matches m
        JOIN profiles p ON p.account_id =
             CASE WHEN m.account_low = $1 THEN m.account_high ELSE m.account_low END
+       JOIN accounts peer ON peer.id = p.account_id AND peer.lifecycle <> 'deletion_scheduled'
        WHERE (m.account_low = $1 OR m.account_high = $1) AND m.status = 'active'
          AND NOT EXISTS (SELECT 1 FROM blocks b WHERE
                (b.blocker = m.account_low AND b.blocked = m.account_high)

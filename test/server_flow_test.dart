@@ -227,4 +227,101 @@ void main() {
     expect(server.requests.last.url.path, '/v1/session');
     expect(find.text('Continue with email'), findsOneWidget);
   });
+
+  group('account deletion', () {
+    Map<String, dynamic> profile() => {
+      'display_name': 'Alex',
+      'relationship_intent': 'casual',
+      'bio': '',
+      'interests': <String>[],
+      'show_distance_band': true,
+      'call_ready_by_default': false,
+      'public_age': 28,
+    };
+
+    Future<void> openDelete(WidgetTester tester) async {
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('profile-tab')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('open-settings')));
+      await _settle(tester);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings-delete')),
+        200,
+      );
+      await tester.tap(find.byKey(const Key('settings-delete')));
+      await _settle(tester);
+      expect(find.text('Delete your account?'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('delete-confirm')));
+      await _settle(tester);
+    }
+
+    testWidgets('schedules it and shows the server date, signed out', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      await openDelete(tester);
+      expect(server.deletionAt, isNotNull);
+      expect(
+        find.text('Your account will be deleted on 4 October 2026'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('signed out on every device'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('deletion-done')));
+      await _settle(tester);
+      expect(find.text('Continue with email'), findsOneWidget);
+    });
+
+    testWidgets('an old sign-in confirms with a code first', (tester) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      server.recentSignIn = false;
+      await openDelete(tester);
+      expect(server.deletionAt, isNull);
+      expect(find.text("Confirm it's you"), findsOneWidget);
+      expect(find.textContaining('To delete your account'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('sign-in-email')),
+        'alex@example.test',
+      );
+      await tester.tap(find.byKey(const Key('send-code')));
+      await _settle(tester);
+      await tester.enterText(
+        find.byKey(const Key('sign-in-code')),
+        server.outbox.last,
+      );
+      await tester.tap(find.byKey(const Key('verify-code')));
+      await _settle(tester);
+      expect(server.deletionAt, isNotNull);
+      expect(find.byKey(const Key('deletion-done')), findsOneWidget);
+    });
+
+    testWidgets('signing in before the date lets the person keep it', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..addPerson('Maya')
+        ..profile = profile()
+        ..deletionAt = DateTime.utc(2026, 10, 4, 12);
+      await _signIn(tester, server);
+      await _settle(tester);
+      expect(
+        find.text('Your account will be deleted on 4 October 2026'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('keep-account')));
+      await _settle(tester);
+      expect(server.deletionAt, isNull);
+      await dismissSwipeTutorial(tester);
+      expect(find.text('Maya, 30', findRichText: true), findsOneWidget);
+    });
+  });
 }

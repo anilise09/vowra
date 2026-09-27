@@ -27,6 +27,8 @@ export async function startHarness(): Promise<Harness> {
     delivery: { sendProof: async (email, proof, purpose) => void outbox.push({ email, proof, purpose }) },
     accessTtlSeconds: 900,
     proofTtlSeconds: 600,
+    reauthWindowSeconds: 600,
+    deletionGraceSeconds: 7 * 24 * 60 * 60,
   });
   await app.ready();
   return { app, db, sealer, clock, outbox, close: async () => (await app.close(), await db.close()) };

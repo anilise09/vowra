@@ -60,6 +60,11 @@ Rules added with the app connection (BE-2): three free Super Likes in any rollin
 (`429 super_like_limit`); a paused person is hidden from new people but keeps their matches and
 chats; likes-you carries the same profile fields as discovery.
 
+Deletion (BE-3b): `POST /v1/me/deletion` needs a sign-in within `VAWRA_REAUTH_WINDOW` (default 600 s),
+signs the account out everywhere, hides it and closes its chats, and returns the server's date
+(`VAWRA_DELETION_GRACE`, default 7 days, a placeholder until counsel sets it). Signing in before then
+allows `DELETE /v1/me/deletion`. The server runs the deletion job at start and hourly.
+
 Security properties covered by tests: no account-existence oracle; emails sealed with AES-256-GCM
 and looked up by keyed hash; tokens and proofs stored only as hashes; proofs single-use even when
 the attempt fails; refresh reuse revokes the family; age gate on every dating feature; mutual
@@ -69,6 +74,6 @@ matches in one transaction; reports keep only a valid message reference; logs ca
 
 ## Not built yet
 
-Account deletion (`POST /v1/me/deletion`, needs recent re-authentication), email delivery provider, OIDC providers, age-assurance provider, location service and privacy
-zones, media uploads, real-time delivery, push notifications, calls, export and deletion jobs,
+Email delivery provider, OIDC providers, age-assurance provider, location service and privacy
+zones, media uploads, real-time delivery, push notifications, calls, data export,
 entitlements. Each waits for its provider review as the contracts require.

@@ -111,47 +111,27 @@ class _SettingsPageState extends State<SettingsPage> {
     widget.onPausedChanged(value);
   }
 
-  /// Server deletion needs a fresh sign-in and a scheduled job (see
-  /// docs/DATA_LIFECYCLE_CONTRACT.md); until that ships, say so plainly.
-  Future<void> _deleteNotReady() async {
-    final pause = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        key: const Key('delete-not-ready'),
-        title: const Text('Account deletion is coming'),
-        content: const Text(
-          'Deleting a Vawra account needs a fresh sign-in, and that step '
-          'arrives in the next update. Until then you can pause your '
-          'profile so no one new sees you, and sign out.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Close'),
-          ),
-          if (!paused)
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Pause profile'),
-            ),
-        ],
-      ),
-    );
-    if (pause == true) _setPaused(true);
-  }
-
   Future<void> _confirmDelete() async {
-    if (widget.live) return _deleteNotReady();
     final choice = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         key: const Key('delete-dialog'),
-        title: const Text('Delete your profile?'),
-        content: const Text(
-          'This removes your profile, likes, matches and chats from this '
-          'device straight away. It cannot be undone.\n\n'
-          'Only need a break? Pausing hides you from Discover and keeps '
-          'everything.',
+        title: Text(
+          widget.live ? 'Delete your account?' : 'Delete your profile?',
+        ),
+        content: Text(
+          widget.live
+              ? 'Your profile, likes, matches and chats are deleted from '
+                    'Vawra after a waiting period, and the next screen shows '
+                    'the date. From now until then nobody can see or message '
+                    'you, and signing back in lets you keep your account. You '
+                    'may be asked to confirm with a code sent to your email.'
+                    '\n\nOnly need a break? Pausing hides you from Discover '
+                    'and keeps everything.'
+              : 'This removes your profile, likes, matches and chats from this '
+                    'device straight away. It cannot be undone.\n\n'
+                    'Only need a break? Pausing hides you from Discover and keeps '
+                    'everything.',
         ),
         actions: [
           if (!paused)
@@ -170,7 +150,7 @@ class _SettingsPageState extends State<SettingsPage> {
               backgroundColor: VawraColors.coralDark,
             ),
             onPressed: () => Navigator.pop(dialogContext, 'delete'),
-            child: const Text('Delete'),
+            child: Text(widget.live ? 'Continue' : 'Delete'),
           ),
         ],
       ),

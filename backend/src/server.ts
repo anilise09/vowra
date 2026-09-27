@@ -4,6 +4,7 @@ import { loadConfig } from './config.js';
 import { Sealer } from './crypto.js';
 import { migrate, openPglite, openPostgres } from './db.js';
 import type { Delivery } from './context.js';
+import { runDueDeletions } from './jobs/deletions.js';
 
 const config = loadConfig();
 if (!config.enabled) {
@@ -39,7 +40,18 @@ const app = buildApp(
     delivery,
     accessTtlSeconds: config.accessTtlSeconds,
     proofTtlSeconds: config.proofTtlSeconds,
+    reauthWindowSeconds: config.reauthWindowSeconds,
+    deletionGraceSeconds: config.deletionGraceSeconds,
   },
   { logger: true },
 );
 await app.listen({ host: config.host, port: config.port });
+
+// Scheduled deletions run at start and then hourly.
+const clock = { now: () => new Date() };
+const sweep = () =>
+  runDueDeletions(db, clock)
+    .then((n) => n > 0 && app.log.info({ deleted: n }, 'scheduled deletions completed'))
+    .catch((err: Error) => app.log.error({ err: { message: err.message } }, 'deletion job failed'));
+await sweep();
+setInterval(sweep, 60 * 60 * 1000).unref();

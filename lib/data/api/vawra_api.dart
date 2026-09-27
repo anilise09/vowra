@@ -100,13 +100,22 @@ class ServerMessage {
 class MeState {
   const MeState({
     required this.ageState,
-    required this.paused,
+    required this.lifecycle,
     required this.profile,
+    this.deletionEffectiveAt,
   });
 
   final String ageState;
-  final bool paused;
+
+  /// active, paused or deletion_scheduled.
+  final String lifecycle;
   final UserProfile? profile;
+
+  /// Set while a deletion is scheduled: the server's date, never assumed.
+  final DateTime? deletionEffectiveAt;
+
+  bool get paused => lifecycle == 'paused';
+  bool get deletionScheduled => lifecycle == 'deletion_scheduled';
 
   bool get canDate => ageState == 'adult_verified';
 }
@@ -360,9 +369,13 @@ class VawraApi {
   Future<MeState> me() async {
     final json = await _send('GET', '/v1/me/profile');
     final profile = json['profile'] as Map<String, dynamic>?;
+    final deletion = json['deletion_effective_at'] as String?;
     return MeState(
       ageState: json['age_state'] as String,
-      paused: json['lifecycle'] == 'paused',
+      lifecycle: json['lifecycle'] as String,
+      deletionEffectiveAt: deletion == null
+          ? null
+          : DateTime.parse(deletion).toLocal(),
       profile: profile == null
           ? null
           : UserProfile(
@@ -392,6 +405,16 @@ class VawraApi {
       'call_ready_by_default': profile.callReadyByDefault,
     },
   );
+
+  /// Schedules deletion and returns the server's date. The server signs the
+  /// account out everywhere, so the local session ends too.
+  Future<DateTime> scheduleDeletion() async {
+    final json = await _send('POST', '/v1/me/deletion');
+    await signOutLocally();
+    return DateTime.parse(json['effective_at'] as String).toLocal();
+  }
+
+  Future<void> cancelDeletion() => _send('DELETE', '/v1/me/deletion');
 
   Future<void> setPaused(bool paused) =>
       _send(paused ? 'POST' : 'DELETE', '/v1/me/pause');

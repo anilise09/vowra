@@ -45,6 +45,11 @@ String describeApiError(Object error) {
     'message_empty' => 'Write a message first.',
     'message_too_long' => 'Messages are limited to 1000 characters.',
     'rate_limited' => 'Too many tries. Wait a few minutes and try again.',
+    'reauthentication_required' => 'Please confirm it\'s you first.',
+    'deletion_scheduled' =>
+      'Your account is scheduled for deletion. Keep it to use Vawra again.',
+    'deletion_effective' => 'This account has already been deleted.',
+    'no_deletion_scheduled' => 'Your account is not scheduled for deletion.',
     _ => 'Something went wrong. Try again.',
   };
 }
@@ -56,7 +61,13 @@ void _toast(BuildContext context, String text) =>
 Future<void> openSignedIn(NavigatorState navigator, VawraApi api) async {
   final me = await api.me();
   final Widget next;
-  if (me.profile == null) {
+  if (me.deletionScheduled) {
+    next = DeletionScheduledScreen(
+      api: api,
+      effectiveAt: me.deletionEffectiveAt,
+      signedIn: true,
+    );
+  } else if (me.profile == null) {
     next = _NewProfile(api: api);
   } else if (!me.canDate) {
     next = AgeCheckScreen(api: api);
@@ -160,11 +171,68 @@ class _Offline implements Exception {
   const _Offline();
 }
 
-/// Email and a one-time code. No password is ever created.
+/// "7 October 2026": the server's date, in the person's own time zone.
+String formatDay(DateTime day) {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  final local = day.toLocal();
+  return '${local.day} ${months[local.month - 1]} ${local.year}';
+}
+
+/// Account actions that need a fresh sign-in (deletion, keeping the account)
+/// run through here: a code to the email first, then [then].
+Future<void> withFreshSignIn(
+  NavigatorState navigator,
+  VawraApi api, {
+  required String reason,
+  required Future<void> Function() action,
+  required Future<void> Function(NavigatorState navigator) then,
+}) async {
+  try {
+    await action();
+    await then(navigator);
+  } on ApiException catch (e) {
+    if (e.code != 'reauthentication_required') rethrow;
+    await navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => SignInScreen(
+          api: api,
+          confirmReason: reason,
+          onConfirmed: (nav) async {
+            await action();
+            await then(nav);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Email and a one-time code. No password is ever created. With
+/// [confirmReason] it confirms the person before an account action instead.
 class SignInScreen extends StatefulWidget {
-  const SignInScreen({super.key, required this.api});
+  const SignInScreen({
+    super.key,
+    required this.api,
+    this.confirmReason,
+    this.onConfirmed,
+  });
 
   final VawraApi api;
+  final String? confirmReason;
+  final Future<void> Function(NavigatorState navigator)? onConfirmed;
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -223,7 +291,12 @@ class _SignInScreenState extends State<SignInScreen> {
     final navigator = Navigator.of(context);
     await _run(() async {
       await widget.api.exchange(code.text);
-      await openSignedIn(navigator, widget.api);
+      final confirmed = widget.onConfirmed;
+      if (confirmed != null) {
+        await confirmed(navigator);
+      } else {
+        await openSignedIn(navigator, widget.api);
+      }
     });
   }
 
@@ -231,7 +304,11 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
+      appBar: AppBar(
+        title: Text(
+          widget.confirmReason == null ? 'Sign in' : 'Confirm it\'s you',
+        ),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -245,6 +322,9 @@ class _SignInScreenState extends State<SignInScreen> {
               codeSent
                   ? 'If ${email.text.trim()} can sign in, a one-time code is '
                         'on its way. It works once and expires soon.'
+                  : widget.confirmReason != null
+                  ? 'To ${widget.confirmReason}, enter the email for this account and we\'ll '
+                        'send a one-time code.'
                   : 'We\'ll email you a one-time code. No password to '
                         'remember, and your email is never shown to anyone.',
               style: theme.textTheme.bodyMedium,
@@ -316,6 +396,123 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: const Text('Use a different email'),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A scheduled deletion: the server's date, and a way to keep the account.
+class DeletionScheduledScreen extends StatefulWidget {
+  const DeletionScheduledScreen({
+    super.key,
+    required this.api,
+    required this.effectiveAt,
+    required this.signedIn,
+  });
+
+  final VawraApi api;
+  final DateTime? effectiveAt;
+
+  /// False straight after scheduling: the server signed out every device.
+  final bool signedIn;
+
+  @override
+  State<DeletionScheduledScreen> createState() =>
+      _DeletionScheduledScreenState();
+}
+
+class _DeletionScheduledScreenState extends State<DeletionScheduledScreen> {
+  bool busy = false;
+
+  String get _when => widget.effectiveAt == null
+      ? 'soon'
+      : 'on ${formatDay(widget.effectiveAt!)}';
+
+  Future<void> _keep() async {
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => busy = true);
+    try {
+      await withFreshSignIn(
+        navigator,
+        widget.api,
+        reason: 'keep your account',
+        action: widget.api.cancelDeletion,
+        then: (nav) async {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Welcome back. Your account is kept.'),
+            ),
+          );
+          await openSignedIn(nav, widget.api);
+        },
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeApiError(e))));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  void _toStart() => Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute<void>(builder: (_) => WelcomeScreen(api: widget.api)),
+    (_) => false,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(28, 48, 28, 24),
+          children: [
+            const Icon(
+              Icons.hourglass_bottom_rounded,
+              size: 64,
+              color: VawraColors.coral,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Your account will be deleted $_when',
+              key: const Key('deletion-date'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              widget.signedIn
+                  ? 'Your profile, matches and messages are deleted then. '
+                        'Until that day nobody can see or message you. Changed '
+                        'your mind? You can keep your account.'
+                  : 'You are signed out on every device. Your profile, '
+                        'matches and messages are deleted then, and until '
+                        'that day nobody can see or message you. To keep your '
+                        'account, sign in again before then.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 28),
+            if (widget.signedIn) ...[
+              FilledButton(
+                key: const Key('keep-account'),
+                onPressed: busy ? null : _keep,
+                child: const Text('Keep my account'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                key: const Key('deletion-sign-out'),
+                onPressed: () => _signOut(Navigator.of(context), widget.api),
+                child: const Text('Sign out'),
+              ),
+            ] else
+              FilledButton(
+                key: const Key('deletion-done'),
+                onPressed: _toStart,
+                child: const Text('Done'),
+              ),
           ],
         ),
       ),
@@ -675,6 +872,30 @@ class _ServerHomeState extends State<ServerHome> {
     }
   }
 
+  Future<void> _deleteAccount(NavigatorState navigator) async {
+    late DateTime effectiveAt;
+    try {
+      await withFreshSignIn(
+        navigator,
+        api,
+        reason: 'delete your account',
+        action: () async => effectiveAt = await api.scheduleDeletion(),
+        then: (nav) async => nav.pushAndRemoveUntil(
+          MaterialPageRoute<void>(
+            builder: (_) => DeletionScheduledScreen(
+              api: api,
+              effectiveAt: effectiveAt,
+              signedIn: false,
+            ),
+          ),
+          (_) => false,
+        ),
+      );
+    } catch (e) {
+      if (mounted) _toast(context, describeApiError(e));
+    }
+  }
+
   Future<void> _setPaused(bool value) async {
     try {
       await api.setPaused(value);
@@ -795,7 +1016,7 @@ class _ServerHomeState extends State<ServerHome> {
               setState(() => notificationPrefs[kind] = on),
           onOpenSafetyGuide: () => DateSafelyGuide.show(context),
           onOpenSafetyCenter: () => _openSafety(context),
-          onDeleteProfile: () {},
+          onDeleteProfile: () => _deleteAccount(navigator),
           onSignOut: () => _signOut(navigator, api),
         ),
       ),
