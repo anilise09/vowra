@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../domain/safety_report.dart';
@@ -129,16 +130,81 @@ RelationshipIntent? _intent(String? key) {
   return null;
 }
 
-/// Talks to the Vawra backend. Session tokens live only in memory for now; a
-/// later step moves them to platform-protected storage (see SESSION_CONTRACT).
+/// Where the refresh token survives an app restart. The short-lived access
+/// token is never stored; it is rotated fresh on start.
+abstract interface class SessionStore {
+  Future<({String refreshToken, String? accountId})?> read();
+  Future<void> write(String refreshToken, String? accountId);
+  Future<void> clear();
+}
+
+/// Android Keystore / iOS Keychain backed, as SESSION_CONTRACT requires.
+class SecureSessionStore implements SessionStore {
+  const SecureSessionStore([this._storage = const FlutterSecureStorage()]);
+
+  final FlutterSecureStorage _storage;
+  static const _refreshKey = 'vawra.refresh';
+  static const _accountKey = 'vawra.account';
+
+  @override
+  Future<({String refreshToken, String? accountId})?> read() async {
+    final refresh = await _storage.read(key: _refreshKey);
+    if (refresh == null) return null;
+    return (
+      refreshToken: refresh,
+      accountId: await _storage.read(key: _accountKey),
+    );
+  }
+
+  @override
+  Future<void> write(String refreshToken, String? accountId) async {
+    await _storage.write(key: _refreshKey, value: refreshToken);
+    if (accountId != null) {
+      await _storage.write(key: _accountKey, value: accountId);
+    }
+  }
+
+  @override
+  Future<void> clear() async {
+    await _storage.delete(key: _refreshKey);
+    await _storage.delete(key: _accountKey);
+  }
+}
+
+/// Keeps nothing past the process; used by tests.
+class MemorySessionStore implements SessionStore {
+  ({String refreshToken, String? accountId})? saved;
+
+  @override
+  Future<({String refreshToken, String? accountId})?> read() async => saved;
+
+  @override
+  Future<void> write(String refreshToken, String? accountId) async =>
+      saved = (refreshToken: refreshToken, accountId: accountId);
+
+  @override
+  Future<void> clear() async => saved = null;
+}
+
+/// Talks to the Vawra backend.
 class VawraApi {
-  VawraApi(this.base, {http.Client? client, Random? random})
-    : _client = client ?? http.Client(),
-      _random = random ?? Random.secure();
+  VawraApi(
+    this.base, {
+    http.Client? client,
+    Random? random,
+    SessionStore? store,
+  }) : _client = client ?? http.Client(),
+       _random = random ?? Random.secure(),
+       _store = store ?? MemorySessionStore();
 
   final Uri base;
   final http.Client _client;
   final Random _random;
+  final SessionStore _store;
+
+  /// One rotation at a time: a refresh token works once, so parallel calls
+  /// rotating it separately would look like reuse and revoke the session.
+  Future<void>? _rotation;
 
   String? _access;
   String? _refresh;
@@ -181,32 +247,53 @@ class VawraApi {
     return decoded;
   }
 
-  void _keep(Map<String, dynamic> session) {
+  Future<void> _keep(Map<String, dynamic> session) async {
     _access = session['access_token'] as String;
     _refresh = session['refresh_token'] as String;
     _accessExpires = DateTime.parse(session['access_expires_at'] as String);
     accountId = (session['account_id'] as String?) ?? accountId;
+    await _store.write(_refresh!, accountId);
+  }
+
+  /// Picks up a saved session after an app restart. False when there is none
+  /// or the server has ended it; network failures are thrown so the caller can
+  /// offer a retry without losing the saved session.
+  Future<bool> resume() async {
+    final saved = await _store.read();
+    if (saved == null) return false;
+    _refresh = saved.refreshToken;
+    accountId = saved.accountId;
+    _accessExpires = DateTime.fromMillisecondsSinceEpoch(0);
+    try {
+      await _ensureFresh();
+    } on ApiException {
+      return false;
+    }
+    return signedIn;
   }
 
   /// Rotates a minute before expiry. A revoked family signs the person out.
-  Future<void> _ensureFresh() async {
+  Future<void> _ensureFresh() {
     final expires = _accessExpires;
-    final refresh = _refresh;
-    if (expires == null || refresh == null) return;
+    if (expires == null || _refresh == null) return Future.value();
     if (DateTime.now().isBefore(expires.subtract(const Duration(minutes: 1)))) {
-      return;
+      return Future.value();
     }
+    return _rotation ??= _rotate().whenComplete(() => _rotation = null);
+  }
+
+  Future<void> _rotate() async {
     try {
-      _keep(
+      await _keep(
         await _send(
           'POST',
           '/v1/session/rotate',
-          body: {'refresh_token': refresh},
+          body: {'refresh_token': _refresh},
           auth: false,
         ),
       );
     } on ApiException {
-      signOutLocally();
+      await signOutLocally();
       rethrow;
     }
   }
@@ -238,7 +325,7 @@ class VawraApi {
     if (verifier == null || state == null) {
       throw ApiException(400, 'no_pending_sign_in');
     }
-    _keep(
+    await _keep(
       await _send(
         'POST',
         '/v1/auth/exchange',
@@ -254,18 +341,19 @@ class VawraApi {
     _state = null;
   }
 
-  void signOutLocally() {
+  Future<void> signOutLocally() async {
     _access = null;
     _refresh = null;
     _accessExpires = null;
     accountId = null;
+    await _store.clear();
   }
 
   Future<void> signOut() async {
     try {
       await _send('DELETE', '/v1/session');
     } finally {
-      signOutLocally();
+      await signOutLocally();
     }
   }
 

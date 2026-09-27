@@ -81,6 +81,85 @@ Future<void> _signOut(NavigatorState navigator, VawraApi api) async {
   );
 }
 
+/// App start in account mode: resumes a saved session, or shows Welcome.
+class SessionGate extends StatefulWidget {
+  const SessionGate({super.key, required this.api});
+
+  final VawraApi api;
+
+  @override
+  State<SessionGate> createState() => _SessionGateState();
+}
+
+class _SessionGateState extends State<SessionGate> {
+  bool offline = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  Future<void> _start() async {
+    setState(() => offline = false);
+    final navigator = Navigator.of(context);
+    try {
+      if (await widget.api.resume()) {
+        await openSignedIn(navigator, widget.api);
+        return;
+      }
+    } catch (_) {
+      // Unreachable server: keep the saved session and offer a retry.
+      if (mounted) setState(() => offline = true);
+      return;
+    }
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => WelcomeScreen(api: widget.api)),
+      (_) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: offline
+          ? Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    size: 48,
+                    color: VawraColors.muted,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    describeApiError(const _Offline()),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    key: const Key('retry-start'),
+                    onPressed: _start,
+                    child: const Text('Try again'),
+                  ),
+                ],
+              ),
+            )
+          : Image.asset(
+              'assets/branding/vawra_company_mark_clean.png',
+              width: 120,
+              semanticLabel: 'Vawra',
+            ),
+    ),
+  );
+}
+
+class _Offline implements Exception {
+  const _Offline();
+}
+
 /// Email and a one-time code. No password is ever created.
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key, required this.api});

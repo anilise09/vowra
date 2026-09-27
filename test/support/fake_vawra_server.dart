@@ -18,6 +18,7 @@ class FakeVawraServer {
   final outbox = <String>[];
 
   bool verified = false;
+  int rotations = 0;
   bool paused = false;
   Map<String, dynamic>? profile;
   final people = <String, Map<String, dynamic>>{};
@@ -111,6 +112,21 @@ class FakeVawraServer {
         'refresh_token': 'refresh-token-00000000000',
         'account_id': me,
         'age_state': verified ? 'adult_verified' : 'assurance_required',
+      });
+    }
+    if (method == 'POST' && path == '/v1/session/rotate') {
+      if (body['refresh_token'] != 'refresh-token-00000000000') {
+        return _error(401, 'session_revoked');
+      }
+      rotations++;
+      return _json(200, {
+        'session_id': 's2',
+        'access_token': 'access-token-000000000000',
+        'access_expires_at': DateTime.now()
+            .add(const Duration(minutes: 15))
+            .toUtc()
+            .toIso8601String(),
+        'refresh_token': 'refresh-token-00000000000',
       });
     }
     if (request.headers['authorization'] !=

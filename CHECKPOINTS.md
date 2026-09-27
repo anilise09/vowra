@@ -1,5 +1,25 @@
 # Checkpoints
 
+## BE-3a - Stay signed in across restarts; one refresh at a time (2026-09-27)
+
+- The refresh token (and account id) is kept in platform-protected storage
+  (`flutter_secure_storage`: Android Keystore, iOS Keychain), as SESSION_CONTRACT requires. The
+  access token is never stored; a restart rotates the saved token for a fresh one.
+- App start in account mode shows the Vawra mark while it resumes: a live session opens Discover
+  (or profile setup / the age check), a session the server ended is forgotten and Welcome shows,
+  and an unreachable server offers "Try again" without losing the saved session.
+- Fixed a real sign-out bug found while doing this: Discover loads three things at once, and near
+  expiry each call rotated the same refresh token, which the server correctly treats as reuse and
+  revokes the whole session. Rotation is now shared; a test with three parallel calls proves one
+  rotation, and fails with 3 when the fix is removed.
+- Sign-out clears the stored token. 115 app tests, analyzer clean; new dependency only
+  (`flutter_secure_storage`), no existing package changed.
+- Device check incomplete: on the Android 17 AVD the build installed and the start screen moved to
+  Welcome with no saved session, but the laptop hit 96% CPU with ~1 GB free (two emulators), input
+  started dropping characters, so I shut my emulator down before the restart check. Repeat the
+  restart check on a device when the machine is quieter, and measure cold-start time there (the
+  overloaded AVD skipped ~5 s of frames on start).
+
 ## BE-2 - The app talks to the real backend (2026-09-27)
 
 - Build with `--dart-define=VAWRA_API=<url>` and the app uses a Vawra account; without it, it is the

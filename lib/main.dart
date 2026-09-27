@@ -29,7 +29,9 @@ import 'theme/vawra_theme.dart';
 /// Without --dart-define=VAWRA_API=... the app is the offline prototype.
 void main() => runApp(
   VawraApp(
-    api: vawraApiBase.isEmpty ? null : VawraApi(Uri.parse(vawraApiBase)),
+    api: vawraApiBase.isEmpty
+        ? null
+        : VawraApi(Uri.parse(vawraApiBase), store: const SecureSessionStore()),
   ),
 );
 
@@ -44,7 +46,10 @@ class VawraApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     title: 'Vawra',
     theme: VawraTheme.light,
-    home: WelcomeScreen(api: api),
+    home: switch (api) {
+      final api? => SessionGate(api: api),
+      null => const WelcomeScreen(),
+    },
   );
 }
 

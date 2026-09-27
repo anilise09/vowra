@@ -9,6 +9,7 @@ import 'support/fake_vawra_server.dart';
 Future<void> _openSignIn(WidgetTester tester, FakeVawraServer server) async {
   final api = VawraApi(Uri.parse('http://vawra.test'), client: server.client);
   await tester.pumpWidget(VawraApp(api: api));
+  await tester.pumpAndSettle();
   expect(find.text('Continue with email'), findsOneWidget);
   expect(find.textContaining('Prototype only'), findsNothing);
   for (final key in ['adult-checkbox', 'rules-checkbox']) {
@@ -156,6 +157,41 @@ void main() {
     await closeSafetyGuideIfShown(tester);
     await _settle(tester);
     expect(find.byKey(const Key('conversation-Maya')), findsOneWidget);
+  });
+
+  testWidgets('a restart with a saved session goes straight back in', (
+    tester,
+  ) async {
+    final server = FakeVawraServer()
+      ..verified = true
+      ..addPerson('Maya')
+      ..profile = {
+        'display_name': 'Alex',
+        'relationship_intent': 'casual',
+        'bio': '',
+        'interests': <String>[],
+        'show_distance_band': true,
+        'call_ready_by_default': false,
+        'public_age': 28,
+      };
+    final store = MemorySessionStore()
+      ..saved = (
+        refreshToken: 'refresh-token-00000000000',
+        accountId: FakeVawraServer.me,
+      );
+    await tester.pumpWidget(
+      VawraApp(
+        api: VawraApi(
+          Uri.parse('http://vawra.test'),
+          client: server.client,
+          store: store,
+        ),
+      ),
+    );
+    await _settle(tester);
+    expect(find.text('Continue with email'), findsNothing);
+    await dismissSwipeTutorial(tester);
+    expect(find.text('Maya, 30', findRichText: true), findsOneWidget);
   });
 
   testWidgets('sign out ends the session and returns to the start', (

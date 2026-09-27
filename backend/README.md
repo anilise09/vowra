@@ -69,7 +69,6 @@ matches in one transaction; reports keep only a valid message reference; logs ca
 
 ## Not built yet
 
-Account deletion (`POST /v1/me/deletion`, needs recent re-authentication), session storage on the
-device (the app keeps tokens in memory, so a restart signs out), email delivery provider, OIDC providers, age-assurance provider, location service and privacy
+Account deletion (`POST /v1/me/deletion`, needs recent re-authentication), email delivery provider, OIDC providers, age-assurance provider, location service and privacy
 zones, media uploads, real-time delivery, push notifications, calls, export and deletion jobs,
 entitlements. Each waits for its provider review as the contracts require.

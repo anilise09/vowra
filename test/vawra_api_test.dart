@@ -119,6 +119,109 @@ void main() {
     expect(seen.last, 'Bearer access-2');
   });
 
+  test('parallel calls near expiry share one rotation', () async {
+    var rotations = 0;
+    final client = MockClient((request) async {
+      switch (request.url.path) {
+        case '/v1/auth/requests':
+          return http.Response('{}', 202);
+        case '/v1/auth/exchange':
+          return http.Response(
+            jsonEncode({
+              'access_token': 'access-1',
+              'refresh_token': 'refresh-1-xxxxxxxxxxxxxxxx',
+              'access_expires_at': DateTime.now().toUtc().toIso8601String(),
+              'account_id': 'a1',
+            }),
+            200,
+          );
+        case '/v1/session/rotate':
+          rotations++;
+          // Slow enough that the other calls arrive while it is in flight.
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          return http.Response(
+            jsonEncode({
+              'access_token': 'access-2',
+              'refresh_token': 'refresh-2-xxxxxxxxxxxxxxxx',
+              'access_expires_at': DateTime.now()
+                  .add(const Duration(minutes: 15))
+                  .toUtc()
+                  .toIso8601String(),
+            }),
+            200,
+          );
+      }
+      expect(request.headers['authorization'], 'Bearer access-2');
+      return http.Response(jsonEncode({'matches': [], 'people': []}), 200);
+    });
+    final api = VawraApi(Uri.parse('http://vawra.test'), client: client);
+    await api.requestSignIn('alex@example.test');
+    await api.exchange('proof-xxxxxxxxxxxxxxxxxxxx');
+    await Future.wait([api.matches(), api.discovery(), api.likesYou()]);
+    expect(rotations, 1);
+  });
+
+  group('saved session', () {
+    test('sign-in saves only the refresh token; sign-out clears it', () async {
+      final server = FakeVawraServer();
+      final store = MemorySessionStore();
+      final api = VawraApi(
+        Uri.parse('http://vawra.test'),
+        client: server.client,
+        store: store,
+      );
+      await api.requestSignIn('alex@example.test');
+      await api.exchange(server.outbox.last);
+      expect(store.saved?.refreshToken, 'refresh-token-00000000000');
+      expect(store.saved?.accountId, FakeVawraServer.me);
+      await api.signOut();
+      expect(store.saved, isNull);
+    });
+
+    test('a restart resumes by rotating the saved token', () async {
+      final server = FakeVawraServer();
+      final store = MemorySessionStore()
+        ..saved = (
+          refreshToken: 'refresh-token-00000000000',
+          accountId: FakeVawraServer.me,
+        );
+      final api = VawraApi(
+        Uri.parse('http://vawra.test'),
+        client: server.client,
+        store: store,
+      );
+      expect(await api.resume(), isTrue);
+      expect(server.rotations, 1);
+      expect(api.accountId, FakeVawraServer.me);
+      await api.me();
+      expect(server.rotations, 1);
+    });
+
+    test('a session the server ended is forgotten', () async {
+      final store = MemorySessionStore()
+        ..saved = (refreshToken: 'refresh-revoked-xxxxxxxxx', accountId: 'a1');
+      final api = VawraApi(
+        Uri.parse('http://vawra.test'),
+        client: FakeVawraServer().client,
+        store: store,
+      );
+      expect(await api.resume(), isFalse);
+      expect(store.saved, isNull);
+    });
+
+    test('no network keeps the saved session for a retry', () async {
+      final store = MemorySessionStore()
+        ..saved = (refreshToken: 'refresh-token-00000000000', accountId: 'a1');
+      final api = VawraApi(
+        Uri.parse('http://vawra.test'),
+        client: MockClient((_) async => throw http.ClientException('offline')),
+        store: store,
+      );
+      await expectLater(api.resume(), throwsA(isA<http.ClientException>()));
+      expect(store.saved, isNotNull);
+    });
+  });
+
   test('a refused rotation signs the person out', () async {
     final client = MockClient((request) async {
       if (request.url.path == '/v1/session/rotate') {
