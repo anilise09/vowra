@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:ember_app/data/api/vawra_api.dart';
+import 'package:ember_app/domain/lifestyle.dart';
+import 'package:ember_app/domain/profile_prompt.dart';
 import 'package:ember_app/domain/safety_report.dart';
 import 'package:ember_app/domain/user_profile.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -269,12 +271,40 @@ void main() {
       'interests',
       'show_distance_band',
       'call_ready_by_default',
+      'lifestyle',
+      'prompts',
     });
     expect(sent['relationship_intent'], 'open_to_long_term');
     expect(
       server.requests.last.headers['authorization'],
       startsWith('Bearer '),
     );
+  });
+
+  test('habits and prompts round-trip through the account', () async {
+    final server = FakeVawraServer();
+    final api = VawraApi(Uri.parse('http://vawra.test'), client: server.client);
+    await api.requestSignIn('alex@example.test');
+    await api.exchange(server.outbox.last);
+    await api.saveProfile(
+      const UserProfile(
+        displayName: 'Alex',
+        age: 28,
+        intent: RelationshipIntent.casual,
+        bio: '',
+        interests: ['Books'],
+        lifestyle: {LifestyleTopic.exercise: 'Daily'},
+        prompts: [ProfilePrompt('Ask me about…', 'trains')],
+      ),
+    );
+    final sent = jsonDecode(server.requests.last.body) as Map;
+    expect(sent['lifestyle'], {'exercise': 'Daily'});
+    expect(sent['prompts'], [
+      {'question': 'Ask me about…', 'answer': 'trains'},
+    ]);
+    final me = await api.me();
+    expect(me.profile?.lifestyle, {LifestyleTopic.exercise: 'Daily'});
+    expect(me.profile?.prompts.single.answer, 'trains');
   });
 
   test('report reasons use the server names', () {

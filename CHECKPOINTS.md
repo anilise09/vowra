@@ -1,5 +1,20 @@
 # Checkpoints
 
+## BE-3c - Habits and prompts are saved to the account and shown to others (2026-09-27)
+
+- Profile contract gains two optional public fields: `lifestyle` (one answer per topic from the
+  app's fixed lists) and `prompts` (up to two answers to distinct fixed questions, 1-150
+  characters). The server repeats the lists and limits; anything else is refused. Recorded in
+  docs/BACKEND_API_CONTRACT.md and in the app's `ProfileMutation`, which the API client now uses to
+  build every profile save.
+- Discovery and likes-you return them, and a real person's profile details now show a Habits row
+  and each prompt; unknown values from a server are ignored, never shown raw. An empty bio no
+  longer shows an empty "About" section; distance for real people says it isn't shown yet.
+- Corrected my earlier note: the bio (the onboarding intro) was already saved; the onboarding
+  privacy line now says answers are saved to the account.
+- Tests: 2 backend (lists and limits), 2 app (round trip, details view). Removing the prompts from
+  the card makes the details test fail.
+
 ## BE-3b - Account deletion from inside the app (2026-09-27)
 
 - Server: `POST /v1/me/deletion` needs a sign-in within the last 10 minutes (server setting); an

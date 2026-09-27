@@ -1,3 +1,5 @@
+import 'lifestyle.dart';
+import 'profile_prompt.dart';
 import 'user_profile.dart';
 
 enum AgeAccessState {
@@ -23,6 +25,8 @@ class ProfileMutation {
     required this.interests,
     required this.showDistanceBand,
     required this.callReadyByDefault,
+    this.lifestyle = const {},
+    this.prompts = const [],
   });
 
   factory ProfileMutation.fromLocalProfile(UserProfile profile) =>
@@ -33,6 +37,8 @@ class ProfileMutation {
         interests: List.unmodifiable(profile.interests),
         showDistanceBand: profile.showDistanceBand,
         callReadyByDefault: profile.callReadyByDefault,
+        lifestyle: Map.unmodifiable(profile.lifestyle),
+        prompts: List.unmodifiable(profile.prompts),
       );
 
   final String displayName;
@@ -42,6 +48,12 @@ class ProfileMutation {
   final bool showDistanceBand;
   final bool callReadyByDefault;
 
+  /// Optional habits, one fixed answer per topic.
+  final Map<LifestyleTopic, String> lifestyle;
+
+  /// Up to two answers to fixed questions.
+  final List<ProfilePrompt> prompts;
+
   Map<String, Object> toContractMap() => {
     'display_name': displayName,
     'relationship_intent': intent.backendKey,
@@ -49,6 +61,13 @@ class ProfileMutation {
     'interests': List<String>.unmodifiable(interests),
     'show_distance_band': showDistanceBand,
     'call_ready_by_default': callReadyByDefault,
+    'lifestyle': {
+      for (final entry in lifestyle.entries) entry.key.name: entry.value,
+    },
+    'prompts': [
+      for (final prompt in prompts)
+        {'question': prompt.question, 'answer': prompt.answer},
+    ],
   };
 }
 

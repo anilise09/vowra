@@ -23,6 +23,8 @@ void main() {
       'interests',
       'show_distance_band',
       'call_ready_by_default',
+      'lifestyle',
+      'prompts',
     });
     for (final forbidden in const [
       'age',

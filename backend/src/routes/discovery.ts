@@ -47,7 +47,7 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     const { limit } = listQuery.parse(request.query);
     const people = await db.query(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent,
-              p.bio, p.interests
+              p.bio, p.interests, p.lifestyle, p.prompts
        FROM accounts a JOIN profiles p ON p.account_id = a.id
        WHERE ${mutuallyEligible('$1::uuid', 'a.id')}
          AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.from_account = $1 AND s.to_account = a.id)
@@ -116,7 +116,7 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     const me = requireDatingAccess(request);
     const people = await db.query(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent, p.bio,
-              p.interests, s.kind = 'super_like' AS super_like
+              p.interests, p.lifestyle, p.prompts, s.kind = 'super_like' AS super_like
        FROM swipes s JOIN accounts a ON a.id = s.from_account JOIN profiles p ON p.account_id = a.id
        WHERE s.to_account = $1 AND s.kind IN ('like','super_like')
          AND ${mutuallyEligible('$1::uuid', 'a.id')}

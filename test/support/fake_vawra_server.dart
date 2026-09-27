@@ -47,9 +47,17 @@ class FakeVawraServer {
   String _id() =>
       '00000000-0000-4000-8000-${(++_ids).toString().padLeft(12, '0')}';
 
-  void addPerson(String name, {int age = 30, bool likesMe = false}) {
+  void addPerson(
+    String name, {
+    int age = 30,
+    bool likesMe = false,
+    Map<String, String> lifestyle = const {},
+    List<Map<String, String>> prompts = const [],
+  }) {
     final id = _id();
     people[id] = {
+      'lifestyle': lifestyle,
+      'prompts': prompts,
       'account_id': id,
       'display_name': name,
       'public_age': age,

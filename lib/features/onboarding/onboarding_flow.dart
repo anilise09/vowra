@@ -596,8 +596,8 @@ class _PrivacyChoices extends StatelessWidget {
             child: Text(
               live
                   ? 'Matching, messaging, blocking and reporting are always '
-                        'free. Your profile is saved to your Vawra account. '
-                        'Habits and your intro are not saved to accounts yet.'
+                        'free. Your answers are saved to your Vawra account, '
+                        'and your exact location is never shown.'
                   : 'Matching, messaging, blocking and reporting are always '
                         'free. This prototype keeps your answers on this '
                         'device only.',

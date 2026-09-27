@@ -621,7 +621,7 @@ class _AgeCheckScreenState extends State<AgeCheckScreen> {
   }
 }
 
-DemoProfile _card(ServerPerson person) => DemoProfile(
+DemoProfile _card(ServerPerson person) => DetailedProfile(
   person.name,
   person.age ?? 18,
   person.intent?.label ?? '',
@@ -629,6 +629,8 @@ DemoProfile _card(ServerPerson person) => DemoProfile(
   person.bio,
   person.interests,
   '$serverPersonPrefix${person.accountId}',
+  lifestyle: person.lifestyle,
+  prompts: person.prompts,
 );
 
 String _accountOf(String photoKey) =>

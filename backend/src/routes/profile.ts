@@ -1,7 +1,16 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { audit, fail, noContent, requireAccount, type Services } from '../context.js';
-import { intents, interests, validateBio, validateName } from '../rules.js';
+import {
+  intents,
+  interests,
+  lifestyleOptions,
+  normalizePrompts,
+  promptQuestions,
+  promptRules,
+  validateBio,
+  validateName,
+} from '../rules.js';
 
 /** The only fields a client may change. Age, location, verification, etc. are absent. */
 const profilePatch = z
@@ -12,6 +21,18 @@ const profilePatch = z
     interests: z.array(z.enum(interests)).max(interests.length),
     show_distance_band: z.boolean(),
     call_ready_by_default: z.boolean(),
+    lifestyle: z
+      .object({
+        drinking: z.enum(lifestyleOptions.drinking),
+        smoking: z.enum(lifestyleOptions.smoking),
+        exercise: z.enum(lifestyleOptions.exercise),
+        pets: z.enum(lifestyleOptions.pets),
+      })
+      .partial()
+      .strict(),
+    prompts: z
+      .array(z.object({ question: z.enum(promptQuestions), answer: z.string().max(1000) }).strict())
+      .max(promptRules.maxPrompts),
   })
   .partial()
   .strict();
@@ -24,6 +45,8 @@ interface ProfileRow {
   show_distance_band: boolean;
   call_ready_by_default: boolean;
   public_age: number | null;
+  lifestyle: Record<string, string>;
+  prompts: { question: string; answer: string }[];
 }
 
 export function profileRoutes(app: FastifyInstance, services: Services) {
@@ -33,7 +56,7 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
     (
       await db.query<ProfileRow>(
         `SELECT display_name, relationship_intent, bio, interests, show_distance_band,
-                call_ready_by_default, public_age
+                call_ready_by_default, public_age, lifestyle, prompts
          FROM profiles WHERE account_id = $1`,
         [accountId],
       )
@@ -74,6 +97,11 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
       patch.bio = patch.bio.trim();
     }
     if (patch.interests) patch.interests = [...new Set(patch.interests)].sort();
+    if (patch.prompts) {
+      const cleaned = normalizePrompts(patch.prompts);
+      if ('error' in cleaned) return fail(422, cleaned.error);
+      patch.prompts = cleaned.prompts;
+    }
 
     const existing = await load(account.id);
     const now = clock.now();
@@ -81,8 +109,9 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
       if (!patch.display_name || !patch.relationship_intent) fail(422, 'profile_incomplete');
       await db.query(
         `INSERT INTO profiles (account_id, display_name, relationship_intent, bio, interests,
-                               show_distance_band, call_ready_by_default, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                               show_distance_band, call_ready_by_default, updated_at,
+                               lifestyle, prompts)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb)`,
         [
           account.id,
           patch.display_name,
@@ -92,6 +121,8 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
           patch.show_distance_band ?? true,
           patch.call_ready_by_default ?? false,
           now,
+          JSON.stringify(patch.lifestyle ?? {}),
+          JSON.stringify(patch.prompts ?? []),
         ],
       );
     } else {
@@ -99,7 +130,7 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
       await db.query(
         `UPDATE profiles SET display_name = $2, relationship_intent = $3, bio = $4,
                 interests = $5, show_distance_band = $6, call_ready_by_default = $7,
-                updated_at = $8
+                updated_at = $8, lifestyle = $9::jsonb, prompts = $10::jsonb
          WHERE account_id = $1`,
         [
           account.id,
@@ -110,6 +141,8 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
           merged.show_distance_band,
           merged.call_ready_by_default,
           now,
+          JSON.stringify(merged.lifestyle),
+          JSON.stringify(merged.prompts),
         ],
       );
     }

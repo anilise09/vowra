@@ -5,6 +5,9 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../domain/account_profile_contract.dart';
+import '../../domain/lifestyle.dart';
+import '../../domain/profile_prompt.dart';
 import '../../domain/safety_report.dart';
 import '../../domain/user_profile.dart';
 
@@ -31,6 +34,8 @@ class ServerPerson {
     required this.bio,
     required this.interests,
     this.superLike = false,
+    this.lifestyle = const {},
+    this.prompts = const [],
   });
 
   final String accountId;
@@ -40,6 +45,8 @@ class ServerPerson {
   final String bio;
   final List<String> interests;
   final bool superLike;
+  final Map<LifestyleTopic, String> lifestyle;
+  final List<ProfilePrompt> prompts;
 
   factory ServerPerson.fromJson(Map<String, dynamic> json) => ServerPerson(
     accountId: json['account_id'] as String,
@@ -49,6 +56,8 @@ class ServerPerson {
     bio: (json['bio'] as String?) ?? '',
     interests: ((json['interests'] as List?) ?? const []).cast<String>(),
     superLike: (json['super_like'] as bool?) ?? false,
+    lifestyle: parseLifestyle(json['lifestyle']),
+    prompts: parsePrompts(json['prompts']),
   );
 }
 
@@ -130,6 +139,27 @@ extension ReportReasonKey on ReportReason {
     ReportReason.underageConcern => 'underage_concern',
     ReportReason.other => 'other',
   };
+}
+
+/// Server habits; unknown topics or answers are ignored, never shown raw.
+Map<LifestyleTopic, String> parseLifestyle(Object? raw) {
+  if (raw is! Map) return const {};
+  return {
+    for (final topic in LifestyleTopic.values)
+      if (topic.options.contains(raw[topic.name]))
+        topic: raw[topic.name] as String,
+  };
+}
+
+List<ProfilePrompt> parsePrompts(Object? raw) {
+  if (raw is! List) return const [];
+  return [
+    for (final item in raw)
+      if (item is Map &&
+          ProfilePrompt.questions.contains(item['question']) &&
+          item['answer'] is String)
+        ProfilePrompt(item['question'] as String, item['answer'] as String),
+  ];
 }
 
 RelationshipIntent? _intent(String? key) {
@@ -388,22 +418,17 @@ class VawraApi {
               interests: (profile['interests'] as List).cast<String>(),
               showDistanceBand: profile['show_distance_band'] as bool,
               callReadyByDefault: profile['call_ready_by_default'] as bool,
+              lifestyle: parseLifestyle(profile['lifestyle']),
+              prompts: parsePrompts(profile['prompts']),
             ),
     );
   }
 
-  /// Sends only the six fields the contract allows. Age is never sent.
+  /// Sends only the fields [ProfileMutation] allows. Age is never sent.
   Future<void> saveProfile(UserProfile profile) => _send(
     'PATCH',
     '/v1/me/profile',
-    body: {
-      'display_name': profile.displayName,
-      'relationship_intent': profile.intent.backendKey,
-      'bio': profile.bio,
-      'interests': profile.interests,
-      'show_distance_band': profile.showDistanceBand,
-      'call_ready_by_default': profile.callReadyByDefault,
-    },
+    body: ProfileMutation.fromLocalProfile(profile).toContractMap(),
   );
 
   /// Schedules deletion and returns the server's date. The server signs the

@@ -228,6 +228,49 @@ void main() {
     expect(find.text('Continue with email'), findsOneWidget);
   });
 
+  testWidgets('profile details show their habits and prompts', (tester) async {
+    final server = FakeVawraServer()
+      ..verified = true
+      ..addPerson(
+        'Maya',
+        lifestyle: {'drinking': 'Socially', 'pets': 'Dog person', 'x': 'y'},
+        prompts: [
+          {'question': 'Ask me about…', 'answer': 'my sourdough starter'},
+        ],
+      )
+      ..profile = {
+        'display_name': 'Alex',
+        'relationship_intent': 'casual',
+        'bio': '',
+        'interests': <String>[],
+        'show_distance_band': true,
+        'call_ready_by_default': false,
+        'public_age': 28,
+      };
+    await _signIn(tester, server);
+    await _settle(tester);
+    await dismissSwipeTutorial(tester);
+    await tester.tap(find.byKey(const Key('open-profile-details')));
+    await _settle(tester);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('detail-habits')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('profile-details-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('Drinking: Socially'), findsOneWidget);
+    expect(find.text('Pets: Dog person'), findsOneWidget);
+    expect(find.textContaining(': y'), findsNothing);
+    expect(find.text('Ask me about…'), findsOneWidget);
+    expect(find.text('my sourdough starter'), findsOneWidget);
+    // An empty bio has no empty "About" section.
+    expect(find.text('About Maya'), findsNothing);
+  });
+
   group('account deletion', () {
     Map<String, dynamic> profile() => {
       'display_name': 'Alex',

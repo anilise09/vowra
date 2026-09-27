@@ -24,6 +24,10 @@ Accepts only:
 - `interests`
 - `show_distance_band`
 - `call_ready_by_default`
+- `lifestyle`: optional habits, at most one answer per topic from fixed lists (drinking, smoking, exercise, pets; `lib/domain/lifestyle.dart`)
+- `prompts`: up to two answers (1-150 characters, no control characters) to distinct questions from a fixed list (`lib/domain/profile_prompt.dart`)
+
+Added 2026-09-27 (BE-3c): habits and prompts are public profile details the person chooses to show, like the bio. Free text is limited to prompt answers and the bio; topics, answers and questions are fixed lists repeated on the server.
 
 The client contract in `ProfileMutation` intentionally cannot send age, date of birth, coordinates, account ID, verification, entitlement, match, block, or moderation state. The server repeats all public-text validation, normalizes bounded fields, and applies rate limits. A successful edit does not prove adulthood or unlock dating features.
 

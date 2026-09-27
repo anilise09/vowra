@@ -1,3 +1,6 @@
+import 'lifestyle.dart';
+import 'profile_prompt.dart';
+
 class DemoProfile {
   const DemoProfile(
     this.name,
@@ -18,4 +21,22 @@ class DemoProfile {
   final List<String> interests;
   final String assetPath;
   final String? background;
+}
+
+/// A person with the optional details a real account can share.
+class DetailedProfile extends DemoProfile {
+  const DetailedProfile(
+    super.name,
+    super.age,
+    super.intent,
+    super.distanceBand,
+    super.bio,
+    super.interests,
+    super.assetPath, {
+    this.lifestyle = const {},
+    this.prompts = const [],
+  });
+
+  final Map<LifestyleTopic, String> lifestyle;
+  final List<ProfilePrompt> prompts;
 }

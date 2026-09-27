@@ -370,14 +370,26 @@ class DiscoveryDeck extends StatelessWidget {
                     style: Theme.of(sheetContext).textTheme.titleMedium,
                   ),
                 ),
-                _DetailSection(
-                  icon: Icons.format_quote_rounded,
-                  title: 'About ${profile.name}',
-                  child: Text(
-                    profile.bio,
-                    style: Theme.of(sheetContext).textTheme.bodyLarge,
+                if (profile.bio.trim().isNotEmpty)
+                  _DetailSection(
+                    icon: Icons.format_quote_rounded,
+                    title: 'About ${profile.name}',
+                    child: Text(
+                      profile.bio,
+                      style: Theme.of(sheetContext).textTheme.bodyLarge,
+                    ),
                   ),
-                ),
+                if (profile is DetailedProfile)
+                  for (final (i, prompt) in profile.prompts.indexed)
+                    _DetailSection(
+                      key: Key('detail-prompt-$i'),
+                      icon: Icons.chat_bubble_outline_rounded,
+                      title: prompt.question,
+                      child: Text(
+                        prompt.answer,
+                        style: Theme.of(sheetContext).textTheme.bodyLarge,
+                      ),
+                    ),
                 _DetailSection(
                   icon: Icons.auto_awesome_outlined,
                   title: 'Interests',
@@ -389,12 +401,30 @@ class DiscoveryDeck extends StatelessWidget {
                         .toList(),
                   ),
                 ),
+                if (profile is DetailedProfile && profile.lifestyle.isNotEmpty)
+                  _DetailSection(
+                    key: const Key('detail-habits'),
+                    icon: Icons.spa_outlined,
+                    title: 'Habits',
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final entry in profile.lifestyle.entries)
+                          Chip(
+                            label: Text('${entry.key.label}: ${entry.value}'),
+                          ),
+                      ],
+                    ),
+                  ),
                 _DetailSection(
                   icon: Icons.near_me_outlined,
                   title: 'Distance',
                   child: Text(
-                    '${profile.distanceBand}. Shown as a band; '
-                    'exact location is never shown.',
+                    isServerPerson(profile.assetPath)
+                        ? 'Not shown yet. Vawra never shows an exact location.'
+                        : '${profile.distanceBand}. Shown as a band; '
+                              'exact location is never shown.',
                   ),
                 ),
                 if (profileReport != null)
@@ -1129,6 +1159,7 @@ class _CardFact extends StatelessWidget {
 
 class _DetailSection extends StatelessWidget {
   const _DetailSection({
+    super.key,
     required this.icon,
     required this.title,
     required this.child,

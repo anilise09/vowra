@@ -56,6 +56,71 @@ describe('profile', () => {
   });
 });
 
+describe('profile details', () => {
+  const patch = (p: Person, payload: object) =>
+    h.app.inject({ method: 'PATCH', url: '/v1/me/profile', headers: p.auth, payload });
+
+  it('saves habits and prompts from fixed lists, and shows them to others', async () => {
+    const me = await member(h, 'Ana');
+    const other = await member(h, 'Ben');
+    const res = await patch(me, {
+      lifestyle: { drinking: 'Socially', pets: 'Dog person' },
+      prompts: [{ question: 'Ask me about…', answer: '  my sourdough starter ' }],
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().profile).toMatchObject({
+      display_name: 'Ana',
+      lifestyle: { drinking: 'Socially', pets: 'Dog person' },
+      prompts: [{ question: 'Ask me about…', answer: 'my sourdough starter' }],
+    });
+    const seen = (await get(other, '/v1/discovery')).json().people[0];
+    expect(seen).toMatchObject({
+      lifestyle: { drinking: 'Socially', pets: 'Dog person' },
+      prompts: [{ question: 'Ask me about…', answer: 'my sourdough starter' }],
+    });
+  });
+
+  it('refuses anything outside the lists and limits', async () => {
+    const me = await member(h, 'Ana');
+    const cases: [object, number, string][] = [
+      [{ lifestyle: { drinking: 'Always' } }, 400, 'invalid_request'],
+      [{ lifestyle: { religion: 'Any' } }, 400, 'unknown_field'],
+      [{ prompts: [{ question: 'Tell me a secret', answer: 'Hi' }] }, 400, 'invalid_request'],
+      [
+        {
+          prompts: [
+            { question: 'Ask me about…', answer: 'a' },
+            { question: 'Ask me about…', answer: 'b' },
+          ],
+        },
+        422,
+        'prompt_repeated',
+      ],
+      [{ prompts: [{ question: 'Ask me about…', answer: '   ' }] }, 422, 'prompt_answer_empty'],
+      [
+        { prompts: [{ question: 'Ask me about…', answer: 'x'.repeat(151) }] },
+        422,
+        'prompt_answer_too_long',
+      ],
+      [
+        {
+          prompts: [
+            { question: 'Ask me about…', answer: 'a' },
+            { question: 'A green flag I look for…', answer: 'b' },
+            { question: 'The best trip I have taken…', answer: 'c' },
+          ],
+        },
+        400,
+        'invalid_request',
+      ],
+    ];
+    for (const [payload, status, error] of cases) {
+      const res = await patch(me, payload);
+      expect([res.statusCode, res.json().error]).toEqual([status, error]);
+    }
+  });
+});
+
 describe('age gate', () => {
   it('keeps every dating feature closed until age assurance passes', async () => {
     const p = await signIn(h, 'unverified@example.test');

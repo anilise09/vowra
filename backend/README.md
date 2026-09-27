@@ -51,7 +51,7 @@ HTTPS-only. Without `VAWRA_API` the app is the offline prototype.
 | --- | --- |
 | Sign-in | `POST /v1/auth/requests` (same answer for every identifier), `POST /v1/auth/exchange` (one-time proof + PKCE + state) |
 | Sessions | `POST /v1/session/rotate` (reuse revokes the family), `DELETE /v1/session`, `DELETE /v1/sessions` |
-| Profile | `GET`/`PATCH /v1/me/profile` (only the six contract fields), `POST`/`DELETE /v1/me/pause` |
+| Profile | `GET`/`PATCH /v1/me/profile` (only the contract fields, including habits and prompts), `POST`/`DELETE /v1/me/pause` |
 | Discovery | `GET /v1/discovery`, `POST /v1/discovery/{id}/swipe` (like, super_like, pass; idempotent), `GET /v1/likes-you` |
 | Chat | `GET /v1/matches`, `DELETE /v1/matches/{id}`, `GET`/`POST /v1/matches/{id}/messages` |
 | Safety | `POST /v1/blocks`, `GET /v1/blocks`, `DELETE /v1/blocks/{id}`, `POST /v1/reports` |
