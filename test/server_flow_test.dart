@@ -228,6 +228,71 @@ void main() {
     expect(find.text('Continue with email'), findsOneWidget);
   });
 
+  testWidgets('cards say why you might click; details list every reason', (
+    tester,
+  ) async {
+    final server = FakeVawraServer()
+      ..verified = true
+      ..addPerson(
+        'Maya',
+        reasons: [
+          {'kind': 'goal', 'text': 'Both want something long-term'},
+          {'kind': 'interests', 'text': 'You both like Books'},
+          {'kind': 'habit', 'text': 'Both dog people'},
+          {'kind': 'looks', 'text': 'Never shown'},
+        ],
+      )
+      ..profile = {
+        'display_name': 'Alex',
+        'relationship_intent': 'casual',
+        'bio': '',
+        'interests': <String>[],
+        'show_distance_band': true,
+        'call_ready_by_default': false,
+        'public_age': 28,
+      };
+    await _signIn(tester, server);
+    await _settle(tester);
+    await dismissSwipeTutorial(tester);
+    // The card shows the shared interest; the goal already has its own line.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('card-reason')),
+        matching: find.text('You both like Books'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('open-profile-details')));
+    await _settle(tester);
+    final details = find.byKey(const Key('detail-reasons'));
+    await tester.scrollUntilVisible(
+      details,
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('profile-details-scroll')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(details, findsOneWidget);
+    for (final text in [
+      'Both want something long-term',
+      'You both like Books',
+      'Both dog people',
+    ]) {
+      expect(
+        find.descendant(of: details, matching: find.text(text)),
+        findsOneWidget,
+      );
+    }
+    expect(find.text('Never shown'), findsNothing);
+    expect(
+      find.textContaining('never ranks people by popularity'),
+      findsOneWidget,
+    );
+  });
+
   group('nudges', () {
     Future<String> openChatWithMaya(
       WidgetTester tester,

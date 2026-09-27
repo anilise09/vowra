@@ -1,4 +1,5 @@
 import 'lifestyle.dart';
+import 'match_reason.dart';
 import 'profile_prompt.dart';
 
 class DemoProfile {
@@ -35,8 +36,12 @@ class DetailedProfile extends DemoProfile {
     super.assetPath, {
     this.lifestyle = const {},
     this.prompts = const [],
+    this.reasons = const [],
   });
 
   final Map<LifestyleTopic, String> lifestyle;
   final List<ProfilePrompt> prompts;
+
+  /// Why the two of you might click, as the server explains its order.
+  final List<MatchReason> reasons;
 }

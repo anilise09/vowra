@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { fail, requireDatingAccess, type Services } from '../context.js';
 import type { Db } from '../db.js';
 import { swipeRules } from '../rules.js';
+import { compatibility, type CompatibilityProfile } from '../compatibility.js';
+
+/** How many eligible people are ranked for one page of Discover. */
+const candidatePool = 300;
 
 const uuid = z.string().uuid();
 const swipeBody = z.object({ kind: z.enum(['like', 'super_like', 'pass']) }).strict();
@@ -45,7 +49,11 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     const me = requireDatingAccess(request);
     await requireProfile(db, me.id);
     const { limit } = listQuery.parse(request.query);
-    const people = await db.query(
+    const [mine] = await db.query<CompatibilityProfile>(
+      'SELECT relationship_intent, interests, lifestyle FROM profiles WHERE account_id = $1',
+      [me.id],
+    );
+    const candidates = await db.query<CompatibilityProfile & { account_id: string }>(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent,
               p.bio, p.interests, p.lifestyle, p.prompts
        FROM accounts a JOIN profiles p ON p.account_id = a.id
@@ -53,10 +61,20 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
          AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.from_account = $1 AND s.to_account = a.id)
        ORDER BY a.created_at
        LIMIT $2`,
-      [me.id, limit],
+      [me.id, candidatePool],
     );
-    // Distance stays null until the reviewed location service exists.
-    return { people: people.map((p) => ({ ...p, distance_band: null })) };
+    // Ranked by visible compatibility only; ties keep the oldest account first.
+    const people = candidates
+      .map((person, order) => ({ person, order, fit: compatibility(mine!, person) }))
+      .sort((x, y) => y.fit.score - x.fit.score || x.order - y.order)
+      .slice(0, limit)
+      .map(({ person, fit }) => ({
+        ...person,
+        reasons: fit.reasons,
+        // Distance stays null until the reviewed location service exists.
+        distance_band: null,
+      }));
+    return { people };
   });
 
   app.post('/v1/discovery/:accountId/swipe', async (request) => {

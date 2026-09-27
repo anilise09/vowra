@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../../domain/account_profile_contract.dart';
 import '../../domain/lifestyle.dart';
+import '../../domain/match_reason.dart';
 import '../../domain/profile_prompt.dart';
 import '../../domain/safety_report.dart';
 import '../../domain/user_profile.dart';
@@ -36,6 +37,7 @@ class ServerPerson {
     this.superLike = false,
     this.lifestyle = const {},
     this.prompts = const [],
+    this.reasons = const [],
   });
 
   final String accountId;
@@ -47,6 +49,7 @@ class ServerPerson {
   final bool superLike;
   final Map<LifestyleTopic, String> lifestyle;
   final List<ProfilePrompt> prompts;
+  final List<MatchReason> reasons;
 
   factory ServerPerson.fromJson(Map<String, dynamic> json) => ServerPerson(
     accountId: json['account_id'] as String,
@@ -58,6 +61,7 @@ class ServerPerson {
     superLike: (json['super_like'] as bool?) ?? false,
     lifestyle: parseLifestyle(json['lifestyle']),
     prompts: parsePrompts(json['prompts']),
+    reasons: MatchReason.parse(json['reasons']),
   );
 }
 

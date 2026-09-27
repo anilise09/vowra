@@ -633,6 +633,7 @@ DemoProfile _card(ServerPerson person) => DetailedProfile(
   '$serverPersonPrefix${person.accountId}',
   lifestyle: person.lifestyle,
   prompts: person.prompts,
+  reasons: person.reasons,
 );
 
 String _accountOf(String photoKey) =>

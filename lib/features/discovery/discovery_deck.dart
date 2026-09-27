@@ -5,6 +5,7 @@ import '../../domain/demo_profile.dart';
 import '../../domain/discovery_interaction.dart';
 import '../../domain/discovery_preferences.dart';
 import '../../domain/local_like_event.dart';
+import '../../domain/match_reason.dart';
 import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
 import '../shared/profile_image.dart';
@@ -284,6 +285,15 @@ class DiscoveryDeck extends StatelessWidget {
                         color: Colors.white,
                         size: 30,
                       ),
+                      if (profile is DetailedProfile)
+                        if (MatchReason.forCard(profile.reasons)
+                            case final reason?) ...[
+                          const SizedBox(height: 8),
+                          _ReasonPill(
+                            key: const Key('card-reason'),
+                            text: reason.text,
+                          ),
+                        ],
                       const SizedBox(height: 8),
                       _CardFact(
                         icon: Icons.favorite_outline_rounded,
@@ -370,6 +380,43 @@ class DiscoveryDeck extends StatelessWidget {
                     style: Theme.of(sheetContext).textTheme.titleMedium,
                   ),
                 ),
+                if (profile is DetailedProfile && profile.reasons.isNotEmpty)
+                  _DetailSection(
+                    key: const Key('detail-reasons'),
+                    icon: Icons.auto_awesome_rounded,
+                    title: 'Why you might click',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final reason in profile.reasons)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  switch (reason.kind) {
+                                    ReasonKind.goal =>
+                                      Icons.favorite_outline_rounded,
+                                    ReasonKind.interests =>
+                                      Icons.auto_awesome_outlined,
+                                    ReasonKind.habit => Icons.spa_outlined,
+                                  },
+                                  size: 18,
+                                  color: VawraColors.coral,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(reason.text)),
+                              ],
+                            ),
+                          ),
+                        Text(
+                          'Vawra orders Discover by what you share. It never '
+                          'ranks people by popularity or looks.',
+                          style: Theme.of(sheetContext).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
                 if (profile.bio.trim().isNotEmpty)
                   _DetailSection(
                     icon: Icons.format_quote_rounded,
@@ -1085,6 +1132,42 @@ class ConversationAccessPreview extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The strongest shared thing, as a soft pill on the card photo.
+class _ReasonPill extends StatelessWidget {
+  const _ReasonPill({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.fromLTRB(10, 5, 12, 5),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.2),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.auto_awesome_rounded, size: 15, color: Colors.white),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Name in bold with the age lighter; reads as "Name, age".

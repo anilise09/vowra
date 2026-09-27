@@ -107,9 +107,11 @@ class FakeVawraServer {
     bool likesMe = false,
     Map<String, String> lifestyle = const {},
     List<Map<String, String>> prompts = const [],
+    List<Map<String, String>> reasons = const [],
   }) {
     final id = _id();
     people[id] = {
+      'reasons': reasons,
       'lifestyle': lifestyle,
       'prompts': prompts,
       'account_id': id,

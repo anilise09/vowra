@@ -1,5 +1,18 @@
 # Checkpoints
 
+## BE-5 - "Why you might click": Discover ranked by what people share, and says so (2026-09-27)
+
+- Tinder's ranking is a black box. Vawra now orders Discover by visible, additive compatibility
+  only: same goal (+3) or long-term and open-to-long-term (+2), each shared interest (+1), each
+  matching habit (+0.5). Never popularity, swipe rates or looks. Rules and wording live in
+  `backend/src/compatibility.ts`; ties keep the oldest account first.
+- Discover returns up to three reasons per person (goal, shared interests, habits). The card shows
+  the most telling one as a pill (shared interests first, since the goal has its own line), and the
+  profile details list them under "Why you might click", with a line saying Vawra never ranks by
+  popularity or looks. Unknown reason kinds from a server are ignored.
+- Tests: scoring and wording, a Discover order test in which three extra likes for one person
+  change nothing (removing the sort makes it fail), and an app flow for the pill and details.
+
 ## BE-4 - Learned from Tinder's open source: nudges instead of polling (2026-09-27)
 
 - Researched all 18 public repositories at github.com/Tinder and their linked engineering
