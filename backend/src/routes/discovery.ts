@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { fail, requireDatingAccess, type Services } from '../context.js';
 import type { Db } from '../db.js';
+import { swipeRules } from '../rules.js';
 
 const uuid = z.string().uuid();
 const swipeBody = z.object({ kind: z.enum(['like', 'super_like', 'pass']) }).strict();
@@ -68,12 +69,23 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     if (!target.success || !(await isEligible(db, me.id, target.data))) fail(404, 'not_found');
     const other = target.data!;
     const now = clock.now();
+    const kind = body.data!.kind;
     return db.transaction(async (tx) => {
+      if (kind === 'super_like') {
+        // A repeat of an existing decision is idempotent and does not count.
+        const [spent] = await tx.query<{ count: number }>(
+          `SELECT count(*)::int AS count FROM swipes
+           WHERE from_account = $1 AND kind = 'super_like' AND created_at > $2
+             AND to_account <> $3`,
+          [me.id, new Date(now.getTime() - 24 * 60 * 60_000), other],
+        );
+        if ((spent?.count ?? 0) >= swipeRules.superLikesPerDay) fail(429, 'super_like_limit');
+      }
       // Idempotent: the first decision stands.
       await tx.query(
         `INSERT INTO swipes (from_account, to_account, kind, created_at) VALUES ($1, $2, $3, $4)
          ON CONFLICT (from_account, to_account) DO NOTHING`,
-        [me.id, other, body.data!.kind, now],
+        [me.id, other, kind, now],
       );
       const [mine] = await tx.query<{ kind: string }>(
         'SELECT kind FROM swipes WHERE from_account = $1 AND to_account = $2',
@@ -103,7 +115,8 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
   app.get('/v1/likes-you', async (request) => {
     const me = requireDatingAccess(request);
     const people = await db.query(
-      `SELECT a.id AS account_id, p.display_name, p.public_age, s.kind = 'super_like' AS super_like
+      `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent, p.bio,
+              p.interests, s.kind = 'super_like' AS super_like
        FROM swipes s JOIN accounts a ON a.id = s.from_account JOIN profiles p ON p.account_id = a.id
        WHERE s.to_account = $1 AND s.kind IN ('like','super_like')
          AND ${mutuallyEligible('$1::uuid', 'a.id')}

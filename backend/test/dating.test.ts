@@ -115,8 +115,33 @@ describe('discovery, likes and matches', () => {
     await swipe(h, fan, me, 'super_like');
     const likes = (await get(me, '/v1/likes-you')).json().people;
     expect(likes).toEqual([
-      expect.objectContaining({ account_id: fan.accountId, super_like: true }),
+      expect.objectContaining({
+        account_id: fan.accountId,
+        super_like: true,
+        display_name: 'Fan',
+        interests: expect.any(Array),
+      }),
     ]);
+  });
+
+  it('allows three Super Likes a day; repeats are free', async () => {
+    const me = await member(h, 'Me');
+    const others = await Promise.all(['Ana', 'Ben', 'Cy', 'Dee'].map((n) => member(h, n)));
+    for (const o of others.slice(0, 3)) {
+      expect((await swipe(h, me, o, 'super_like')).statusCode).toBe(200);
+    }
+    // Repeating a decision already made does not spend one.
+    expect((await swipe(h, me, others[0]!, 'super_like')).statusCode).toBe(200);
+    const fourth = await swipe(h, me, others[3]!, 'super_like');
+    expect(fourth.statusCode).toBe(429);
+    expect(fourth.json().error).toBe('super_like_limit');
+    // An ordinary like still works, and a day later Super Likes are back.
+    expect((await swipe(h, me, others[3]!, 'like')).statusCode).toBe(200);
+    const fifth = await member(h, 'Eve');
+    // Age the earlier Super Likes past the window (advancing the clock would
+    // also expire the session).
+    await h.db.query("UPDATE swipes SET created_at = created_at - interval '25 hours'");
+    expect((await swipe(h, me, fifth, 'super_like')).statusCode).toBe(200);
   });
 
   it('unknown and blocked targets look exactly the same', async () => {
@@ -184,6 +209,21 @@ describe('chat', () => {
     // Unblocking never revives the old conversation.
     await h.app.inject({ method: 'DELETE', url: `/v1/blocks/${b.accountId}`, headers: a.auth });
     expect((await post(a, `/v1/matches/${matchId}/messages`, { text: 'hi' })).statusCode).toBe(409);
+  });
+
+  it('pausing hides a person from new people but keeps their chats', async () => {
+    const a = await member(h, 'Ana');
+    const b = await member(h, 'Ben');
+    const newcomer = await member(h, 'Cy');
+    const matchId = await matched(a, b);
+    expect((await post(a, '/v1/me/pause', {})).statusCode).toBe(204);
+    expect(await discoverable(newcomer)).not.toContain(a.accountId);
+    expect((await get(a, '/v1/discovery')).json().error).toBe('account_paused');
+    expect((await get(a, '/v1/matches')).json().matches).toHaveLength(1);
+    const url = `/v1/matches/${matchId}/messages`;
+    expect((await post(b, url, { text: 'Still here?' })).statusCode).toBe(201);
+    expect((await post(a, url, { text: 'Yes, just paused.' })).statusCode).toBe(201);
+    expect((await get(a, url)).json().messages).toHaveLength(2);
   });
 
   it('unmatch closes the conversation', async () => {

@@ -1,5 +1,39 @@
 # Checkpoints
 
+## BE-2 - The app talks to the real backend (2026-09-27)
+
+- Build with `--dart-define=VAWRA_API=<url>` and the app uses a Vawra account; without it, it is the
+  unchanged offline prototype (all 109 prototype tests pass as before).
+- New `lib/data/api/vawra_api.dart`: email sign-in with a one-time code bound to the device by PKCE
+  S256 and state, session rotation a minute before expiry (a refused rotation signs out), profile
+  (only the six contract fields, never age), pause, discovery, swipes, likes-you, matches,
+  messages, block, report, sign out.
+- New `lib/server/server_flow.dart`: sign-in screen; first sign-in reuses the onboarding and saves
+  the profile; an honest age-check screen (dating stays closed until the server records a passed
+  check); home with Discover, Matches, Chats and Profile reusing the approved UI; a chat list for
+  every match; threads refresh every 3 s (no real-time service yet); Settings says what the server
+  keeps, adds Sign out, and explains that account deletion needs the next update.
+- Server people show a neutral "no photo yet" placeholder until the media service exists; the
+  "prototype" labels, report and block wording change to real-account wording for them.
+- Backend: three free Super Likes per rolling day enforced on the server; pausing keeps existing
+  chats (the app already promised this, the server refused it); likes-you returns full profile
+  fields; matches return the peer's account id. 23 backend tests.
+- Tests: API client tests (PKCE, state, rotation, sign-out on refusal, contract fields) and
+  server-mode widget flows against an in-memory stand-in (wrong code, new account to match and
+  chat, sign out). A deliberately broken message refresh made the flow test fail, so it can.
+- End to end on the Android 17 Pixel AVD against the local server: code from the dev outbox, new
+  profile saved, age gate held, local age stand-in, three synthetic members in Discover, a like that
+  matched, a message from the other account shown in Chats, a reply stored on the server, and the
+  next message arriving by refresh. The AVD's emulator crashed once mid-run (qemu, known on this
+  laptop) and the run continued after relaunch; the server state was intact.
+- Found on device and fixed: onboarding still said "This prototype keeps your answers on this
+  device only" in account mode.
+
+Next: keep the session in platform-protected storage so a restart stays signed in; account
+deletion with re-authentication; move habits and intro to the server; profile photos with the
+media service. Release builds need INTERNET and an HTTPS server before any public test. The APK is
+~725 MB because of the bundled portraits and needs compressing before distribution.
+
 ## BE-1 - Backend core: sign-in, sessions, profile, discovery, matches, chat, safety (2026-09-27)
 
 - New `backend/` (TypeScript, Node 22, Fastify, zod). PostgreSQL through PGlite for development and

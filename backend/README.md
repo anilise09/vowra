@@ -31,6 +31,19 @@ install, no admin rights). Set `DATABASE_URL` to use a real PostgreSQL server in
 No age-assurance provider is reviewed yet, so dating features stay closed for every account. For
 local testing only: `npm run dev:assure -- <email> <age>` marks a local account as verified. It is
 a command on the developer's machine, never an HTTP endpoint, and refuses a real database.
+Stop the server first: PGlite is single-process, so two processes must never open `.data/pglite`
+at once.
+
+## Run the app against it
+
+```
+flutter build apk --profile --dart-define=VAWRA_API=http://127.0.0.1:8787
+adb reverse tcp:8787 tcp:8787          # per device; phones and emulators reach the laptop
+```
+
+Debug and profile builds allow plain HTTP only to 127.0.0.1, localhost and 10.0.2.2
+(`android/app/src/{debug,profile}/res/xml/network_security_config.xml`); release builds stay
+HTTPS-only. Without `VAWRA_API` the app is the offline prototype.
 
 ## What exists (BE-1)
 
@@ -43,6 +56,10 @@ a command on the developer's machine, never an HTTP endpoint, and refuses a real
 | Chat | `GET /v1/matches`, `DELETE /v1/matches/{id}`, `GET`/`POST /v1/matches/{id}/messages` |
 | Safety | `POST /v1/blocks`, `GET /v1/blocks`, `DELETE /v1/blocks/{id}`, `POST /v1/reports` |
 
+Rules added with the app connection (BE-2): three free Super Likes in any rolling 24 hours
+(`429 super_like_limit`); a paused person is hidden from new people but keeps their matches and
+chats; likes-you carries the same profile fields as discovery.
+
 Security properties covered by tests: no account-existence oracle; emails sealed with AES-256-GCM
 and looked up by keyed hash; tokens and proofs stored only as hashes; proofs single-use even when
 the attempt fails; refresh reuse revokes the family; age gate on every dating feature; mutual
@@ -52,6 +69,7 @@ matches in one transaction; reports keep only a valid message reference; logs ca
 
 ## Not built yet
 
-Email delivery provider, OIDC providers, age-assurance provider, location service and privacy
+Account deletion (`POST /v1/me/deletion`, needs recent re-authentication), session storage on the
+device (the app keeps tokens in memory, so a restart signs out), email delivery provider, OIDC providers, age-assurance provider, location service and privacy
 zones, media uploads, real-time delivery, push notifications, calls, export and deletion jobs,
 entitlements. Each waits for its provider review as the contracts require.

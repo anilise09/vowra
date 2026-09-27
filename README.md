@@ -16,4 +16,4 @@ CP-064 is complete: a Tinder-style swipe deck with stamps, Super Like and a matc
 - Managed WebRTC provider for the MVP
 - StoreKit 2 and Google Play Billing
 
-A first backend slice exists in `backend/` (BE-1: sign-in, sessions, profile, discovery, matches, chat, safety), switched off by default and never deployed. No production service, billing integration, or real user-data collection exists yet.
+A first backend slice exists in `backend/` (BE-1: sign-in, sessions, profile, discovery, matches, chat, safety), switched off by default and never deployed. Since BE-2 the app can use it: build with `--dart-define=VAWRA_API=<url>` for email sign-in, a server profile, real matches and chat (see `backend/README.md`); without that define it stays the offline prototype. No production service, billing integration, or real user-data collection exists yet.

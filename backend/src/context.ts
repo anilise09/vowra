@@ -52,10 +52,18 @@ export function requireAccount(request: FastifyRequest): Account {
   return request.account ?? fail(401, 'unauthenticated');
 }
 
-/** Dating features stay closed until the server records a passed age check. */
-export function requireDatingAccess(request: FastifyRequest): Account {
+/**
+ * Dating features stay closed until the server records a passed age check.
+ * Pausing hides a person from new people only: existing matches can still
+ * chat, so conversation routes pass `allowPaused`.
+ */
+export function requireDatingAccess(
+  request: FastifyRequest,
+  { allowPaused = false }: { allowPaused?: boolean } = {},
+): Account {
   const account = requireAccount(request);
   if (account.ageState !== 'adult_verified') fail(403, 'age_assurance_required');
+  if (account.lifecycle === 'paused' && allowPaused) return account;
   if (account.lifecycle !== 'active') fail(409, 'account_paused');
   return account;
 }

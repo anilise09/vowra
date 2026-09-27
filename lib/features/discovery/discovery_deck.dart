@@ -7,6 +7,7 @@ import '../../domain/discovery_preferences.dart';
 import '../../domain/local_like_event.dart';
 import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
+import '../shared/profile_image.dart';
 import 'swipe_card_stack.dart';
 
 class DiscoveryDeck extends StatelessWidget {
@@ -122,6 +123,7 @@ class DiscoveryDeck extends StatelessWidget {
                 title: title,
                 onBack: onBack,
                 count: visibleProfiles.length,
+                live: profiles.any((p) => isServerPerson(p.assetPath)),
                 filtersActive: !preferences.isDefault,
                 onPreferences: () => _showPreferences(context),
                 onSafety: onOpenSafety,
@@ -218,22 +220,24 @@ class DiscoveryDeck extends StatelessWidget {
               ),
             ),
           ),
-          const Positioned(
-            top: 22,
-            left: 16,
-            child: _OverlayPill(
-              icon: Icons.science_outlined,
-              label: 'PROTOTYPE PROFILE · NOT A REAL PERSON',
+          if (!isServerPerson(profile.assetPath))
+            const Positioned(
+              top: 22,
+              left: 16,
+              child: _OverlayPill(
+                icon: Icons.science_outlined,
+                label: 'PROTOTYPE PROFILE · NOT A REAL PERSON',
+              ),
             ),
-          ),
           if (profileReport != null)
             Positioned(
               top: 52,
               left: 16,
               right: 60,
               child: Tooltip(
-                message:
-                    '${profileReport.moderationState.label}. Saved on this device only; no review team is connected.',
+                message: isServerPerson(profile.assetPath)
+                    ? 'Sent to Vawra safety for review.'
+                    : '${profileReport.moderationState.label}. Saved on this device only; no review team is connected.',
                 child: _OverlayPill(
                   icon: Icons.flag_outlined,
                   label: 'Report recorded: ${profileReport.reason.label}',
@@ -398,9 +402,11 @@ class DiscoveryDeck extends StatelessWidget {
                     icon: Icons.flag_outlined,
                     title: 'Your report',
                     child: Text(
-                      '${profileReport.reason.label}. '
-                      '${profileReport.moderationState.label}. '
-                      'Saved on this device only; no review team is connected.',
+                      isServerPerson(profile.assetPath)
+                          ? '${profileReport.reason.label}. Sent to Vawra safety for review.'
+                          : '${profileReport.reason.label}. '
+                                '${profileReport.moderationState.label}. '
+                                'Saved on this device only; no review team is connected.',
                     ),
                   ),
                 const SizedBox(height: 6),
@@ -602,9 +608,11 @@ class DiscoveryDeck extends StatelessWidget {
       if (report == null || !context.mounted) return;
       onReport(report);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Report recorded privately. Saved on this device only. No review team is connected.',
+            isServerPerson(profile.assetPath)
+                ? 'Report sent privately. ${profile.name} is not told who reported.'
+                : 'Report recorded privately. Saved on this device only. No review team is connected.',
           ),
         ),
       );
@@ -615,8 +623,10 @@ class DiscoveryDeck extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text('Block ${profile.name}?'),
-        content: const Text(
-          'This removes the prototype profile from discovery and closes any active match for this app session. No real account is contacted.',
+        content: Text(
+          isServerPerson(profile.assetPath)
+              ? '${profile.name} will no longer see you or be able to message you, and any match with them closes. They are not told.'
+              : 'This removes the prototype profile from discovery and closes any active match for this app session. No real account is contacted.',
         ),
         actions: [
           TextButton(
@@ -713,6 +723,7 @@ class _DiscoveryHeader extends StatelessWidget {
     required this.title,
     required this.onBack,
     required this.count,
+    this.live = false,
     required this.filtersActive,
     required this.onPreferences,
     required this.onSafety,
@@ -721,6 +732,7 @@ class _DiscoveryHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onBack;
   final int count;
+  final bool live;
   final bool filtersActive;
   final VoidCallback onPreferences;
   final VoidCallback onSafety;
@@ -758,7 +770,9 @@ class _DiscoveryHeader extends StatelessWidget {
                   ?.copyWith(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             Text(
-              '$count prototype profiles',
+              live
+                  ? '$count ${count == 1 ? 'person' : 'people'} to meet'
+                  : '$count prototype profiles',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall
@@ -846,7 +860,7 @@ class _StoryAvatar extends StatelessWidget {
                       color: VawraColors.blush,
                       child: Icon(icon, color: VawraColors.coral),
                     )
-                  : Image.asset(assetPath!, fit: BoxFit.cover),
+                  : Image(image: profileImage(assetPath!), fit: BoxFit.cover),
             ),
           ),
         ),
@@ -1594,14 +1608,14 @@ class _CardPhotosState extends State<_CardPhotos> {
     builder: (context, constraints) => Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          widget.photos[index],
+        Image(
+          image: profileImage(widget.photos[index]),
           key: ValueKey(widget.photos[index]),
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
           gaplessPlayback: true,
           semanticLabel:
-              'Synthetic portrait of ${widget.name}, photo ${index + 1} of ${widget.photos.length}',
+              '${portraitLabel(widget.name, widget.photos[index])}, photo ${index + 1} of ${widget.photos.length}',
         ),
         if (widget.interactive && widget.photos.length > 1)
           Positioned.fill(
@@ -1667,12 +1681,12 @@ class _DetailPhotosState extends State<_DetailPhotos> {
             onPageChanged: (value) => setState(() => page = value),
             children: [
               for (final (i, photo) in widget.photos.indexed)
-                Image.asset(
-                  photo,
+                Image(
+                  image: profileImage(photo),
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
                   semanticLabel:
-                      'Synthetic portrait of ${widget.name}, photo ${i + 1} of ${widget.photos.length}',
+                      '${portraitLabel(widget.name, photo)}, photo ${i + 1} of ${widget.photos.length}',
                 ),
             ],
           ),

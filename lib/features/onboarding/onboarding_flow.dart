@@ -9,9 +9,16 @@ import '../shared/lifestyle_picker.dart';
 /// One question per screen. Name, age, intent and interests are required;
 /// the bio can be skipped; privacy and call defaults are pre-set safely.
 class OnboardingFlow extends StatefulWidget {
-  const OnboardingFlow({super.key, required this.onComplete});
+  const OnboardingFlow({
+    super.key,
+    required this.onComplete,
+    this.live = false,
+  });
 
   final ValueChanged<UserProfile> onComplete;
+
+  /// True when the profile is saved to a Vawra account, not this device.
+  final bool live;
 
   @override
   State<OnboardingFlow> createState() => _OnboardingFlowState();
@@ -345,6 +352,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             ],
           ),
           _Step.privacy => _PrivacyChoices(
+            live: widget.live,
             showDistanceBand: showDistanceBand,
             callReadyByDefault: callReadyByDefault,
             onDistanceChanged: (value) =>
@@ -530,12 +538,14 @@ class _InterestPicker extends StatelessWidget {
 
 class _PrivacyChoices extends StatelessWidget {
   const _PrivacyChoices({
+    required this.live,
     required this.showDistanceBand,
     required this.callReadyByDefault,
     required this.onDistanceChanged,
     required this.onCallsChanged,
   });
 
+  final bool live;
   final bool showDistanceBand;
   final bool callReadyByDefault;
   final ValueChanged<bool> onDistanceChanged;
@@ -577,15 +587,20 @@ class _PrivacyChoices extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 18),
-      const Row(
+      Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.shield_outlined, size: 20, color: VawraColors.plum),
-          SizedBox(width: 10),
+          const Icon(Icons.shield_outlined, size: 20, color: VawraColors.plum),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Matching, messaging, blocking and reporting are always free. '
-              'This prototype keeps your answers on this device only.',
+              live
+                  ? 'Matching, messaging, blocking and reporting are always '
+                        'free. Your profile is saved to your Vawra account. '
+                        'Habits and your intro are not saved to accounts yet.'
+                  : 'Matching, messaging, blocking and reporting are always '
+                        'free. This prototype keeps your answers on this '
+                        'device only.',
             ),
           ),
         ],

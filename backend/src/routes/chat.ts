@@ -48,9 +48,10 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
   const { db, clock } = services;
 
   app.get('/v1/matches', async (request) => {
-    const me = requireDatingAccess(request);
+    const me = requireDatingAccess(request, { allowPaused: true });
     const matches = await db.query(
-      `SELECT m.id AS match_id, m.created_at, p.display_name AS peer_name, p.public_age AS peer_age,
+      `SELECT m.id AS match_id, m.created_at, p.account_id AS peer_account_id,
+              p.display_name AS peer_name, p.public_age AS peer_age,
               (SELECT body FROM messages WHERE match_id = m.id ORDER BY created_at DESC LIMIT 1)
                 AS last_message
        FROM matches m
@@ -76,7 +77,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
   });
 
   app.get('/v1/matches/:matchId/messages', async (request) => {
-    const me = requireDatingAccess(request);
+    const me = requireDatingAccess(request, { allowPaused: true });
     const match = await openConversation(
       db,
       me.id,
@@ -100,7 +101,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
   });
 
   app.post('/v1/matches/:matchId/messages', async (request, reply) => {
-    const me = requireDatingAccess(request);
+    const me = requireDatingAccess(request, { allowPaused: true });
     const body = sendBody.safeParse(request.body);
     if (!body.success) fail(400, 'invalid_request');
     const normalized = normalizeMessage(body.data!.text);

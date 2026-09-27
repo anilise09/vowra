@@ -1,0 +1,1109 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../data/api/vawra_api.dart';
+import '../data/discovery_interaction_repository.dart';
+import '../domain/chat_message.dart';
+import '../domain/demo_profile.dart';
+import '../domain/discovery_interaction.dart';
+import '../domain/discovery_preferences.dart';
+import '../domain/match_connection.dart';
+import '../domain/safety_report.dart';
+import '../domain/user_profile.dart';
+import '../features/discovery/discovery_deck.dart';
+import '../features/matches/date_safely_guide.dart';
+import '../features/matches/match_celebration.dart';
+import '../features/matches/match_tabs.dart';
+import '../features/onboarding/onboarding_flow.dart';
+import '../features/profile/profile_editor.dart';
+import '../features/settings/settings_page.dart';
+import '../features/shared/profile_image.dart';
+import '../main.dart' show SafetySheet, WelcomeScreen;
+import '../theme/vawra_theme.dart';
+
+/// Plain-language text for a failed call. Server codes never reach the screen
+/// raw, and nothing reveals whether an email has an account.
+String describeApiError(Object error) {
+  if (error is! ApiException) {
+    return 'Can\'t reach Vawra. Check your connection and try again.';
+  }
+  return switch (error.code) {
+    'invalid_proof' => 'That code didn\'t work. Codes work once and expire, so ask for a new one.',
+    'slow_down' => 'Slow down a little: up to 5 messages a minute.',
+    'super_like_limit' => 'You\'ve used today\'s Super Likes. More tomorrow.',
+    'conversation_closed' => 'This conversation has closed.',
+    'account_paused' => 'Your profile is paused. Resume it to meet new people.',
+    'age_assurance_required' => 'Your age needs to be confirmed first.',
+    'session_revoked' ||
+    'unauthorized' => 'You were signed out. Sign in again.',
+    'name_too_short' => 'Your name needs at least 2 characters.',
+    'name_too_long' => 'Use 40 characters or fewer for your name.',
+    'bio_too_short' =>
+      'Write at least 20 characters in your bio, or leave it empty.',
+    'bio_too_long' => 'Use 300 characters or fewer in your bio.',
+    'message_empty' => 'Write a message first.',
+    'message_too_long' => 'Messages are limited to 1000 characters.',
+    'rate_limited' => 'Too many tries. Wait a few minutes and try again.',
+    _ => 'Something went wrong. Try again.',
+  };
+}
+
+void _toast(BuildContext context, String text) =>
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+/// After sign-in: create the profile, wait for age assurance, or open Vawra.
+Future<void> openSignedIn(NavigatorState navigator, VawraApi api) async {
+  final me = await api.me();
+  final Widget next;
+  if (me.profile == null) {
+    next = _NewProfile(api: api);
+  } else if (!me.canDate) {
+    next = AgeCheckScreen(api: api);
+  } else {
+    next = ServerHome(api: api, me: me);
+  }
+  navigator.pushAndRemoveUntil(
+    MaterialPageRoute<void>(builder: (_) => next),
+    (_) => false,
+  );
+}
+
+Future<void> _signOut(NavigatorState navigator, VawraApi api) async {
+  try {
+    await api.signOut();
+  } catch (_) {
+    // The local session is gone either way.
+  }
+  navigator.pushAndRemoveUntil(
+    MaterialPageRoute<void>(builder: (_) => WelcomeScreen(api: api)),
+    (_) => false,
+  );
+}
+
+/// Email and a one-time code. No password is ever created.
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key, required this.api});
+
+  final VawraApi api;
+
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends State<SignInScreen> {
+  final email = TextEditingController();
+  final code = TextEditingController();
+  final codeFocus = FocusNode();
+  bool codeSent = false;
+  bool busy = false;
+  String? error;
+
+  static final _emailShape = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+  @override
+  void dispose() {
+    email.dispose();
+    code.dispose();
+    codeFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run(Future<void> Function() action) async {
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      await action();
+    } catch (e) {
+      if (mounted) setState(() => error = describeApiError(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> _send() async {
+    if (!_emailShape.hasMatch(email.text.trim())) {
+      setState(() => error = 'Enter an email address like name@example.com.');
+      return;
+    }
+    await _run(() async {
+      await widget.api.requestSignIn(email.text);
+      code.clear();
+      setState(() => codeSent = true);
+      codeFocus.requestFocus();
+    });
+  }
+
+  Future<void> _verify() async {
+    if (code.text.trim().length < 20) {
+      setState(() => error = 'Paste the whole code from the email.');
+      return;
+    }
+    final navigator = Navigator.of(context);
+    await _run(() async {
+      await widget.api.exchange(code.text);
+      await openSignedIn(navigator, widget.api);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Sign in')),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          children: [
+            Text(
+              codeSent ? 'Check your email' : 'What\'s your email?',
+              style: theme.textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              codeSent
+                  ? 'If ${email.text.trim()} can sign in, a one-time code is '
+                        'on its way. It works once and expires soon.'
+                  : 'We\'ll email you a one-time code. No password to '
+                        'remember, and your email is never shown to anyone.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 22),
+            if (!codeSent)
+              TextField(
+                key: const Key('sign-in-email'),
+                controller: email,
+                autofocus: true,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                autocorrect: false,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => busy ? null : _send(),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.mail_outline_rounded),
+                ),
+              )
+            else
+              TextField(
+                key: const Key('sign-in-code'),
+                controller: code,
+                focusNode: codeFocus,
+                autocorrect: false,
+                enableSuggestions: false,
+                autofillHints: const [AutofillHints.oneTimeCode],
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => busy ? null : _verify(),
+                decoration: const InputDecoration(
+                  labelText: 'Code',
+                  prefixIcon: Icon(Icons.key_rounded),
+                ),
+              ),
+            if (error case final message?) ...[
+              const SizedBox(height: 12),
+              Text(
+                message,
+                key: const Key('sign-in-error'),
+                style: const TextStyle(color: VawraColors.coralDark),
+              ),
+            ],
+            const SizedBox(height: 20),
+            FilledButton(
+              key: Key(codeSent ? 'verify-code' : 'send-code'),
+              onPressed: busy ? null : (codeSent ? _verify : _send),
+              child: busy
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.4),
+                    )
+                  : Text(codeSent ? 'Sign in' : 'Send code'),
+            ),
+            if (codeSent) ...[
+              const SizedBox(height: 8),
+              TextButton(
+                key: const Key('resend-code'),
+                onPressed: busy ? null : _send,
+                child: const Text('Send a new code'),
+              ),
+              TextButton(
+                onPressed: busy
+                    ? null
+                    : () => setState(() {
+                        codeSent = false;
+                        error = null;
+                      }),
+                child: const Text('Use a different email'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// First sign-in: the same onboarding as the prototype, saved to the server.
+class _NewProfile extends StatelessWidget {
+  const _NewProfile({required this.api});
+
+  final VawraApi api;
+
+  @override
+  Widget build(BuildContext context) => OnboardingFlow(
+    live: true,
+    onComplete: (profile) async {
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      try {
+        await api.saveProfile(profile);
+        await openSignedIn(navigator, api);
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      }
+    },
+  );
+}
+
+/// Dating stays closed until an independent age check passes.
+class AgeCheckScreen extends StatefulWidget {
+  const AgeCheckScreen({super.key, required this.api});
+
+  final VawraApi api;
+
+  @override
+  State<AgeCheckScreen> createState() => _AgeCheckScreenState();
+}
+
+class _AgeCheckScreenState extends State<AgeCheckScreen> {
+  bool checking = false;
+
+  Future<void> _checkAgain() async {
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => checking = true);
+    try {
+      final me = await widget.api.me();
+      if (me.canDate) {
+        messenger.clearSnackBars();
+        await openSignedIn(navigator, widget.api);
+        return;
+      }
+      if (mounted) _toast(context, 'Not confirmed yet.');
+    } catch (e) {
+      if (mounted) _toast(context, describeApiError(e));
+    } finally {
+      if (mounted) setState(() => checking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(28, 48, 28, 24),
+          children: [
+            const Icon(
+              Icons.verified_user_outlined,
+              size: 64,
+              color: VawraColors.coral,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'One more step: confirming you\'re 18+',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your profile is saved. Before Discover, matches and chat open, '
+              'Vawra confirms every member\'s age with an independent '
+              'age-check service. That service is not connected yet, so '
+              'this step cannot be completed today.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 28),
+            FilledButton(
+              key: const Key('age-check-again'),
+              onPressed: checking ? null : _checkAgain,
+              child: const Text('Check again'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              key: const Key('age-sign-out'),
+              onPressed: () => _signOut(Navigator.of(context), widget.api),
+              child: const Text('Sign out'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+DemoProfile _card(ServerPerson person) => DemoProfile(
+  person.name,
+  person.age ?? 18,
+  person.intent?.label ?? '',
+  'Distance hidden',
+  person.bio,
+  person.interests,
+  '$serverPersonPrefix${person.accountId}',
+);
+
+String _accountOf(String photoKey) =>
+    photoKey.substring(serverPersonPrefix.length);
+
+MatchConnection _connection(
+  ServerMatch match, {
+  ConnectionStatus status = ConnectionStatus.active,
+  bool callReady = false,
+}) => MatchConnection(
+  matchId: match.matchId,
+  peerName: match.peerName,
+  peerProfileAssetPath: '$serverPersonPrefix${match.peerAccountId}',
+  status: status,
+  currentUserCallReady: callReady,
+);
+
+/// Vawra with a real account: Discover, Matches, Chats and Profile.
+class ServerHome extends StatefulWidget {
+  const ServerHome({
+    super.key,
+    required this.api,
+    required this.me,
+    this.pollEvery = const Duration(seconds: 10),
+  });
+
+  final VawraApi api;
+  final MeState me;
+  final Duration pollEvery;
+
+  @override
+  State<ServerHome> createState() => _ServerHomeState();
+}
+
+class _ServerHomeState extends State<ServerHome> {
+  static const tabDiscover = 0;
+  static const tabChats = 2; // Discover, Matches, Chats, Profile
+
+  VawraApi get api => widget.api;
+
+  int tab = tabDiscover;
+  List<ServerPerson> people = const [];
+  List<ServerPerson> likes = const [];
+  List<ServerMatch> matches = const [];
+  bool loaded = false;
+  String? loadError;
+  late UserProfile? profile = widget.me.profile;
+  late bool paused = widget.me.paused;
+  final interactions = MemoryDiscoveryInteractionRepository();
+  final reports = <String, DiscoveryProfileReport>{};
+  DiscoveryPreferences preferences = const DiscoveryPreferences();
+  int profileIndex = 0;
+  int superLikesLeft = 3;
+  bool tutorialSeen = false;
+  bool safetyGuideSeen = false;
+  final notificationPrefs = <String, bool>{
+    'New matches': true,
+    'Messages': true,
+    'Likes you': true,
+    'Safety tips': true,
+  };
+  Timer? poll;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshAll();
+    poll = Timer.periodic(widget.pollEvery, (_) => _refreshMatches());
+  }
+
+  @override
+  void dispose() {
+    poll?.cancel();
+    super.dispose();
+  }
+
+  /// A revoked or expired session goes back to the start.
+  bool _signedOutBy(Object error) {
+    if (error is ApiException && error.status == 401) {
+      _signOut(Navigator.of(context), api);
+      return true;
+    }
+    return false;
+  }
+
+  /// While paused only existing matches are reachable; new people and
+  /// incoming likes wait until the person resumes.
+  Future<List<ServerPerson>> _newPeople() async =>
+      paused ? const [] : api.discovery();
+  Future<List<ServerPerson>> _likes() async =>
+      paused ? const [] : api.likesYou();
+
+  Future<void> _refreshAll() async {
+    try {
+      final results = await Future.wait([
+        _newPeople(),
+        _likes(),
+        api.matches(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        people = results[0] as List<ServerPerson>;
+        likes = results[1] as List<ServerPerson>;
+        matches = results[2] as List<ServerMatch>;
+        profileIndex = 0;
+        loaded = true;
+        loadError = null;
+      });
+    } catch (e) {
+      if (!mounted || _signedOutBy(e)) return;
+      setState(() => loadError = describeApiError(e));
+    }
+  }
+
+  Future<void> _refreshMatches() async {
+    try {
+      final results = await Future.wait([_likes(), api.matches()]);
+      if (!mounted) return;
+      setState(() {
+        likes = results[0] as List<ServerPerson>;
+        matches = results[1] as List<ServerMatch>;
+      });
+    } catch (e) {
+      if (mounted) _signedOutBy(e);
+    }
+  }
+
+  void _selectTab(int index) {
+    setState(() => tab = index);
+    if (index == tabDiscover) _refreshAll();
+    if (index != tabDiscover) _refreshMatches();
+    if (index == tabChats && !safetyGuideSeen) {
+      safetyGuideSeen = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) DateSafelyGuide.show(context);
+      });
+    }
+  }
+
+  Future<void> _swipe(DemoProfile card, DiscoverySwipeAction action) async {
+    final String kind;
+    switch (action) {
+      case DiscoverySwipeAction.skip:
+        setState(() => profileIndex += 1);
+        return;
+      case DiscoverySwipeAction.reject:
+        kind = 'pass';
+        setState(() => interactions.reject(card));
+      case DiscoverySwipeAction.like:
+        kind = 'like';
+        setState(
+          () => interactions.recordLike(
+            card,
+            createdAt: DateTime.now().toUtc(),
+            mutualLike: false,
+          ),
+        );
+      case DiscoverySwipeAction.superLike:
+        if (superLikesLeft <= 0) return;
+        kind = 'super_like';
+        setState(() {
+          final recorded = interactions.recordLike(
+            card,
+            createdAt: DateTime.now().toUtc(),
+            mutualLike: false,
+            superLike: true,
+          );
+          if (recorded) superLikesLeft -= 1;
+        });
+    }
+    final accountId = _accountOf(card.assetPath);
+    try {
+      final matchId = await api.swipe(accountId, kind);
+      if (!mounted) return;
+      setState(
+        () => likes = [
+          for (final p in likes)
+            if (p.accountId != accountId) p,
+        ],
+      );
+      if (matchId != null) {
+        await _refreshMatches();
+        if (mounted) _celebrate(card, matchId, kind == 'super_like');
+      }
+    } catch (e) {
+      if (!mounted || _signedOutBy(e)) return;
+      if (e is ApiException && e.code == 'super_like_limit') {
+        setState(() => superLikesLeft = 0);
+      }
+      _toast(context, describeApiError(e));
+    }
+  }
+
+  void _celebrate(DemoProfile card, String matchId, bool superLike) {
+    final name = profile?.displayName.trim() ?? '';
+    MatchCelebration.show(
+      context,
+      peerName: card.name,
+      peerPhotoAsset: card.assetPath,
+      ownInitial: name.isEmpty ? 'You' : name.characters.first.toUpperCase(),
+      superLike: superLike,
+      onMessage: () {
+        final match = matches.where((m) => m.matchId == matchId).firstOrNull;
+        if (match != null) _openThread(match);
+      },
+    );
+  }
+
+  Future<void> _openThread(ServerMatch match) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ServerThreadPage(api: api, match: match),
+      ),
+    );
+    if (mounted) _refreshMatches();
+  }
+
+  Future<void> _report(DiscoveryProfileReport report) async {
+    try {
+      await api.report(
+        _accountOf(report.profileAssetPath),
+        report.reason.backendKey,
+      );
+      if (mounted) setState(() => reports[report.profileAssetPath] = report);
+    } catch (e) {
+      if (mounted && !_signedOutBy(e)) _toast(context, describeApiError(e));
+    }
+  }
+
+  Future<void> _block(DemoProfile card) async {
+    try {
+      await api.block(_accountOf(card.assetPath));
+      if (!mounted) return;
+      setState(() {
+        interactions.block(card);
+        profileIndex = 0;
+      });
+      _refreshMatches();
+    } catch (e) {
+      if (mounted && !_signedOutBy(e)) _toast(context, describeApiError(e));
+    }
+  }
+
+  Future<void> _setPaused(bool value) async {
+    try {
+      await api.setPaused(value);
+      if (!mounted) return;
+      setState(() => paused = value);
+      _refreshAll();
+    } catch (e) {
+      if (mounted && !_signedOutBy(e)) _toast(context, describeApiError(e));
+    }
+  }
+
+  Widget _discover(BuildContext context) {
+    if (!loaded) {
+      return Center(
+        child: loadError == null
+            ? const CircularProgressIndicator()
+            : Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(loadError!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      key: const Key('retry-load'),
+                      onPressed: _refreshAll,
+                      child: const Text('Try again'),
+                    ),
+                  ],
+                ),
+              ),
+      );
+    }
+    final deck = DiscoveryDeck(
+      profiles: people.map(_card).toList(),
+      preferences: preferences,
+      blockedProfileAssets: interactions.blockedProfileAssets(),
+      likedProfiles: interactions.likedProfiles(),
+      rejectedProfileAssets: interactions.rejectedProfileAssets(),
+      reports: reports,
+      likeEvents: const [],
+      profileIndex: profileIndex,
+      onPreferencesChanged: (updated) => setState(() {
+        preferences = updated;
+        profileIndex = 0;
+      }),
+      onSwipeAction: _swipe,
+      onReport: _report,
+      onBlockProfile: _block,
+      onOpenSafety: () => _openSafety(context),
+      superLikesLeft: superLikesLeft,
+      showTutorial: !tutorialSeen,
+      onTutorialDone: () => setState(() => tutorialSeen = true),
+    );
+    if (!paused) return deck;
+    return Column(
+      key: const Key('paused-discover'),
+      children: [
+        SafeArea(
+          bottom: false,
+          child: Container(
+            key: const Key('paused-banner'),
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+            decoration: BoxDecoration(
+              color: VawraColors.lavender,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.pause_circle_outline, color: VawraColors.plum),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Your profile is paused. New people cannot see you.',
+                  ),
+                ),
+                TextButton(
+                  key: const Key('resume-profile'),
+                  onPressed: () => _setPaused(false),
+                  child: const Text('Resume'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Expanded(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text(
+                'Discover is resting while your profile is paused. Your matches '
+                'and chats are still here.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openSafety(BuildContext context) => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (_) => const SafetySheet(),
+  );
+
+  void _openSettings(BuildContext context) {
+    final navigator = Navigator.of(context);
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsPage(
+          paused: paused,
+          onPausedChanged: _setPaused,
+          notifications: notificationPrefs,
+          onNotificationChanged: (kind, on) =>
+              setState(() => notificationPrefs[kind] = on),
+          onOpenSafetyGuide: () => DateSafelyGuide.show(context),
+          onOpenSafetyCenter: () => _openSafety(context),
+          onDeleteProfile: () {},
+          onSignOut: () => _signOut(navigator, api),
+        ),
+      ),
+    );
+  }
+
+  Widget _profile(BuildContext context) => SafeArea(
+    child: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 6, 10, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Profile',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              IconButton.filledTonal(
+                key: const Key('open-settings'),
+                tooltip: 'Settings',
+                onPressed: () => _openSettings(context),
+                icon: const Icon(Icons.settings_outlined),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ProfileEditor(
+            initialProfile: profile,
+            onSaved: (updated) async {
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await api.saveProfile(updated);
+                if (mounted) setState(() => profile = updated);
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Profile saved.')),
+                );
+              } catch (e) {
+                if (mounted && !_signedOutBy(e)) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(describeApiError(e))),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final latest = matches.firstOrNull;
+    final answered = {
+      ...interactions.likedProfiles().keys,
+      ...interactions.rejectedProfileAssets(),
+      ...interactions.blockedProfileAssets(),
+    };
+    final pages = [
+      _discover(context),
+      MatchTab(
+        connection: latest == null ? null : _connection(latest),
+        onOpenChat: () {
+          if (latest != null) _openThread(latest);
+        },
+        likesYou: [
+          for (final p in likes.map(_card))
+            if (!answered.contains(p.assetPath)) p,
+        ],
+        onRespond: _swipe,
+      ),
+      ServerChatList(
+        matches: matches,
+        onOpen: _openThread,
+        onOpenSafety: () => DateSafelyGuide.show(context),
+      ),
+      _profile(context),
+    ];
+    return Scaffold(
+      body: IndexedStack(index: tab, children: pages),
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x3D182465),
+              blurRadius: 26,
+              offset: Offset(0, 12),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: NavigationBar(
+            selectedIndex: tab,
+            onDestinationSelected: _selectTab,
+            destinations: [
+              const NavigationDestination(
+                icon: Icon(Icons.explore_outlined),
+                selectedIcon: Icon(Icons.explore_rounded),
+                label: 'Discover',
+              ),
+              NavigationDestination(
+                icon: Badge(
+                  isLabelVisible: likes.isNotEmpty,
+                  child: const Icon(Icons.favorite_outline),
+                ),
+                selectedIcon: const Icon(Icons.favorite_rounded),
+                label: 'Matches',
+              ),
+              const NavigationDestination(
+                key: Key('chat-tab'),
+                icon: Icon(Icons.chat_bubble_outline),
+                selectedIcon: Icon(Icons.chat_bubble_rounded),
+                label: 'Chats',
+              ),
+              const NavigationDestination(
+                key: Key('profile-tab'),
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: 'Profile',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Every active match: new ones as a row of faces, conversations below.
+class ServerChatList extends StatelessWidget {
+  const ServerChatList({
+    super.key,
+    required this.matches,
+    required this.onOpen,
+    required this.onOpenSafety,
+  });
+
+  final List<ServerMatch> matches;
+  final ValueChanged<ServerMatch> onOpen;
+  final VoidCallback onOpenSafety;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fresh = matches.where((m) => m.lastMessage == null).toList();
+    final talking = matches.where((m) => m.lastMessage != null).toList();
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 6, 18, 24),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('Chats', style: theme.textTheme.headlineSmall),
+              ),
+              IconButton(
+                tooltip: 'Date safely',
+                onPressed: onOpenSafety,
+                icon: const Icon(Icons.shield_outlined),
+              ),
+            ],
+          ),
+          if (matches.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 48),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 48,
+                    color: VawraColors.muted,
+                  ),
+                  const SizedBox(height: 12),
+                  Text('No matches yet', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'When you and someone both like each other, you can '
+                    'chat here. Messaging is always free.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          if (fresh.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('New matches', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 104,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: fresh.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (_, i) => InkWell(
+                  key: Key('new-match-${fresh[i].peerName}'),
+                  borderRadius: BorderRadius.circular(40),
+                  onTap: () => onOpen(fresh[i]),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 34,
+                        backgroundColor: VawraColors.coral,
+                        child: CircleAvatar(
+                          radius: 31,
+                          backgroundImage: profileImage(
+                            '$serverPersonPrefix${fresh[i].peerAccountId}',
+                          ),
+                          child: Text(
+                            fresh[i].peerName.characters.first.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: VawraColors.plum,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(fresh[i].peerName),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (talking.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            Text('Messages', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 6),
+            for (final match in talking)
+              ListTile(
+                key: Key('conversation-${match.peerName}'),
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  radius: 28,
+                  backgroundImage: profileImage(
+                    '$serverPersonPrefix${match.peerAccountId}',
+                  ),
+                  child: Text(
+                    match.peerName.characters.first.toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: VawraColors.plum,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  match.peerName,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(
+                  match.lastMessage!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () => onOpen(match),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One conversation, refreshed every few seconds until real-time delivery
+/// exists.
+class ServerThreadPage extends StatefulWidget {
+  const ServerThreadPage({
+    super.key,
+    required this.api,
+    required this.match,
+    this.pollEvery = const Duration(seconds: 3),
+  });
+
+  final VawraApi api;
+  final ServerMatch match;
+  final Duration pollEvery;
+
+  @override
+  State<ServerThreadPage> createState() => _ServerThreadPageState();
+}
+
+class _ServerThreadPageState extends State<ServerThreadPage> {
+  List<ChatMessage> messages = const [];
+  ConnectionStatus status = ConnectionStatus.active;
+  bool callReady = false;
+  SafetyReport? report;
+  Timer? poll;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    poll = Timer.periodic(widget.pollEvery, (_) => _load());
+  }
+
+  @override
+  void dispose() {
+    poll?.cancel();
+    super.dispose();
+  }
+
+  ChatMessage _message(ServerMessage m) => ChatMessage(
+    id: m.id,
+    author: m.mine ? MessageAuthor.currentUser : MessageAuthor.peer,
+    text: m.text,
+    sentAt: m.sentAt,
+  );
+
+  void _closed() {
+    poll?.cancel();
+    if (status == ConnectionStatus.active) {
+      setState(() => status = ConnectionStatus.unmatched);
+    }
+  }
+
+  Future<void> _load() async {
+    if (status != ConnectionStatus.active) return;
+    try {
+      final loaded = await widget.api.messages(widget.match.matchId);
+      if (mounted) setState(() => messages = loaded.map(_message).toList());
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'conversation_closed' || e.status == 404) _closed();
+    } catch (_) {
+      // Offline for a moment; the next poll tries again.
+    }
+  }
+
+  Future<void> _send(String text) async {
+    try {
+      final sent = await widget.api.send(widget.match.matchId, text);
+      if (mounted) setState(() => messages = [...messages, _message(sent)]);
+    } catch (e) {
+      if (!mounted) return;
+      if (e is ApiException && e.code == 'conversation_closed') _closed();
+      _toast(context, describeApiError(e));
+    }
+  }
+
+  Future<void> _act(Future<void> Function() call, VoidCallback after) async {
+    try {
+      await call();
+      if (mounted) setState(after);
+    } catch (e) {
+      if (mounted) _toast(context, describeApiError(e));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: ChatTab(
+      connection: _connection(
+        widget.match,
+        status: status,
+        callReady: callReady,
+      ),
+      messages: messages,
+      report: report,
+      startInThread: true,
+      onBack: () => Navigator.of(context).pop(),
+      onSend: _send,
+      onCallReadinessChanged: (value) => setState(() => callReady = value),
+      onReport: (r) => _act(
+        () => widget.api.report(
+          widget.match.peerAccountId,
+          r.reason.backendKey,
+          messageId: r.messageId,
+        ),
+        () => report = r,
+      ),
+      onUnmatch: () => _act(() => widget.api.unmatch(widget.match.matchId), () {
+        poll?.cancel();
+        status = ConnectionStatus.unmatched;
+      }),
+      onBlock: () =>
+          _act(() => widget.api.block(widget.match.peerAccountId), () {
+            poll?.cancel();
+            status = ConnectionStatus.blocked;
+          }),
+      onOpenSafety: () => DateSafelyGuide.show(context),
+    ),
+  );
+}

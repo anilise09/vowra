@@ -16,7 +16,13 @@ class SettingsPage extends StatefulWidget {
     this.onNotificationChanged,
     this.travelCity,
     this.onTravelCityChanged,
+    this.onSignOut,
   });
+
+  /// Present for a signed-in server account; the page then describes what the
+  /// server keeps instead of the prototype's in-memory session.
+  final VoidCallback? onSignOut;
+  bool get live => onSignOut != null;
 
   /// Notification kinds and whether each is on. Nothing is sent yet.
   final Map<String, bool> notifications;
@@ -105,7 +111,37 @@ class _SettingsPageState extends State<SettingsPage> {
     widget.onPausedChanged(value);
   }
 
+  /// Server deletion needs a fresh sign-in and a scheduled job (see
+  /// docs/DATA_LIFECYCLE_CONTRACT.md); until that ships, say so plainly.
+  Future<void> _deleteNotReady() async {
+    final pause = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const Key('delete-not-ready'),
+        title: const Text('Account deletion is coming'),
+        content: const Text(
+          'Deleting a Vawra account needs a fresh sign-in, and that step '
+          'arrives in the next update. Until then you can pause your '
+          'profile so no one new sees you, and sign out.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Close'),
+          ),
+          if (!paused)
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Pause profile'),
+            ),
+        ],
+      ),
+    );
+    if (pause == true) _setPaused(true);
+  }
+
   Future<void> _confirmDelete() async {
+    if (widget.live) return _deleteNotReady();
     final choice = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -169,14 +205,15 @@ class _SettingsPageState extends State<SettingsPage> {
               value: !paused,
               onChanged: (value) => _setPaused(!value),
             ),
-            _Row(
-              key: const Key('settings-travel'),
-              icon: Icons.flight_takeoff_rounded,
-              title: travelCity == null
-                  ? 'Travel mode: off'
-                  : 'Travel mode: $travelCity',
-              onTap: _pickCity,
-            ),
+            if (widget.onTravelCityChanged != null)
+              _Row(
+                key: const Key('settings-travel'),
+                icon: Icons.flight_takeoff_rounded,
+                title: travelCity == null
+                    ? 'Travel mode: off'
+                    : 'Travel mode: $travelCity',
+                onTap: _pickCity,
+              ),
           ],
         ),
         const _Heading('Notifications'),
@@ -192,12 +229,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   widget.onNotificationChanged?.call(entry.key, on);
                 },
               ),
-            const ListTile(
-              leading: Icon(Icons.info_outline_rounded),
-              title: Text('Nothing is sent yet'),
+            ListTile(
+              leading: const Icon(Icons.info_outline_rounded),
+              title: const Text('Nothing is sent yet'),
               subtitle: Text(
-                'This prototype has no notification service. Your choices '
-                'are kept and will apply when notifications arrive.',
+                '${widget.live ? 'Vawra has no notification service yet' : 'This prototype has no notification service'}. '
+                'Your choices are kept and will '
+                'apply when notifications arrive.',
               ),
             ),
           ],
@@ -219,19 +257,35 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         const _Heading('Privacy'),
-        const _Group(
-          children: [
-            ListTile(
-              leading: Icon(Icons.lock_outline_rounded),
-              title: Text('What this prototype keeps'),
-              subtitle: Text(
-                'Everything stays in this device\'s memory and is gone when '
-                'the app closes. Nothing is uploaded. Others only ever see a '
-                'distance band, never your location.',
+        if (widget.live)
+          const _Group(
+            children: [
+              ListTile(
+                leading: Icon(Icons.lock_outline_rounded),
+                title: Text('What Vawra keeps'),
+                subtitle: Text(
+                  'Your profile, likes, matches and messages are stored on '
+                  'the Vawra server so they reach the people you match. Your '
+                  'email is stored encrypted. Vawra does not collect your '
+                  'location.',
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          )
+        else
+          const _Group(
+            children: [
+              ListTile(
+                leading: Icon(Icons.lock_outline_rounded),
+                title: Text('What this prototype keeps'),
+                subtitle: Text(
+                  'Everything stays in this device\'s memory and is gone when '
+                  'the app closes. Nothing is uploaded. Others only ever see a '
+                  'distance band, never your location.',
+                ),
+              ),
+            ],
+          ),
         const _Heading('Account'),
         _Group(
           children: [
@@ -242,11 +296,20 @@ class _SettingsPageState extends State<SettingsPage> {
               destructive: true,
               onTap: _confirmDelete,
             ),
+            if (widget.onSignOut case final signOut?)
+              _Row(
+                key: const Key('settings-sign-out'),
+                icon: Icons.logout_rounded,
+                title: 'Sign out',
+                onTap: signOut,
+              ),
           ],
         ),
         const SizedBox(height: 18),
-        const Text(
-          'Vawra prototype · matching, messaging, blocking and reporting are always free',
+        Text(
+          widget.live
+              ? 'Vawra · matching, messaging, blocking and reporting are always free'
+              : 'Vawra prototype · matching, messaging, blocking and reporting are always free',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: VawraColors.muted),
         ),

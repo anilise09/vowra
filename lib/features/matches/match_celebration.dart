@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/vawra_theme.dart';
+import '../shared/profile_image.dart';
 
 /// Full-screen moment when a like turns into a match.
 class MatchCelebration extends StatelessWidget {
@@ -89,8 +90,8 @@ class MatchCelebration extends StatelessWidget {
                     Positioned(
                       right: 0,
                       child: _Avatar(
-                        child: Image.asset(
-                          peerPhotoAsset,
+                        child: Image(
+                          image: profileImage(peerPhotoAsset),
                           fit: BoxFit.cover,
                           width: 132,
                           height: 132,

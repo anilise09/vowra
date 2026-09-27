@@ -7,6 +7,7 @@ import '../../domain/local_like_event.dart';
 import '../../domain/match_connection.dart';
 import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
+import '../shared/profile_image.dart';
 import '../discovery/discovery_deck.dart' show LocalActivityCard;
 import '../shared/empty_tab.dart';
 
@@ -88,10 +89,11 @@ class MatchTab extends StatelessWidget {
             const SizedBox(height: 12),
             _NewMatchCard(connection: activeConnection, onOpenChat: onOpenChat),
             const SizedBox(height: 16),
-            const Text(
-              'Synthetic prototype match · not a real person.',
-              textAlign: TextAlign.center,
-            ),
+            if (!isServerPerson(activeConnection.peerProfileAssetPath))
+              const Text(
+                'Synthetic prototype match · not a real person.',
+                textAlign: TextAlign.center,
+              ),
           ],
           if (activity.isNotEmpty) ...[
             const SizedBox(height: 22),
@@ -120,7 +122,7 @@ class _NewMatchCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           image: DecorationImage(
-            image: AssetImage(activeConnection.peerProfileAssetPath),
+            image: profileImage(activeConnection.peerProfileAssetPath),
             fit: BoxFit.cover,
           ),
           boxShadow: const [
@@ -228,11 +230,11 @@ class _LikesYouTile extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(
-                  profile.assetPath,
+                Image(
+                  image: profileImage(profile.assetPath),
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
-                  semanticLabel: 'Synthetic portrait of ${profile.name}',
+                  semanticLabel: portraitLabel(profile.name, profile.assetPath),
                 ),
                 const DecoratedBox(
                   decoration: BoxDecoration(
@@ -366,6 +368,7 @@ class ChatTab extends StatefulWidget {
     required this.onOpenSafety,
     this.startInThread = false,
     this.openThreadRequest = 0,
+    this.onBack,
   });
 
   final MatchConnection? connection;
@@ -383,6 +386,9 @@ class ChatTab extends StatefulWidget {
 
   /// Increase to jump into the conversation, e.g. from "Send a message".
   final int openThreadRequest;
+
+  /// Replaces the thread's back action, e.g. when the thread is its own page.
+  final VoidCallback? onBack;
 
   @override
   State<ChatTab> createState() => _ChatTabState();
@@ -568,7 +574,7 @@ class _ChatTabState extends State<ChatTab> {
                   backgroundColor: VawraColors.coral,
                   child: CircleAvatar(
                     radius: 31,
-                    backgroundImage: AssetImage(match.peerProfileAssetPath),
+                    backgroundImage: profileImage(match.peerProfileAssetPath),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -585,7 +591,7 @@ class _ChatTabState extends State<ChatTab> {
           contentPadding: EdgeInsets.zero,
           leading: CircleAvatar(
             radius: 28,
-            backgroundImage: AssetImage(match.peerProfileAssetPath),
+            backgroundImage: profileImage(match.peerProfileAssetPath),
           ),
           title: Text(
             match.peerName,
@@ -621,12 +627,13 @@ class _ChatTabState extends State<ChatTab> {
               IconButton(
                 key: const Key('thread-back'),
                 tooltip: 'Back to chats',
-                onPressed: () => setState(() => inThread = false),
+                onPressed:
+                    widget.onBack ?? () => setState(() => inThread = false),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
               CircleAvatar(
                 radius: 21,
-                backgroundImage: AssetImage(match.peerProfileAssetPath),
+                backgroundImage: profileImage(match.peerProfileAssetPath),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -637,8 +644,10 @@ class _ChatTabState extends State<ChatTab> {
                       match.peerName,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const Text(
-                      'Matched · prototype chat',
+                    Text(
+                      isServerPerson(match.peerProfileAssetPath)
+                          ? 'Matched on Vawra'
+                          : 'Matched · prototype chat',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 12),

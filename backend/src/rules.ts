@@ -39,6 +39,9 @@ export function validateBio(value: string): string | null {
 
 export const messageRules = { maxCharacters: 1000, maxPerMinute: 5 } as const;
 
+/** Free Super Likes in any rolling 24 hours; the app shows the same number. */
+export const swipeRules = { superLikesPerDay: 3 } as const;
+
 /** Trims, collapses runs of spaces/tabs, and rejects blank or control text. */
 export function normalizeMessage(value: string): { text: string } | { error: string } {
   const text = value.trim().replace(/[ \t]+/g, ' ');

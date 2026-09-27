@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'data/api/vawra_api.dart';
 import 'data/discovery_interaction_repository.dart';
 import 'data/discovery_safety_service.dart';
 import 'data/match_repository.dart';
@@ -22,23 +23,35 @@ import 'features/matches/match_tabs.dart';
 import 'features/onboarding/onboarding_flow.dart';
 import 'features/profile/profile_editor.dart';
 import 'features/settings/settings_page.dart';
+import 'server/server_flow.dart';
 import 'theme/vawra_theme.dart';
 
-void main() => runApp(const VawraApp());
+/// Without --dart-define=VAWRA_API=... the app is the offline prototype.
+void main() => runApp(
+  VawraApp(
+    api: vawraApiBase.isEmpty ? null : VawraApi(Uri.parse(vawraApiBase)),
+  ),
+);
 
 class VawraApp extends StatelessWidget {
-  const VawraApp({super.key});
+  const VawraApp({super.key, this.api});
+
+  /// Set when the app talks to a Vawra server.
+  final VawraApi? api;
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     title: 'Vawra',
     theme: VawraTheme.light,
-    home: const WelcomeScreen(),
+    home: WelcomeScreen(api: api),
   );
 }
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, this.api});
+
+  final VawraApi? api;
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
@@ -168,8 +181,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           const SizedBox(height: 14),
                           FilledButton.icon(
                             key: const Key('continue-button'),
-                            onPressed: isAdult && acceptsRules
+                            onPressed: !(isAdult && acceptsRules)
+                                ? null
+                                : widget.api != null
                                 ? () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          SignInScreen(api: widget.api!),
+                                    ),
+                                  )
+                                : () => Navigator.of(context).push(
                                     MaterialPageRoute<void>(
                                       builder: (_) => OnboardingFlow(
                                         onComplete: (profile) =>
@@ -185,14 +206,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                             ),
                                       ),
                                     ),
-                                  )
-                                : null,
+                                  ),
                             icon: const Icon(Icons.favorite_rounded),
-                            label: const Text('Create my profile'),
+                            label: Text(
+                              widget.api == null
+                                  ? 'Create my profile'
+                                  : 'Continue with email',
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Prototype only · no account or upload is created',
+                          Text(
+                            widget.api == null
+                                ? 'Prototype only · no account or upload is created'
+                                : 'A one-time code, no password',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 12,
