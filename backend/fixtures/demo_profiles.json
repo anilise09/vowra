@@ -1,0 +1,3122 @@
+[
+ {
+  "name": "Maya",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Sunday markets, tiny concerts, and ambitious pasta experiments.",
+  "interests": [
+   "Kindness",
+   "Live music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/maya.png"
+ },
+ {
+  "name": "Elena",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Bookshop regular, neighborhood explorer, and enthusiastic brunch host.",
+  "interests": [
+   "Books",
+   "Cooking",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/elena.png"
+ },
+ {
+  "name": "Amina",
+  "age": 27,
+  "intent_label": "Open to long-term",
+  "bio": "Plant lover, weekend cyclist, and always looking for a new gallery.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/amina.png"
+ },
+ {
+  "name": "Sofia",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Farmers markets, live jazz, and dinners that run pleasantly late.",
+  "interests": [
+   "Music",
+   "Cooking",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/sofia.png"
+ },
+ {
+  "name": "Mei",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Museum afternoons, design books, and finding the best noodles in town.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/mei.png"
+ },
+ {
+  "name": "Nadia",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside walks, contemporary fiction, and finding the perfect flatbread.",
+  "interests": [
+   "Books",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/nadia.png"
+ },
+ {
+  "name": "Grace",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Early bakery runs, dance classes, and hosting game nights.",
+  "interests": [
+   "Cooking",
+   "Fitness",
+   "Music"
+  ],
+  "portrait": "assets/profiles/grace.png"
+ },
+ {
+  "name": "Valentina",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden weekends, live theater, and making travel plans over coffee.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/valentina.png"
+ },
+ {
+  "name": "Leila",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Gallery openings, architecture walks, and slow Sunday breakfasts.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/leila.png"
+ },
+ {
+  "name": "Chloe",
+  "age": 26,
+  "intent_label": "Long-term relationship",
+  "bio": "Lakeside picnics, indie films, and learning new recipes.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/chloe.png"
+ },
+ {
+  "name": "Camila",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "City gardens, weekend dancing, and sharing ambitious home cooking.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/camila.png"
+ },
+ {
+  "name": "Derya",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront walks, live comedy, and a carefully curated reading list.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Outdoors"
+  ],
+  "portrait": "assets/profiles/derya.png"
+ },
+ {
+  "name": "Thuy",
+  "age": 37,
+  "intent_label": "Long-term relationship",
+  "bio": "Libraries, quiet courtyards, and planning trips around great food.",
+  "interests": [
+   "Books",
+   "Travel",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/thuy.png"
+ },
+ {
+  "name": "Selam",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical walks, dance workouts, and trying every café nearby.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/selam.png"
+ },
+ {
+  "name": "Amelie",
+  "age": 27,
+  "intent_label": "Long-term relationship",
+  "bio": "Flower markets, sketchbooks, and films with excellent soundtracks.",
+  "interests": [
+   "Arts",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/amelie.png"
+ },
+ {
+  "name": "Zuri",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Community gardens, morning runs, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/zuri.png"
+ },
+ {
+  "name": "Ines",
+  "age": 35,
+  "intent_label": "Open to long-term",
+  "bio": "City overlooks, pottery classes, and slow weekend breakfasts.",
+  "interests": [
+   "Arts",
+   "Travel",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ines.png"
+ },
+ {
+  "name": "Yara",
+  "age": 28,
+  "intent_label": "Long-term relationship",
+  "bio": "Courtyard cafés, contemporary novels, and live acoustic sets.",
+  "interests": [
+   "Books",
+   "Music",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/yara.png"
+ },
+ {
+  "name": "Sari",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside cycling, design markets, and finding excellent noodles.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/sari.png"
+ },
+ {
+  "name": "Anya",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Outdoor book stalls, classical concerts, and winter walks.",
+  "interests": [
+   "Books",
+   "Music",
+   "Outdoors"
+  ],
+  "portrait": "assets/profiles/anya.png"
+ },
+ {
+  "name": "Aisha",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Tropical gardens, craft workshops, and long weekend lunches.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/aisha.png"
+ },
+ {
+  "name": "Lucia",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront sunsets, salsa nights, and neighborhood food finds.",
+  "interests": [
+   "Music",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/lucia.png"
+ },
+ {
+  "name": "Kasia",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Autumn walks, mystery novels, and learning new recipes.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kasia.png"
+ },
+ {
+  "name": "Hodan",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical courtyards, thoughtful conversation, and museum weekends.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/hodan.png"
+ },
+ {
+  "name": "Mariam",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Golden-hour walks, family recipes, and independent films.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/mariam.png"
+ },
+ {
+  "name": "Noura",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Coastal gardens, jazz evenings, and shared meals.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/noura.png"
+ },
+ {
+  "name": "Elise",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Sculpture parks, cycling, and quiet Sunday cafés.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Books"
+  ],
+  "portrait": "assets/profiles/elise.png"
+ },
+ {
+  "name": "Adwoa",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden walks, live music, and dinner with friends.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/adwoa.png"
+ },
+ {
+  "name": "Rina",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront walks, design exhibits, and weekend travel.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/rina.png"
+ },
+ {
+  "name": "Milena",
+  "age": 39,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside evenings, novels, and ambitious baking.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/milena.png"
+ },
+ {
+  "name": "Samira",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden walks, music, and shared dinners.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/samira.png"
+ },
+ {
+  "name": "Maeve",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Coastal paths, novels, and live shows.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/maeve.png"
+ },
+ {
+  "name": "Lindiwe",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical walks, dance, and weekend cooking.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/lindiwe.png"
+ },
+ {
+  "name": "Petra",
+  "age": 35,
+  "intent_label": "Open to long-term",
+  "bio": "Marina evenings, photography, and travel.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/petra.png"
+ },
+ {
+  "name": "Noor",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Courtyard cafés, books, and museum days.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/noor.png"
+ },
+ {
+  "name": "Nino",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Hillside gardens, architecture, and long dinners.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/nino.png"
+ },
+ {
+  "name": "Marisol",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical walks, dancing, and weekend markets.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/marisol.png"
+ },
+ {
+  "name": "Keza",
+  "age": 37,
+  "intent_label": "Long-term relationship",
+  "bio": "Lakeside walks, books, and live jazz.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/keza.png"
+ },
+ {
+  "name": "Aino",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Harbor gardens, design, and hiking weekends.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/aino.png"
+ },
+ {
+  "name": "Rima",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Stone courtyards, museums, and shared recipes.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/rima.png"
+ },
+ {
+  "name": "Oksana",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Courtyard gardens, architecture, and weekend baking.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/oksana.png"
+ },
+ {
+  "name": "Isidora",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical walks, dancing, and independent films.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/isidora.png"
+ },
+ {
+  "name": "Abena",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden afternoons, live music, and dinner with friends.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/abena.png"
+ },
+ {
+  "name": "Freyja",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront walks, design books, and quiet road trips.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/freyja.png"
+ },
+ {
+  "name": "Dalia",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Stone courtyards, family recipes, and museum weekends.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/dalia.png"
+ },
+ {
+  "name": "Irina",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Old-town walks, architecture, and relaxed dinner parties.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/elena_ro.png"
+ },
+ {
+  "name": "Awa",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside gardens, live music, and Sunday reading.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Books"
+  ],
+  "portrait": "assets/profiles/awa.png"
+ },
+ {
+  "name": "Anahit",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Mountain views, museums, and trying new recipes.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/anahit.png"
+ },
+ {
+  "name": "Simone",
+  "age": 35,
+  "intent_label": "Open to long-term",
+  "bio": "Coastal gardens, dancing, and spontaneous road trips.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/simone.png"
+ },
+ {
+  "name": "Margot",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Canal walks, design books, and intimate concerts.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/elise_be.png"
+ },
+ {
+  "name": "Kavya",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Campus gardens, indie films, and experimental cooking.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_kavya.png"
+ },
+ {
+  "name": "Meera",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront walks, novels, and hosting relaxed dinners.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_meera.png"
+ },
+ {
+  "name": "Zoya",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Gallery courtyards, live music, and weekend travel.",
+  "interests": [
+   "Arts",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ind_zoya.png"
+ },
+ {
+  "name": "Nandini",
+  "age": 37,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical afternoons, architecture, and family recipes.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_nandini.png"
+ },
+ {
+  "name": "Rhea",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "City parks, morning runs, and spontaneous road trips.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ind_rhea.png"
+ },
+ {
+  "name": "Tara",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Library gardens, book clubs, and relaxed neighborhood dinners.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_tara.png"
+ },
+ {
+  "name": "Isha",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside evenings, live music, and photography walks.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/ind_isha.png"
+ },
+ {
+  "name": "Priya",
+  "age": 27,
+  "intent_label": "Long-term relationship",
+  "bio": "City plazas, morning runs, and weekend road trips.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ind_priya.png"
+ },
+ {
+  "name": "Leela",
+  "age": 39,
+  "intent_label": "Open to long-term",
+  "bio": "Heritage gardens, architecture, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_leela.png"
+ },
+ {
+  "name": "Sana",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Coastal parks, novels, and finding small live venues.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/ind_sana.png"
+ },
+ {
+  "name": "Ayesha",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "University gardens, design podcasts, and weekend baking.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pak_ayesha.png"
+ },
+ {
+  "name": "Hira",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside walks, books, and small live shows.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/pak_hira.png"
+ },
+ {
+  "name": "Mahnoor",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Arts courtyards, photography, and spontaneous travel.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/pak_mahnoor.png"
+ },
+ {
+  "name": "Saba",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical afternoons, architecture, and relaxed dinners.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pak_saba.png"
+ },
+ {
+  "name": "Alina",
+  "age": 27,
+  "intent_label": "Open to long-term",
+  "bio": "City parks, morning runs, and film nights.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/pak_alina.png"
+ },
+ {
+  "name": "Eman",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Bookshop courtyards, design podcasts, and weekend baking.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pak_eman.png"
+ },
+ {
+  "name": "Laiba",
+  "age": 34,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside gardens, live music, and relaxed city breaks.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/pak_laiba.png"
+ },
+ {
+  "name": "Mehwish",
+  "age": 39,
+  "intent_label": "Long-term relationship",
+  "bio": "Arts courtyards, photography, and dinners with friends.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pak_mehwish.png"
+ },
+ {
+  "name": "Rabia",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical walks, morning fitness, and independent films.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/pak_rabia.png"
+ },
+ {
+  "name": "Sidra",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Museum gardens, thoughtful books, and long weekend drives.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/pak_sidra.png"
+ },
+ {
+  "name": "Tasnim",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical courtyards, design books, and weekend baking.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/bd_tasnim.png"
+ },
+ {
+  "name": "Nusrat",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside evenings, live music, and relaxed city walks.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_nusrat.png"
+ },
+ {
+  "name": "Farzana",
+  "age": 40,
+  "intent_label": "Open to long-term",
+  "bio": "Arts gardens, photography, and cooking for friends.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/bd_farzana.png"
+ },
+ {
+  "name": "Jannat",
+  "age": 27,
+  "intent_label": "Long-term relationship",
+  "bio": "Cycling paths, morning workouts, and independent films.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/bd_jannat.png"
+ },
+ {
+  "name": "Rukhsana",
+  "age": 33,
+  "intent_label": "Open to long-term",
+  "bio": "Museum courtyards, thoughtful novels, and road trips.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_rukhsana.png"
+ },
+ {
+  "name": "Sharmin",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Library gardens, thoughtful books, and neighborhood dinners.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/bd_sharmin.png"
+ },
+ {
+  "name": "Mitu",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside parks, live shows, and spontaneous city breaks.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_mitu.png"
+ },
+ {
+  "name": "Tanjila",
+  "age": 37,
+  "intent_label": "Long-term relationship",
+  "bio": "Architecture walks, photography, and relaxed cooking.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/bd_tanjila.png"
+ },
+ {
+  "name": "Lamis",
+  "age": 34,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside art, morning fitness, and independent films.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Outdoors"
+  ],
+  "portrait": "assets/profiles/bd_lamis.png"
+ },
+ {
+  "name": "Nabila",
+  "age": 41,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical terraces, novels, and long weekend drives.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_nabila.png"
+ },
+ {
+  "name": "Yuxin",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Bookshop afternoons, urban sketching, and trying new noodle spots.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/cn_yuxin.png"
+ },
+ {
+  "name": "Wenqi",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside cycling, live jazz, and carefully planned weekend trips.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/cn_wenqi.png"
+ },
+ {
+  "name": "Xinyi",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Contemporary galleries, botanical walks, and dinner parties with friends.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/cn_xinyi.png"
+ },
+ {
+  "name": "Jia",
+  "age": 37,
+  "intent_label": "Long-term relationship",
+  "bio": "Architecture podcasts, literary fiction, and quiet coastal escapes.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/cn_jia.png"
+ },
+ {
+  "name": "Ruolan",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Morning runs, independent films, and finding intimate concert venues.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Music"
+  ],
+  "portrait": "assets/profiles/cn_ruolan.png"
+ },
+ {
+  "name": "Lihua",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Library courtyards, literary fiction, and home cooking.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/cn_lihua.png"
+ },
+ {
+  "name": "Mengyao",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside cycling, live shows, and weekend city breaks.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/cn_mengyao.png"
+ },
+ {
+  "name": "Qian",
+  "age": 39,
+  "intent_label": "Long-term relationship",
+  "bio": "Sculpture gardens, architecture, and dinners with friends.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/cn_qian.png"
+ },
+ {
+  "name": "Shanshan",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Flower markets, photography, and independent films.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Books"
+  ],
+  "portrait": "assets/profiles/cn_shanshan.png"
+ },
+ {
+  "name": "Xiaoyu",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Coastal hikes, travel writing, and acoustic music.",
+  "interests": [
+   "Outdoors",
+   "Travel",
+   "Music"
+  ],
+  "portrait": "assets/profiles/cn_xiaoyu.png"
+ },
+ {
+  "name": "Aiko",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical afternoons, design books, and relaxed home cooking.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jp_aiko.png"
+ },
+ {
+  "name": "Emi",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront walks, live jazz, and carefully planned getaways.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_emi.png"
+ },
+ {
+  "name": "Nanami",
+  "age": 27,
+  "intent_label": "Open to long-term",
+  "bio": "Ceramics studios, independent films, and neighborhood cafes.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jp_nanami.png"
+ },
+ {
+  "name": "Sayaka",
+  "age": 40,
+  "intent_label": "Long-term relationship",
+  "bio": "Sculpture gardens, architecture, and long weekend drives.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_sayaka.png"
+ },
+ {
+  "name": "Yui",
+  "age": 33,
+  "intent_label": "Open to long-term",
+  "bio": "Cycling paths, photography walks, and intimate concerts.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Music"
+  ],
+  "portrait": "assets/profiles/jp_yui.png"
+ },
+ {
+  "name": "Akari",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Rose gardens, illustration books, and weekend baking.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jp_akari.png"
+ },
+ {
+  "name": "Chihiro",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Canal walks, thoughtful novels, and live acoustic sets.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/jp_chihiro.png"
+ },
+ {
+  "name": "Kaori",
+  "age": 41,
+  "intent_label": "Open to long-term",
+  "bio": "Modern architecture, photography, and relaxed city breaks.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_kaori.png"
+ },
+ {
+  "name": "Misaki",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Coastal trails, morning fitness, and independent cinema.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/jp_misaki.png"
+ },
+ {
+  "name": "Tomomi",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "Library gardens, home cooking, and long weekend drives.",
+  "interests": [
+   "Books",
+   "Cooking",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_tomomi.png"
+ },
+ {
+  "name": "Althea",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Campus gardens, illustration, and trying new recipes.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ph_althea.png"
+ },
+ {
+  "name": "Bianca",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront walks, live music, and weekend escapes.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ph_bianca.png"
+ },
+ {
+  "name": "Camille",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Arts centers, photography, and relaxed dinner parties.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ph_camille.png"
+ },
+ {
+  "name": "Denise",
+  "age": 39,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical afternoons, literary fiction, and acoustic shows.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/ph_denise.png"
+ },
+ {
+  "name": "Mariel",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Coastal paths, morning fitness, and spontaneous road trips.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ph_mariel.png"
+ },
+ {
+  "name": "Bea",
+  "age": 26,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside cycling, graphic novels, and weekend food hunts.",
+  "interests": [
+   "Fitness",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ph_bea.png"
+ },
+ {
+  "name": "Celeste",
+  "age": 43,
+  "intent_label": "Long-term relationship",
+  "bio": "Library courtyards, architecture, and intimate jazz sets.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Music"
+  ],
+  "portrait": "assets/profiles/ph_celeste.png"
+ },
+ {
+  "name": "Inez",
+  "age": 32,
+  "intent_label": "Open to long-term",
+  "bio": "Community gardens, photography, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ph_inez.png"
+ },
+ {
+  "name": "Katrina",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Coastal hikes, morning training, and spontaneous travel.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ph_katrina.png"
+ },
+ {
+  "name": "Liza",
+  "age": 47,
+  "intent_label": "Open to long-term",
+  "bio": "Sculpture parks, literary memoirs, and relaxed dinners.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ph_liza.png"
+ },
+ {
+  "name": "Jisoo",
+  "age": 27,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside walks, illustration, and weekend baking.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kr_jisoo.png"
+ },
+ {
+  "name": "Minji",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Library gardens, literary fiction, and intimate concerts.",
+  "interests": [
+   "Books",
+   "Outdoors",
+   "Music"
+  ],
+  "portrait": "assets/profiles/kr_minji.png"
+ },
+ {
+  "name": "Sora",
+  "age": 42,
+  "intent_label": "Open to long-term",
+  "bio": "Sculpture courtyards, architecture, and relaxed travel.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/kr_sora.png"
+ },
+ {
+  "name": "Yuna",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Coastal trails, morning fitness, and photography walks.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/kr_yuna.png"
+ },
+ {
+  "name": "Hyejin",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical afternoons, thoughtful books, and dinner parties.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kr_hyejin.png"
+ },
+ {
+  "name": "Eunchae",
+  "age": 26,
+  "intent_label": "Open to long-term",
+  "bio": "Ceramics workshops, tiny galleries, and experimental baking.",
+  "interests": [
+   "Arts",
+   "Cooking",
+   "Outdoors"
+  ],
+  "portrait": "assets/profiles/kr_eunchae.png"
+ },
+ {
+  "name": "Dabin",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Community gardens, trail runs, and cooking from scratch.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kr_dabin.png"
+ },
+ {
+  "name": "Nari",
+  "age": 41,
+  "intent_label": "Open to long-term",
+  "bio": "Architecture walks, essay collections, and quiet city breaks.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/kr_nari.png"
+ },
+ {
+  "name": "Seoyeon",
+  "age": 47,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront mornings, folk playlists, and lively dinner tables.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kr_seoyeon.png"
+ },
+ {
+  "name": "Mirae",
+  "age": 52,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical sketches, memoirs, and unhurried train journeys.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/kr_mirae.png"
+ },
+ {
+  "name": "Ximena",
+  "age": 25,
+  "intent_label": "Open to long-term",
+  "bio": "Sculpture courtyards, morning runs, and late-night playlists.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Music"
+  ],
+  "portrait": "assets/profiles/mx_ximena.png"
+ },
+ {
+  "name": "Renata",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Rooftop gardens, design books, and relaxed weekend cooking.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/mx_renata.png"
+ },
+ {
+  "name": "Paloma",
+  "age": 39,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside walks, live vocals, and dinner with a full table.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/mx_paloma.png"
+ },
+ {
+  "name": "Itzel",
+  "age": 46,
+  "intent_label": "Long-term relationship",
+  "bio": "Modern art, architecture trips, and quiet literary essays.",
+  "interests": [
+   "Arts",
+   "Travel",
+   "Books"
+  ],
+  "portrait": "assets/profiles/mx_itzel.png"
+ },
+ {
+  "name": "Fernanda",
+  "age": 53,
+  "intent_label": "Open to long-term",
+  "bio": "Coastal trails, botanical sketches, and thoughtful memoirs.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Books"
+  ],
+  "portrait": "assets/profiles/mx_fernanda.png"
+ },
+ {
+  "name": "Abril",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Library courtyards, illustrated essays, and finding new running routes.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Fitness"
+  ],
+  "portrait": "assets/profiles/mx_abril.png"
+ },
+ {
+  "name": "Marisol",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Ceramics afternoons, neighborhood gardens, and ambitious weekend meals.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/mx_marisol.png"
+ },
+ {
+  "name": "Nayeli",
+  "age": 43,
+  "intent_label": "Long-term relationship",
+  "bio": "Conservatory walks, live jazz, and slow journeys with a good book.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/mx_nayeli.png"
+ },
+ {
+  "name": "Adriana",
+  "age": 50,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront mornings, modern architecture, and thoughtful memoirs.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Books"
+  ],
+  "portrait": "assets/profiles/mx_adriana.png"
+ },
+ {
+  "name": "Teresa",
+  "age": 59,
+  "intent_label": "Long-term relationship",
+  "bio": "Community gardens, family recipes, and music that fills the kitchen.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Music"
+  ],
+  "portrait": "assets/profiles/mx_teresa.png"
+ },
+ {
+  "name": "Marcus",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Coffee walks, pickup basketball, and cooking for friends.",
+  "interests": [
+   "Fitness",
+   "Cooking",
+   "Music"
+  ],
+  "portrait": "assets/profiles/marcus.png"
+ },
+ {
+  "name": "Daniel",
+  "age": 34,
+  "intent_label": "Open to long-term",
+  "bio": "Record collector, amateur photographer, and reliable road-trip DJ.",
+  "interests": [
+   "Music",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/daniel.png"
+ },
+ {
+  "name": "Arjun",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Runner, home cook, and the person who reads every museum label.",
+  "interests": [
+   "Fitness",
+   "Cooking",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/arjun.png"
+ },
+ {
+  "name": "Ethan",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Community gardener, history reader, and beginner bread baker.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ethan.png"
+ },
+ {
+  "name": "Minjun",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "City walks, independent films, and planning the next hiking weekend.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/minjun.png"
+ },
+ {
+  "name": "Jamal",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical gardens, jazz playlists, and cooking with friends.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jamal.png"
+ },
+ {
+  "name": "Luca",
+  "age": 35,
+  "intent_label": "Open to long-term",
+  "bio": "Old-town cafés, cycling, and an unreasonable number of cookbooks.",
+  "interests": [
+   "Fitness",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/luca.png"
+ },
+ {
+  "name": "Tomas",
+  "age": 28,
+  "intent_label": "Long-term relationship",
+  "bio": "Weekend football, street photography, and hunting down great tacos.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/tomas.png"
+ },
+ {
+  "name": "Andre",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront runs, soul records, and planning relaxed dinner parties.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/andre.png"
+ },
+ {
+  "name": "Noah",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Mountain trails, small-town cafés, and documentary nights.",
+  "interests": [
+   "Outdoors",
+   "Travel",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/noah.png"
+ },
+ {
+  "name": "Kwame",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Public gardens, live percussion, and cooking for a full table.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kwame.png"
+ },
+ {
+  "name": "Ronan",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Coastal hikes, history podcasts, and finding welcoming pubs.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ronan.png"
+ },
+ {
+  "name": "Omar",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Museum afternoons, pickup football, and perfecting breakfast.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/omar.png"
+ },
+ {
+  "name": "Niran",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Rainy park walks, street food, and a growing vinyl collection.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Music"
+  ],
+  "portrait": "assets/profiles/niran.png"
+ },
+ {
+  "name": "Nikos",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Marina evenings, architecture, and hosting relaxed Sunday lunches.",
+  "interests": [
+   "Travel",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/nikos.png"
+ },
+ {
+  "name": "Mateo",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Colorful neighborhoods, weekend football, and sunset photography.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/mateo.png"
+ },
+ {
+  "name": "Emmanuel",
+  "age": 35,
+  "intent_label": "Open to long-term",
+  "bio": "Public gardens, contemporary art, and elaborate Sunday dinners.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/emmanuel.png"
+ },
+ {
+  "name": "Tane",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront trails, social basketball, and discovering new music.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Music"
+  ],
+  "portrait": "assets/profiles/tane.png"
+ },
+ {
+  "name": "Pavel",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Old-town walks, history books, and experimenting with bread.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pavel.png"
+ },
+ {
+  "name": "Farid",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical gardens, documentary films, and generous dinner tables.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/farid.png"
+ },
+ {
+  "name": "Daan",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Canal cycling, live music, and experimental home cooking.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/daan.png"
+ },
+ {
+  "name": "Idrissa",
+  "age": 35,
+  "intent_label": "Open to long-term",
+  "bio": "Art spaces, community events, and a great Sunday playlist.",
+  "interests": [
+   "Arts",
+   "Music",
+   "Outdoors"
+  ],
+  "portrait": "assets/profiles/idrissa.png"
+ },
+ {
+  "name": "Sebastian",
+  "age": 28,
+  "intent_label": "Long-term relationship",
+  "bio": "Hilltop hikes, street photography, and late coffee.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/sebastian.png"
+ },
+ {
+  "name": "Andrei",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Old-town walks, tennis, and hosting relaxed dinners.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/andrei.png"
+ },
+ {
+  "name": "Timur",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Modern gardens, architecture books, and weekend road trips.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/timur.png"
+ },
+ {
+  "name": "Youssef",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Courtyard cafés, running, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/youssef.png"
+ },
+ {
+  "name": "Henrik",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "Harbor walks, design books, and live concerts.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/henrik.png"
+ },
+ {
+  "name": "Chinedu",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical trails, basketball, and film nights.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/chinedu.png"
+ },
+ {
+  "name": "Rafael",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "City plazas, street photography, and weekend cooking.",
+  "interests": [
+   "Arts",
+   "Travel",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/rafael.png"
+ },
+ {
+  "name": "Batu",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Public gardens, hiking, and architecture podcasts.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Books"
+  ],
+  "portrait": "assets/profiles/batu.png"
+ },
+ {
+  "name": "Karim",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Seaside walks, running, and home cooking.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/karim.png"
+ },
+ {
+  "name": "Marek",
+  "age": 33,
+  "intent_label": "Open to long-term",
+  "bio": "River walks, history, and small concerts.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/marek.png"
+ },
+ {
+  "name": "Tendai",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "City gardens, jazz, and dinner parties.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/tendai.png"
+ },
+ {
+  "name": "Joao",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "City overlooks, football, and photography.",
+  "interests": [
+   "Travel",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/joao.png"
+ },
+ {
+  "name": "Ari",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Harbor trails, hiking, and film nights.",
+  "interests": [
+   "Outdoors",
+   "Travel",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/ari.png"
+ },
+ {
+  "name": "Diego",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Hilltop walks, football, and photography.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/diego.png"
+ },
+ {
+  "name": "Dawit",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical trails, jazz, and Sunday cooking.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/dawit.png"
+ },
+ {
+  "name": "Lars",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront hikes, books, and live shows.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/lars.png"
+ },
+ {
+  "name": "Giorgi",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Garden terraces, architecture, and dinner parties.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/giorgi.png"
+ },
+ {
+  "name": "Sami",
+  "age": 28,
+  "intent_label": "Long-term relationship",
+  "bio": "Coastal walks, running, and weekend travel.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/sami.png"
+ },
+ {
+  "name": "Luka",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Seaside walks, photography, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/luka.png"
+ },
+ {
+  "name": "Nicolas",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Hillside trails, live music, and weekend travel.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/nicolas.png"
+ },
+ {
+  "name": "Kato",
+  "age": 39,
+  "intent_label": "Long-term relationship",
+  "bio": "Lakeside gardens, jazz records, and Sunday brunch.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kato.png"
+ },
+ {
+  "name": "Mikkel",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront runs, novels, and small concerts.",
+  "interests": [
+   "Fitness",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/mikkel.png"
+ },
+ {
+  "name": "Yacine",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden terraces, architecture, and coastal drives.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/yacine.png"
+ },
+ {
+  "name": "Stefan",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside walks, photography, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/stefan.png"
+ },
+ {
+  "name": "Andres",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Botanical trails, live shows, and weekend travel.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/andres.png"
+ },
+ {
+  "name": "Alain",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden afternoons, jazz, and ambitious home cooking.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/alain.png"
+ },
+ {
+  "name": "Cian",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Coastal hikes, novels, and small live venues.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/cian.png"
+ },
+ {
+  "name": "Zaid",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Courtyard gardens, architecture, and long weekend drives.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/omar_jo.png"
+ },
+ {
+  "name": "Vihaan",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Tree-lined walks, photography, and Sunday cooking.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_vihaan.png"
+ },
+ {
+  "name": "Kabir",
+  "age": 36,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside paths, jazz playlists, and history books.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Books"
+  ],
+  "portrait": "assets/profiles/ind_kabir.png"
+ },
+ {
+  "name": "Rohan",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden runs, live shows, and weekend getaways.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ind_rohan.png"
+ },
+ {
+  "name": "Dev",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "Stone courtyards, architecture, and ambitious dinners.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_dev.png"
+ },
+ {
+  "name": "Imran",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside evenings, books, and planning the next trip.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ind_imran.png"
+ },
+ {
+  "name": "Neel",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "Museum gardens, design, and Sunday brunch experiments.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_neel.png"
+ },
+ {
+  "name": "Aditya",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Leafy trails, history books, and acoustic shows.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/ind_aditya.png"
+ },
+ {
+  "name": "Sameer",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront walks, fitness, and spontaneous travel.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ind_sameer.png"
+ },
+ {
+  "name": "Kunal",
+  "age": 40,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical terraces, jazz, and hosting dinner nights.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ind_kunal.png"
+ },
+ {
+  "name": "Aarav",
+  "age": 34,
+  "intent_label": "Open to long-term",
+  "bio": "Arts campuses, architecture, and long weekend drives.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ind_aarav.png"
+ },
+ {
+  "name": "Hamza",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Tree-lined walks, photography, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pak_hamza.png"
+ },
+ {
+  "name": "Bilal",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside paths, history books, and jazz.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/pak_bilal.png"
+ },
+ {
+  "name": "Usman",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Garden runs, live shows, and weekend travel.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/pak_usman.png"
+ },
+ {
+  "name": "Farhan",
+  "age": 40,
+  "intent_label": "Open to long-term",
+  "bio": "Courtyard architecture, novels, and Sunday cooking.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pak_farhan.png"
+ },
+ {
+  "name": "Daniyal",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront evenings, music, and long road trips.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/pak_daniyal.png"
+ },
+ {
+  "name": "Shahzaib",
+  "age": 31,
+  "intent_label": "Open to long-term",
+  "bio": "University walks, pickup games, and neighborhood cafés.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/pak_shahzaib.png"
+ },
+ {
+  "name": "Fahad",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Cultural centers, history books, and acoustic shows.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/pak_fahad.png"
+ },
+ {
+  "name": "Waleed",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "City-park runs, photography, and spontaneous travel.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/pak_waleed.png"
+ },
+ {
+  "name": "Noman",
+  "age": 41,
+  "intent_label": "Long-term relationship",
+  "bio": "Heritage gardens, ambitious cooking, and jazz evenings.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Music"
+  ],
+  "portrait": "assets/profiles/pak_noman.png"
+ },
+ {
+  "name": "Saad",
+  "age": 33,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront walks, design, and relaxed road trips.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/pak_saad.png"
+ },
+ {
+  "name": "Tanvir",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "University walks, photography, and neighborhood cafés.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/bd_tanvir.png"
+ },
+ {
+  "name": "Shakib",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside routes, history books, and live jazz.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/bd_shakib.png"
+ },
+ {
+  "name": "Mahmud",
+  "age": 42,
+  "intent_label": "Long-term relationship",
+  "bio": "Arts courtyards, ambitious dinners, and weekend travel.",
+  "interests": [
+   "Arts",
+   "Cooking",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_mahmud.png"
+ },
+ {
+  "name": "Rafi",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside runs, design, and spontaneous road trips.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_rafi.png"
+ },
+ {
+  "name": "Zayed",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Waterfront evenings, cooking, and small live venues.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Music"
+  ],
+  "portrait": "assets/profiles/bd_zayed.png"
+ },
+ {
+  "name": "Arif",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Library walks, photography, and cooking for friends.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/bd_arif.png"
+ },
+ {
+  "name": "Faisal",
+  "age": 38,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverfront evenings, history books, and live music.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/bd_faisal.png"
+ },
+ {
+  "name": "Rezaul",
+  "age": 43,
+  "intent_label": "Open to long-term",
+  "bio": "Sculpture gardens, ambitious dinners, and road trips.",
+  "interests": [
+   "Arts",
+   "Cooking",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_rezaul.png"
+ },
+ {
+  "name": "Imtiaz",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Cycling routes, design, and weekend travel.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/bd_imtiaz.png"
+ },
+ {
+  "name": "Sohan",
+  "age": 27,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront walks, home cooking, and small live venues.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Music"
+  ],
+  "portrait": "assets/profiles/bd_sohan.png"
+ },
+ {
+  "name": "Haoran",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Park runs, street photography, and cooking ambitious Sunday lunches.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/cn_haoran.png"
+ },
+ {
+  "name": "Junjie",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "History books, small music venues, and train trips to new cities.",
+  "interests": [
+   "Books",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/cn_junjie.png"
+ },
+ {
+  "name": "Wei",
+  "age": 27,
+  "intent_label": "Long-term relationship",
+  "bio": "Bouldering sessions, design exhibitions, and exploring neighborhood cafes.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/cn_wei.png"
+ },
+ {
+  "name": "Zhen",
+  "age": 35,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside walks, jazz records, and long-form science writing.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Books"
+  ],
+  "portrait": "assets/profiles/cn_zhen.png"
+ },
+ {
+  "name": "Bo",
+  "age": 41,
+  "intent_label": "Long-term relationship",
+  "bio": "Sculpture gardens, regional cooking, and relaxed road trips.",
+  "interests": [
+   "Arts",
+   "Cooking",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/cn_bo.png"
+ },
+ {
+  "name": "Cheng",
+  "age": 30,
+  "intent_label": "Open to long-term",
+  "bio": "Campus walks, pickup games, and neighborhood cafes.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/cn_cheng.png"
+ },
+ {
+  "name": "Ming",
+  "age": 37,
+  "intent_label": "Long-term relationship",
+  "bio": "Canal walks, history books, and live jazz.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/cn_ming.png"
+ },
+ {
+  "name": "Tao",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Design exhibitions, photography, and spontaneous trips.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/cn_tao.png"
+ },
+ {
+  "name": "Yichen",
+  "age": 41,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical paths, ambitious cooking, and thoughtful novels.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Books"
+  ],
+  "portrait": "assets/profiles/cn_yichen.png"
+ },
+ {
+  "name": "Liang",
+  "age": 34,
+  "intent_label": "Open to long-term",
+  "bio": "Waterfront evenings, live music, and weekend road trips.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/cn_liang.png"
+ },
+ {
+  "name": "Daichi",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Campus gardens, pickup games, and Sunday cooking.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jp_daichi.png"
+ },
+ {
+  "name": "Haruto",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "Harbor walks, history books, and small live venues.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/jp_haruto.png"
+ },
+ {
+  "name": "Kenta",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Design museums, street photography, and spontaneous travel.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_kenta.png"
+ },
+ {
+  "name": "Ren",
+  "age": 42,
+  "intent_label": "Open to long-term",
+  "bio": "Woodland gardens, thoughtful novels, and ambitious dinners.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jp_ren.png"
+ },
+ {
+  "name": "Sota",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Riverside evenings, acoustic shows, and weekend road trips.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_sota.png"
+ },
+ {
+  "name": "Hiroshi",
+  "age": 39,
+  "intent_label": "Long-term relationship",
+  "bio": "Sculpture courtyards, jazz records, and history books.",
+  "interests": [
+   "Arts",
+   "Music",
+   "Books"
+  ],
+  "portrait": "assets/profiles/jp_hiroshi.png"
+ },
+ {
+  "name": "Koji",
+  "age": 33,
+  "intent_label": "Open to long-term",
+  "bio": "Canal cycling, photography, and cooking for friends.",
+  "interests": [
+   "Fitness",
+   "Arts",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jp_koji.png"
+ },
+ {
+  "name": "Masato",
+  "age": 44,
+  "intent_label": "Long-term relationship",
+  "bio": "Botanical afternoons, literary essays, and quiet travel.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_masato.png"
+ },
+ {
+  "name": "Naoki",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Cycling routes, live shows, and spontaneous road trips.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/jp_naoki.png"
+ },
+ {
+  "name": "Takumi",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Performing arts, architecture walks, and ambitious dinners.",
+  "interests": [
+   "Arts",
+   "Outdoors",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/jp_takumi.png"
+ },
+ {
+  "name": "Enzo",
+  "age": 30,
+  "intent_label": "Long-term relationship",
+  "bio": "Tree-lined walks, pickup games, and cooking for friends.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ph_enzo.png"
+ },
+ {
+  "name": "Gabriel",
+  "age": 37,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside evenings, history books, and live jazz.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Music"
+  ],
+  "portrait": "assets/profiles/ph_gabriel.png"
+ },
+ {
+  "name": "Joaquin",
+  "age": 33,
+  "intent_label": "Long-term relationship",
+  "bio": "Design museums, street photography, and weekend travel.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ph_joaquin.png"
+ },
+ {
+  "name": "Luis",
+  "age": 42,
+  "intent_label": "Open to long-term",
+  "bio": "Tropical gardens, ambitious dinners, and thoughtful novels.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Books"
+  ],
+  "portrait": "assets/profiles/ph_luis.png"
+ },
+ {
+  "name": "Paolo",
+  "age": 29,
+  "intent_label": "Long-term relationship",
+  "bio": "Harbor walks, small concerts, and spontaneous city breaks.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ph_paolo.png"
+ },
+ {
+  "name": "Adrian",
+  "age": 27,
+  "intent_label": "Open to long-term",
+  "bio": "Skate parks, live music, and budget weekend adventures.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ph_adrian.png"
+ },
+ {
+  "name": "Carlo",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Market courtyards, ambitious cooking, and history podcasts.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Books"
+  ],
+  "portrait": "assets/profiles/ph_carlo.png"
+ },
+ {
+  "name": "Dante",
+  "age": 46,
+  "intent_label": "Open to long-term",
+  "bio": "Conservatory walks, sculpture, and long road trips.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/ph_dante.png"
+ },
+ {
+  "name": "Miguel",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Library terraces, design books, and acoustic concerts.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Music"
+  ],
+  "portrait": "assets/profiles/ph_miguel.png"
+ },
+ {
+  "name": "Ramon",
+  "age": 40,
+  "intent_label": "Open to long-term",
+  "bio": "Harbor walks, strength training, and dinner experiments.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/ph_ramon.png"
+ },
+ {
+  "name": "Jihoon",
+  "age": 29,
+  "intent_label": "Open to long-term",
+  "bio": "Arts plazas, live shows, and spontaneous city breaks.",
+  "interests": [
+   "Arts",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/kr_jihoon.png"
+ },
+ {
+  "name": "Minho",
+  "age": 36,
+  "intent_label": "Long-term relationship",
+  "bio": "Market courtyards, ambitious cooking, and history books.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Books"
+  ],
+  "portrait": "assets/profiles/kr_minho.png"
+ },
+ {
+  "name": "Seojun",
+  "age": 44,
+  "intent_label": "Open to long-term",
+  "bio": "Conservatory walks, sculpture, and long road trips.",
+  "interests": [
+   "Outdoors",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/kr_seojun.png"
+ },
+ {
+  "name": "Taeyang",
+  "age": 32,
+  "intent_label": "Long-term relationship",
+  "bio": "Library terraces, design podcasts, and acoustic music.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Music"
+  ],
+  "portrait": "assets/profiles/kr_taeyang.png"
+ },
+ {
+  "name": "Hyunwoo",
+  "age": 40,
+  "intent_label": "Open to long-term",
+  "bio": "Harbor walks, strength training, and Sunday cooking.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kr_hyunwoo.png"
+ },
+ {
+  "name": "Donghyun",
+  "age": 28,
+  "intent_label": "Open to long-term",
+  "bio": "Climbing sessions, live sets, and finding the best dumplings.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kr_donghyun.png"
+ },
+ {
+  "name": "Kyungmin",
+  "age": 35,
+  "intent_label": "Long-term relationship",
+  "bio": "Independent bookshops, jazz records, and slow weekend travel.",
+  "interests": [
+   "Books",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/kr_kyungmin.png"
+ },
+ {
+  "name": "Jaeho",
+  "age": 43,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside rides, strength work, and ambitious home cooking.",
+  "interests": [
+   "Outdoors",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/kr_jaeho.png"
+ },
+ {
+  "name": "Sungmin",
+  "age": 49,
+  "intent_label": "Long-term relationship",
+  "bio": "Public art, old soul albums, and spontaneous road trips.",
+  "interests": [
+   "Arts",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/kr_sungmin.png"
+ },
+ {
+  "name": "Woobin",
+  "age": 55,
+  "intent_label": "Open to long-term",
+  "bio": "Coastal walks, history books, and patient landscape sketches.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/kr_woobin.png"
+ },
+ {
+  "name": "Emiliano",
+  "age": 27,
+  "intent_label": "Open to long-term",
+  "bio": "Riverside runs, small concerts, and spontaneous city breaks.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/mx_emiliano.png"
+ },
+ {
+  "name": "Gael",
+  "age": 34,
+  "intent_label": "Long-term relationship",
+  "bio": "Woodworking projects, strength training, and Sunday cooking.",
+  "interests": [
+   "Arts",
+   "Fitness",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/mx_gael.png"
+ },
+ {
+  "name": "Balam",
+  "age": 41,
+  "intent_label": "Open to long-term",
+  "bio": "Greenhouse afternoons, history books, and slow train travel.",
+  "interests": [
+   "Outdoors",
+   "Books",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/mx_balam.png"
+ },
+ {
+  "name": "Armando",
+  "age": 48,
+  "intent_label": "Long-term relationship",
+  "bio": "Hill walks, old records, and cooking for a lively crowd.",
+  "interests": [
+   "Outdoors",
+   "Music",
+   "Cooking"
+  ],
+  "portrait": "assets/profiles/mx_armando.png"
+ },
+ {
+  "name": "Salvador",
+  "age": 56,
+  "intent_label": "Open to long-term",
+  "bio": "Library terraces, landscape drawing, and unhurried journeys.",
+  "interests": [
+   "Books",
+   "Arts",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/mx_salvador.png"
+ },
+ {
+  "name": "Mauricio",
+  "age": 31,
+  "intent_label": "Long-term relationship",
+  "bio": "Courtyard coffee, strength training, and cooking without a recipe.",
+  "interests": [
+   "Fitness",
+   "Cooking",
+   "Music"
+  ],
+  "portrait": "assets/profiles/mx_mauricio.png"
+ },
+ {
+  "name": "Hector",
+  "age": 38,
+  "intent_label": "Open to long-term",
+  "bio": "Long bike trails, live sets, and planning the next road trip.",
+  "interests": [
+   "Fitness",
+   "Music",
+   "Travel"
+  ],
+  "portrait": "assets/profiles/mx_hector.png"
+ },
+ {
+  "name": "Rodrigo",
+  "age": 45,
+  "intent_label": "Long-term relationship",
+  "bio": "Museum afternoons, design histories, and unhurried city walks.",
+  "interests": [
+   "Arts",
+   "Books",
+   "Outdoors"
+  ],
+  "portrait": "assets/profiles/mx_rodrigo.png"
+ },
+ {
+  "name": "Ignacio",
+  "age": 52,
+  "intent_label": "Open to long-term",
+  "bio": "Lakeside walks, patient home cooking, and landscape photography.",
+  "interests": [
+   "Outdoors",
+   "Cooking",
+   "Arts"
+  ],
+  "portrait": "assets/profiles/mx_ignacio.png"
+ },
+ {
+  "name": "Cesar",
+  "age": 60,
+  "intent_label": "Long-term relationship",
+  "bio": "Park chess, history books, and train journeys with no fixed schedule.",
+  "interests": [
+   "Books",
+   "Travel",
+   "Outdoors"
+  ],
+  "portrait": "assets/profiles/mx_cesar.png"
+ }
+]

@@ -38,6 +38,7 @@ class ServerPerson {
     this.lifestyle = const {},
     this.prompts = const [],
     this.reasons = const [],
+    this.demoPortrait,
   });
 
   final String accountId;
@@ -51,6 +52,9 @@ class ServerPerson {
   final List<ProfilePrompt> prompts;
   final List<MatchReason> reasons;
 
+  /// Local test server only: a bundled synthetic portrait.
+  final String? demoPortrait;
+
   factory ServerPerson.fromJson(Map<String, dynamic> json) => ServerPerson(
     accountId: json['account_id'] as String,
     name: json['display_name'] as String,
@@ -62,6 +66,7 @@ class ServerPerson {
     lifestyle: parseLifestyle(json['lifestyle']),
     prompts: parsePrompts(json['prompts']),
     reasons: MatchReason.parse(json['reasons']),
+    demoPortrait: json['demo_portrait'] as String?,
   );
 }
 
@@ -76,6 +81,7 @@ class ServerMatch {
     this.unread = 0,
     this.sharedInterests = const [],
     this.peerPrompts = const [],
+    this.peerDemoPortrait,
   });
 
   final String matchId;
@@ -91,6 +97,7 @@ class ServerMatch {
   /// What you share, for opening lines in an empty chat.
   final List<String> sharedInterests;
   final List<ProfilePrompt> peerPrompts;
+  final String? peerDemoPortrait;
 
   /// The other person wrote last: it is your turn to reply.
   bool get yourTurn => lastMessage != null && lastMessageMine == false;
@@ -107,6 +114,7 @@ class ServerMatch {
         .whereType<String>()
         .toList(),
     peerPrompts: parsePrompts(json['peer_prompts']),
+    peerDemoPortrait: json['peer_demo_portrait'] as String?,
   );
 }
 

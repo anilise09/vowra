@@ -34,6 +34,12 @@ a command on the developer's machine, never an HTTP endpoint, and refuses a real
 Stop the server first: PGlite is single-process, so two processes must never open `.data/pglite`
 at once.
 
+For a full deck to test with, `npm run dev:seed-demo` adds the app's 260 synthetic sample profiles
+as age-verified demo members with their bundled portraits (`--remove` takes them all out again).
+Also local-only and refused on a real database; the portrait column cannot be set through the
+API, and the app labels these people "TEST PROFILE · NOT A REAL PERSON". The fixture comes from
+`python tools/export_demo_profiles.py`.
+
 ## Run the app against it
 
 ```

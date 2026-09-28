@@ -1,4 +1,5 @@
 import 'package:ember_app/data/api/vawra_api.dart';
+import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -483,6 +484,46 @@ void main() {
       await _settle(tester);
       expect(server.shareReceipts, isTrue);
     });
+  });
+
+  testWidgets('seeded test members show their portrait and a test label', (
+    tester,
+  ) async {
+    final server = FakeVawraServer()
+      ..verified = true
+      ..addPerson('Maya', demoPortrait: 'assets/profiles/maya.png')
+      ..profile = {
+        'display_name': 'Alex',
+        'relationship_intent': 'casual',
+        'bio': '',
+        'interests': <String>[],
+        'show_distance_band': true,
+        'call_ready_by_default': false,
+        'public_age': 28,
+      };
+    await _signIn(tester, server);
+    await _settle(tester);
+    await dismissSwipeTutorial(tester);
+    expect(find.byKey(const Key('demo-pill')), findsOneWidget);
+    expect(find.text('TEST PROFILE · NOT A REAL PERSON'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Image &&
+            w.image is AssetImage &&
+            (w.image as AssetImage).assetName == 'assets/profiles/maya.png',
+      ),
+      findsWidgets,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Image &&
+            w.image is AssetImage &&
+            (w.image as AssetImage).assetName == noPhotoAsset,
+      ),
+      findsNothing,
+    );
   });
 
   group('nudges', () {

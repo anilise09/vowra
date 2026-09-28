@@ -229,6 +229,16 @@ class DiscoveryDeck extends StatelessWidget {
                 icon: Icons.science_outlined,
                 label: 'PROTOTYPE PROFILE · NOT A REAL PERSON',
               ),
+            )
+          else if (isDemoPerson(profile.assetPath))
+            const Positioned(
+              key: Key('demo-pill'),
+              top: 22,
+              left: 16,
+              child: _OverlayPill(
+                icon: Icons.science_outlined,
+                label: 'TEST PROFILE · NOT A REAL PERSON',
+              ),
             ),
           if (profileReport != null)
             Positioned(

@@ -127,9 +127,11 @@ class FakeVawraServer {
     Map<String, String> lifestyle = const {},
     List<Map<String, String>> prompts = const [],
     List<Map<String, String>> reasons = const [],
+    String? demoPortrait,
   }) {
     final id = _id();
     people[id] = {
+      'demo_portrait': demoPortrait,
       'reasons': reasons,
       'lifestyle': lifestyle,
       'prompts': prompts,
@@ -333,6 +335,7 @@ class FakeVawraServer {
                       i,
                 ],
                 'peer_prompts': people[m.value]!['prompts'],
+                'peer_demo_portrait': people[m.value]!['demo_portrait'],
                 'unread': [...?messages[m.key]?.skip(myRead[m.key] ?? 0)]
                     .where((x) => x['mine'] == false)
                     .length,

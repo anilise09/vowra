@@ -624,7 +624,15 @@ class _AgeCheckScreenState extends State<AgeCheckScreen> {
   }
 }
 
-DemoProfile _card(ServerPerson person) => DetailedProfile(
+DemoProfile _card(ServerPerson person) {
+  registerDemoPortrait(
+    '$serverPersonPrefix${person.accountId}',
+    person.demoPortrait,
+  );
+  return _detailed(person);
+}
+
+DemoProfile _detailed(ServerPerson person) => DetailedProfile(
   person.name,
   person.age ?? 18,
   person.intent?.label ?? '',
@@ -807,6 +815,7 @@ class _ServerHomeState extends State<ServerHome> {
         api.matches(),
       ]);
       if (!mounted) return;
+      _registerMatchPortraits(results[2] as List<ServerMatch>);
       setState(() {
         people = results[0] as List<ServerPerson>;
         likes = results[1] as List<ServerPerson>;
@@ -826,12 +835,22 @@ class _ServerHomeState extends State<ServerHome> {
     try {
       final results = await Future.wait([_likes(), api.matches()]);
       if (!mounted) return;
+      _registerMatchPortraits(results[1] as List<ServerMatch>);
       setState(() {
         likes = results[0] as List<ServerPerson>;
         matches = results[1] as List<ServerMatch>;
       });
     } catch (e) {
       if (mounted) _signedOutBy(e);
+    }
+  }
+
+  void _registerMatchPortraits(List<ServerMatch> list) {
+    for (final m in list) {
+      registerDemoPortrait(
+        '$serverPersonPrefix${m.peerAccountId}',
+        m.peerDemoPortrait,
+      );
     }
   }
 
@@ -1342,14 +1361,20 @@ class ServerChatList extends StatelessWidget {
                           backgroundImage: profileImage(
                             '$serverPersonPrefix${fresh[i].peerAccountId}',
                           ),
-                          child: Text(
-                            fresh[i].peerName.characters.first.toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: VawraColors.plum,
-                            ),
-                          ),
+                          child:
+                              isDemoPerson(
+                                '$serverPersonPrefix${fresh[i].peerAccountId}',
+                              )
+                              ? null
+                              : Text(
+                                  fresh[i].peerName.characters.first
+                                      .toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    color: VawraColors.plum,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -1373,13 +1398,16 @@ class ServerChatList extends StatelessWidget {
                   backgroundImage: profileImage(
                     '$serverPersonPrefix${match.peerAccountId}',
                   ),
-                  child: Text(
-                    match.peerName.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: VawraColors.plum,
-                    ),
-                  ),
+                  child:
+                      isDemoPerson('$serverPersonPrefix${match.peerAccountId}')
+                      ? null
+                      : Text(
+                          match.peerName.characters.first.toUpperCase(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: VawraColors.plum,
+                          ),
+                        ),
                 ),
                 title: Text(
                   match.peerName,

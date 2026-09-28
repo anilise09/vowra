@@ -83,6 +83,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
       `SELECT m.id AS match_id, m.created_at, p.account_id AS peer_account_id,
               p.display_name AS peer_name, p.public_age AS peer_age,
               p.interests AS peer_interests, p.prompts AS peer_prompts,
+              p.demo_portrait AS peer_demo_portrait,
               last.body AS last_message, last.author_id = $1 AS last_message_mine,
               last.created_at AS last_message_at,
               (SELECT count(*)::int FROM messages u

@@ -1,5 +1,21 @@
 # Checkpoints
 
+## Dev - The 260 sample profiles on the local test server (2026-09-27)
+
+- The owner asked where the 250+ profiles went: they are the prototype's bundled synthetic people,
+  and the server build shows only accounts on the server. `npm run dev:seed-demo` now loads all 260
+  into the local test database as age-verified demo members with their bundled portraits (idempotent;
+  `--remove` takes them out). The fixture is exported from `lib/main.dart` by
+  `tools/export_demo_profiles.py`; goals and bios fit the server's rules, two stray interests are
+  dropped or mapped; habits are assigned deterministically so reasons stay stable.
+- Safeguards: the seed refuses a real database, the `demo_portrait` column cannot be set through
+  the API (strict PATCH, tested), only `assets/profiles/` paths are shown, and the app labels these
+  people "TEST PROFILE · NOT A REAL PERSON".
+- Loaded on the laptop's test server: Alex's Discover now starts with the closest fits, each with
+  a portrait and reasons (e.g. Junjie, "You both like Books, Music and Travel").
+- Gap this exposed: Discover has no gender / "who I want to meet" setting yet, so everyone sees
+  everyone. Next.
+
 ## Fix - Chats open at the newest message and follow new ones (2026-09-27)
 
 - Seen on the owner's Samsung: Maya's message arrived in 0.4 s but below the visible area, and a
