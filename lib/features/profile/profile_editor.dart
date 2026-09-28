@@ -14,10 +14,12 @@ class ProfileEditor extends StatefulWidget {
     super.key,
     required this.initialProfile,
     required this.onSaved,
+    this.prototypeMode = true,
   });
 
   final UserProfile? initialProfile;
   final ValueChanged<UserProfile> onSaved;
+  final bool prototypeMode;
 
   @override
   State<ProfileEditor> createState() => _ProfileEditorState();
@@ -130,8 +132,10 @@ class _ProfileEditorState extends State<ProfileEditor> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Prototype data stays in memory and disappears when the app closes.',
+          Text(
+            widget.prototypeMode
+                ? 'Prototype data stays in memory and disappears when the app closes.'
+                : 'Changes are saved to your account when you tap Save.',
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),

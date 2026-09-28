@@ -7,7 +7,7 @@ abstract final class VawraColors {
   static const ink = Color(0xFF21161E);
   static const muted = Color(0xFF756A72);
   static const blush = Color(0xFFFFF3F7);
-  static const canvas = Color(0xFFFFFAFC);
+  static const canvas = Color(0xFFFCFAF8);
   static const lavender = Color(0xFFF1ECFF);
   static const superLike = Color(0xFF4C6FFF);
 }
@@ -112,22 +112,24 @@ abstract final class VawraTheme {
         shape: const StadiumBorder(),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 68,
+        height: 66,
         elevation: 0,
-        backgroundColor: const Color(0xFF182465),
-        indicatorColor: VawraColors.coral,
+        backgroundColor: Colors.transparent,
+        indicatorColor: Colors.transparent,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? Colors.white
-                : const Color(0xFFC8CCE8),
-            size: 25,
+                ? VawraColors.coralDark
+                : VawraColors.muted,
+            size: 24,
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
-            color: Colors.white,
-            fontSize: 12,
+            color: states.contains(WidgetState.selected)
+                ? VawraColors.coralDark
+                : VawraColors.muted,
+            fontSize: 11,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w800
                 : FontWeight.w600,

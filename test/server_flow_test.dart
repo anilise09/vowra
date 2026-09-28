@@ -214,6 +214,11 @@ void main() {
     await dismissSwipeTutorial(tester);
     await tester.tap(find.byKey(const Key('profile-tab')));
     await _settle(tester);
+    expect(find.textContaining('Prototype data stays in memory'), findsNothing);
+    expect(
+      find.textContaining('saved to your account when you tap Save'),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('open-settings')));
     await _settle(tester);
     await tester.scrollUntilVisible(find.text('What Vawra keeps'), 200);

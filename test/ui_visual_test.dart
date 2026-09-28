@@ -14,6 +14,22 @@ void main() {
     await usePhoneViewport(tester);
     await tester.pumpWidget(const VawraApp());
     await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      final context = tester.element(find.byType(WelcomeScreen));
+      await Future.wait([
+        precacheImage(
+          const AssetImage(
+            'assets/branding/vawra_company_lockup_transparent.png',
+          ),
+          context,
+        ),
+        precacheImage(
+          const AssetImage('assets/branding/vawra_welcome_background.png'),
+          context,
+        ),
+      ]);
+    });
+    await tester.pumpAndSettle();
 
     await expectLater(
       find.byType(MaterialApp),
@@ -24,6 +40,13 @@ void main() {
   testWidgets('discovery visual baseline', (tester) async {
     await usePhoneViewport(tester);
     await enterDiscovery(tester);
+    await tester.runAsync(() async {
+      await precacheImage(
+        const AssetImage('assets/profiles/maya.png'),
+        tester.element(find.byKey(const Key('discovery-card-gesture'))),
+      );
+    });
+    await tester.pumpAndSettle();
 
     await expectLater(
       find.byType(MaterialApp),

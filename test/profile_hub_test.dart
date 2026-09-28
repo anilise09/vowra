@@ -13,6 +13,11 @@ void main() {
     await enterDiscovery(tester);
     await openProfile(tester);
 
+    expect(
+      find.textContaining('Prototype data stays in memory'),
+      findsOneWidget,
+    );
+
     await tester.tap(find.byKey(const Key('preview-card')));
     await tester.pumpAndSettle();
     expect(find.text('How others see you'), findsOneWidget);

@@ -9,11 +9,11 @@ void main() {
     await tester.pumpWidget(const VawraApp());
     expect(
       find.image(
-        const AssetImage('assets/branding/vawra_company_mark_clean.png'),
+        const AssetImage('assets/branding/vawra_company_lockup_transparent.png'),
       ),
       findsOneWidget,
     );
-    expect(find.text('Vawra'), findsOneWidget);
+    expect(find.byKey(const Key('welcome-brand-lockup')), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(find.byKey(const Key('continue-button')))

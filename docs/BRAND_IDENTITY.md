@@ -16,6 +16,7 @@ The owner-supplied identity sheet dated 2026-09-24 is the visual authority. The 
 
 - `assets/branding/vawra_company_mark.png` is the padded transparent master retained for launcher derivation.
 - `assets/branding/vawra_company_mark_clean.png` is the tightly cropped, artifact-cleaned transparent mark used inside the app with no tile, border, or shadow.
+- `assets/branding/vawra_company_lockup_transparent.png` is the transparent horizontal mark-and-wordmark extraction from the owner-supplied identity sheet. Discover and Welcome use it without a containing tile or border.
 - `assets/branding/vawra_mark.png` preserves the earlier exploratory ribbon mark for provenance; it is not the active identity.
 - `assets/branding/vawra_welcome_background.png` is the original welcome-screen artwork.
 - Android launcher assets live in `android/app/src/main/res/mipmap-*`.
@@ -30,5 +31,10 @@ Use `Vawra` and the approved mark consistently as brand identifiers. Do not use 
 ## Generation record
 
 The active master was extracted with the built-in image-generation workflow from the owner-supplied company identity sheet. The extraction request preserved the approved profiles, ribbon geometry, proportions, gradients, highlights, and silhouette while removing the presentation sheet, wordmark, tagline, and background.
+
+For UI-4, the built-in image-generation workflow isolated the lower-left horizontal company
+lockup from that same sheet as a separate transparent PNG. The edit preserved the mark and exact
+`Vawra` lettering, removed the tagline and all presentation background, and was checked for an
+alpha-transparent corner before inclusion. The original mark asset remains unchanged.
 
 The Android and iOS size variants are deterministic resizes of the selected master, not separately generated artwork.

@@ -1,9 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ember_app/theme/vawra_theme.dart';
 
 import 'support/app_flow.dart';
 
 void main() {
+  testWidgets('Discover dock opens details without starting a chat', (
+    tester,
+  ) async {
+    await enterDiscovery(tester);
+    expect(find.byKey(const Key('discovery-action-dock')), findsOneWidget);
+    expect(find.text('Verified'), findsNothing);
+    expect(find.textContaining('% aligned'), findsNothing);
+
+    final pass = find.byKey(const Key('action-pass'));
+    final like = find.byKey(const Key('action-like'));
+    final superLike = find.byKey(const Key('action-super-like'));
+    expect(tester.getSize(pass).width, tester.getSize(like).width);
+    expect(
+      tester.getSize(pass).width,
+      greaterThan(tester.getSize(superLike).width),
+    );
+    expect(
+      tester
+          .widget<Icon>(
+            find.descendant(
+              of: pass,
+              matching: find.byIcon(Icons.close_rounded),
+            ),
+          )
+          .color,
+      VawraColors.plum,
+    );
+    expect(
+      tester
+          .widget<Icon>(
+            find.descendant(
+              of: like,
+              matching: find.byIcon(Icons.favorite_rounded),
+            ),
+          )
+          .color,
+      VawraColors.coral,
+    );
+    expect(
+      tester
+          .widget<Icon>(
+            find.descendant(
+              of: superLike,
+              matching: find.byIcon(Icons.star_rounded),
+            ),
+          )
+          .color,
+      VawraColors.superLike,
+    );
+    expect(
+      find.descendant(
+        of: superLike,
+        matching: find.byIcon(Icons.auto_awesome_rounded),
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const Key('action-details')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('close-profile-details')), findsOneWidget);
+    expect(find.byKey(const Key('message-composer')), findsNothing);
+  });
+
   double stampOpacity(WidgetTester tester, String key) => tester
       .widget<Opacity>(
         find.descendant(

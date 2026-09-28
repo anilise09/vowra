@@ -1,5 +1,60 @@
 # Checkpoints
 
+## UI-5 - Discover action hierarchy and connected Profile copy (2026-09-28)
+
+- Discover's Pass and Like controls are now equal-sized primary actions, with plum Pass and
+  coral Like matching the swipe meanings. Undo and details remain smaller secondary controls.
+- Super Like is now a smaller blue star with a blue remaining-count badge. The shared-reason
+  sparkle on the card remains distinct. Existing three-per-day behavior and swipe physics did
+  not change.
+- The shared Profile editor now distinguishes offline prototype copy from a connected account:
+  the connected version explains that edits are saved when the user taps Save.
+- Added focused assertions for action sizes, icon colors and icon identity, and for the
+  connected Profile copy. Updated the deliberate Discover visual baseline.
+- Verified `flutter analyze --no-pub` with no issues, all 177 Flutter tests with one existing
+  skip (including the 18-case device matrix), and a debug APK build. The new APK has not been
+  installed or reviewed interactively on the Samsung while the owner is on a call.
+
+## UI-4 - Owner-directed brand and Apple-style polish (2026-09-28)
+
+- The owner rejected UI-3 as too generic, especially the typed company name. Discover now uses a
+  transparent horizontal extraction of the approved couple/heart mark and Vawra wordmark from
+  the owner-supplied identity sheet; Welcome uses the same lockup without a white tile or border.
+- Welcome now shows that logo in the first viewport over the existing ribbon artwork, with a
+  gentle whole-background contrast wash and a calm reading panel. Removed the old floating
+  circles/portraits composition. A visual test preloads its artwork before comparison.
+- Discover has a restrained warm canvas, legible frosted disclosure and controls, one translucent
+  action rail, and a shared glass-like navigation shell in both prototype and connected flows.
+  The fifth action is clearly profile information, never a pre-match message. Existing gesture
+  physics, reduced-motion behavior, coarse distance and free safety actions are unchanged.
+- The owner's sample's unverified badge and unsupported percentage score were not copied. The
+  synthetic/test-person disclosure remains on each card.
+- Verified all 177 Flutter tests (one pre-existing skip), including 18 device/text-size cases,
+  the 1.8x sweep, swipe physics and visual baselines. The visual tests now await bundled image
+  decoding so a missing-image frame cannot be approved accidentally.
+- Built and installed this revision on the owner's Samsung SM-S928W without clearing app data.
+  Inspected the Welcome screen at native device size: the approved lockup appears over the
+  artwork with no white tile or border; the reading panel and controls fit without overflow.
+  Discover's final composition is covered by updated visual baselines and device-matrix tests,
+  but has not yet been reviewed interactively on this physical handset.
+- Final `flutter analyze --no-pub` found no issues; `git diff --check` found no whitespace errors.
+
+## UI-3 - Reference-led Discover composition (2026-09-28)
+
+- Reworked Discover from the owner's supplied sample: a quiet Vawra wordmark header, more room
+  for the portrait, a warm five-action dock, and light navigation chrome. Removed the nonfunctional
+  story preview strip. The fifth dock action opens profile details, not a pre-match message.
+- Kept Vawra's own colors and synthetic portraits. The sample's verification badge, precise
+  distance and percentage alignment score were not copied: none is supported by the product.
+  The card can show its existing server-explained shared reason and an optional one-line intro.
+- The dock adapts button diameter to narrow widths, the card remains width-capped on tablets,
+  and decorative press motion is disabled when the system requests reduced motion.
+- Verified `flutter analyze --no-pub` with no issues; all 177 Flutter tests passed with one
+  existing skipped test, including the 18-case device matrix, 1.8x text, swipe feel and physics.
+  Updated the affected visual baselines, inspected the Discover baseline, and built a debug APK.
+  A phone was not
+  connected to ADB, so physical-device inspection is still pending.
+
 ## UI-2 - Fits every phone, foldable and tablet (2026-09-28)
 
 - New `test/device_matrix_test.dart` walks onboarding, Discover, profile details, a match and its

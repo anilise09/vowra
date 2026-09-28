@@ -23,6 +23,7 @@ import '../features/profile/profile_editor.dart';
 import '../features/settings/settings_page.dart';
 import '../features/shared/profile_image.dart';
 import '../main.dart' show SafetySheet, WelcomeScreen;
+import '../theme/vawra_navigation_shell.dart';
 import '../theme/vawra_theme.dart';
 
 /// Plain-language text for a failed call. Server codes never reach the screen
@@ -1164,6 +1165,7 @@ class _ServerHomeState extends State<ServerHome> {
         Expanded(
           child: ProfileEditor(
             initialProfile: profile,
+            prototypeMode: false,
             onSaved: (updated) async {
               final messenger = ScaffoldMessenger.of(context);
               try {
@@ -1218,64 +1220,46 @@ class _ServerHomeState extends State<ServerHome> {
     ];
     return Scaffold(
       body: IndexedStack(index: tab, children: pages),
-      // Above the system navigation buttons, never behind them.
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x3D182465),
-                blurRadius: 26,
-                offset: Offset(0, 12),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: NavigationBar(
-              selectedIndex: tab,
-              onDestinationSelected: _selectTab,
-              destinations: [
-                const NavigationDestination(
-                  icon: Icon(Icons.explore_outlined),
-                  selectedIcon: Icon(Icons.explore_rounded),
-                  label: 'Discover',
-                ),
-                NavigationDestination(
-                  icon: Badge(
-                    isLabelVisible: likes.isNotEmpty,
-                    child: const Icon(Icons.favorite_outline),
-                  ),
-                  selectedIcon: const Icon(Icons.favorite_rounded),
-                  label: 'Matches',
-                ),
-                NavigationDestination(
-                  key: const Key('chat-tab'),
-                  icon: Badge(
-                    key: const Key('chats-unread'),
-                    isLabelVisible: _unreadTotal > 0,
-                    label: Text('$_unreadTotal'),
-                    child: const Icon(Icons.chat_bubble_outline),
-                  ),
-                  selectedIcon: Badge(
-                    isLabelVisible: _unreadTotal > 0,
-                    label: Text('$_unreadTotal'),
-                    child: const Icon(Icons.chat_bubble_rounded),
-                  ),
-                  label: 'Chats',
-                ),
-                const NavigationDestination(
-                  key: Key('profile-tab'),
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Profile',
-                ),
-              ],
+      bottomNavigationBar: VawraNavigationShell(
+        child: NavigationBar(
+          selectedIndex: tab,
+          onDestinationSelected: _selectTab,
+          destinations: [
+            const NavigationDestination(
+              icon: Icon(Icons.explore_outlined),
+              selectedIcon: Icon(Icons.explore_rounded),
+              label: 'Discover',
             ),
-          ),
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: likes.isNotEmpty,
+                child: const Icon(Icons.favorite_outline),
+              ),
+              selectedIcon: const Icon(Icons.favorite_rounded),
+              label: 'Matches',
+            ),
+            NavigationDestination(
+              key: const Key('chat-tab'),
+              icon: Badge(
+                key: const Key('chats-unread'),
+                isLabelVisible: _unreadTotal > 0,
+                label: Text('$_unreadTotal'),
+                child: const Icon(Icons.chat_bubble_outline),
+              ),
+              selectedIcon: Badge(
+                isLabelVisible: _unreadTotal > 0,
+                label: Text('$_unreadTotal'),
+                child: const Icon(Icons.chat_bubble_rounded),
+              ),
+              label: 'Chats',
+            ),
+            const NavigationDestination(
+              key: Key('profile-tab'),
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person_rounded),
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
     );

@@ -25,6 +25,7 @@ import 'features/profile/profile_editor.dart';
 import 'features/settings/settings_page.dart';
 import 'server/server_flow.dart';
 import 'theme/readable_width.dart';
+import 'theme/vawra_navigation_shell.dart';
 import 'theme/vawra_theme.dart';
 
 /// Without --dart-define=VAWRA_API=... the app is the offline prototype.
@@ -69,10 +70,37 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF1EEF2),
+    backgroundColor: const Color(0xFFFFF8F5),
     body: Stack(
       children: [
-        // White behind the lower half so the panel reaches the bottom edge.
+        const Positioned.fill(
+          child: Image(
+            image: AssetImage('assets/branding/vawra_welcome_background.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        const Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: 340,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xAAFFFFFF),
+                    Color(0x44FFFFFF),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // A calm reading surface continues behind the lower panel.
         const Positioned(
           left: 0,
           right: 0,
@@ -86,7 +114,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
         ),
         SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
@@ -95,14 +124,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     SizedBox(
                       height: MediaQuery.sizeOf(context).height < 700
                           ? 154
-                          : 326,
-                      child: const FittedBox(
-                        fit: BoxFit.contain,
-                        alignment: Alignment.topCenter,
-                        child: SizedBox(
-                          width: 520,
-                          height: 326,
-                          child: _WelcomeArtwork(),
+                          : 300,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/branding/vawra_company_lockup_transparent.png',
+                          key: const Key('welcome-brand-lockup'),
+                          semanticLabel: 'Vawra company logo',
+                          width: 272,
+                          height: 96,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -118,11 +148,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          const Text(
+                            'MEET · BELONG · BE YOU',
+                            style: TextStyle(
+                              color: VawraColors.coralDark,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2.1,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
                           Text(
                             'Find someone worth\nslowing down for.',
                             style: Theme.of(context).textTheme.displaySmall
                                 ?.copyWith(
-                                  color: const Color(0xFF182465),
+                                  color: VawraColors.ink,
                                   fontSize: 34,
                                 ),
                           ),
@@ -130,7 +170,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Text(
                             'Intentional matches, safer conversations, and space to be yourself.',
                             style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(color: const Color(0xFF737796)),
+                                ?.copyWith(color: VawraColors.muted),
                           ),
                           const SizedBox(height: 16),
                           Material(
@@ -243,115 +283,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         ),
       ],
     ),
-  );
-}
-
-class _WelcomeArtwork extends StatelessWidget {
-  const _WelcomeArtwork();
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    clipBehavior: Clip.none,
-    children: [
-      Positioned(
-        left: -36,
-        top: 18,
-        child: Container(
-          width: 330,
-          height: 275,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFFD4E3), Color(0xFFE8DFFF)],
-            ),
-          ),
-        ),
-      ),
-      Positioned(
-        right: -74,
-        top: -28,
-        child: Container(
-          width: 240,
-          height: 240,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.5),
-          ),
-        ),
-      ),
-      Positioned(
-        top: 12,
-        left: 0,
-        right: 0,
-        child: Column(
-          children: [
-            SizedBox(
-              width: 118,
-              height: 104,
-              child: Image.asset(
-                'assets/branding/vawra_company_mark_clean.png',
-                semanticLabel: 'Vawra logo',
-                fit: BoxFit.contain,
-              ),
-            ),
-            Text(
-              'Vawra',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: const Color(0xFF182465),
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
-      ),
-      const Positioned(
-        left: 34,
-        top: 86,
-        child: _FloatingPortrait(asset: 'assets/profiles/maya.png', size: 66),
-      ),
-      const Positioned(
-        right: 34,
-        top: 92,
-        child: _FloatingPortrait(asset: 'assets/profiles/elena.png', size: 72),
-      ),
-      const Positioned(
-        left: 96,
-        bottom: 22,
-        child: _FloatingPortrait(asset: 'assets/profiles/amina.png', size: 74),
-      ),
-      const Positioned(
-        right: 86,
-        bottom: 8,
-        child: _FloatingPortrait(asset: 'assets/profiles/sofia.png', size: 64),
-      ),
-      const Positioned(
-        left: 0,
-        right: 0,
-        top: 196,
-        child: Icon(Icons.favorite_rounded, color: VawraColors.coral, size: 54),
-      ),
-    ],
-  );
-}
-
-class _FloatingPortrait extends StatelessWidget {
-  const _FloatingPortrait({required this.asset, required this.size});
-
-  final String asset;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    padding: const EdgeInsets.all(3),
-    decoration: const BoxDecoration(
-      color: Colors.white,
-      shape: BoxShape.circle,
-    ),
-    child: ClipOval(child: Image.asset(asset, fit: BoxFit.cover)),
   );
 }
 
@@ -3012,58 +2943,40 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     ];
     return Scaffold(
       body: IndexedStack(index: selectedIndex, children: pages),
-      // Above the system navigation buttons, never behind them.
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0x3D182465),
-                blurRadius: 26,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: NavigationBar(
-              selectedIndex: selectedIndex,
-              onDestinationSelected: _selectTab,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.explore_outlined),
-                  selectedIcon: Icon(Icons.explore_rounded),
-                  label: 'Discover',
-                ),
-                NavigationDestination(
-                  key: Key('explore-tab'),
-                  icon: Icon(Icons.grid_view_outlined),
-                  selectedIcon: Icon(Icons.grid_view_rounded),
-                  label: 'Explore',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.favorite_outline),
-                  selectedIcon: Icon(Icons.favorite_rounded),
-                  label: 'Matches',
-                ),
-                NavigationDestination(
-                  key: Key('chat-tab'),
-                  icon: Icon(Icons.chat_bubble_outline),
-                  selectedIcon: Icon(Icons.chat_bubble_rounded),
-                  label: 'Chats',
-                ),
-                NavigationDestination(
-                  key: Key('profile-tab'),
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Profile',
-                ),
-              ],
+      bottomNavigationBar: VawraNavigationShell(
+        child: NavigationBar(
+          selectedIndex: selectedIndex,
+          onDestinationSelected: _selectTab,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.explore_outlined),
+              selectedIcon: Icon(Icons.explore_rounded),
+              label: 'Discover',
             ),
-          ),
+            NavigationDestination(
+              key: Key('explore-tab'),
+              icon: Icon(Icons.grid_view_outlined),
+              selectedIcon: Icon(Icons.grid_view_rounded),
+              label: 'Explore',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.favorite_outline),
+              selectedIcon: Icon(Icons.favorite_rounded),
+              label: 'Matches',
+            ),
+            NavigationDestination(
+              key: Key('chat-tab'),
+              icon: Icon(Icons.chat_bubble_outline),
+              selectedIcon: Icon(Icons.chat_bubble_rounded),
+              label: 'Chats',
+            ),
+            NavigationDestination(
+              key: Key('profile-tab'),
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person_rounded),
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
     );
