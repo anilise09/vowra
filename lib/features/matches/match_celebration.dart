@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/vawra_theme.dart';
 import '../shared/profile_image.dart';
@@ -27,28 +28,32 @@ class MatchCelebration extends StatelessWidget {
     required String ownInitial,
     required bool superLike,
     required VoidCallback onMessage,
-  }) => showGeneralDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    barrierLabel: 'Match',
-    transitionDuration: const Duration(milliseconds: 320),
-    pageBuilder: (_, _, _) => MatchCelebration(
-      peerName: peerName,
-      peerPhotoAsset: peerPhotoAsset,
-      ownInitial: ownInitial,
-      superLike: superLike,
-      onMessage: onMessage,
-    ),
-    transitionBuilder: (_, animation, _, child) => FadeTransition(
-      opacity: animation,
-      child: ScaleTransition(
-        scale: Tween(begin: 0.92, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-        ),
-        child: child,
+  }) {
+    // The one big moment gets a firm haptic, on the frame the screen opens.
+    HapticFeedback.heavyImpact();
+    return showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Match',
+      transitionDuration: const Duration(milliseconds: 320),
+      pageBuilder: (_, _, _) => MatchCelebration(
+        peerName: peerName,
+        peerPhotoAsset: peerPhotoAsset,
+        ownInitial: ownInitial,
+        superLike: superLike,
+        onMessage: onMessage,
       ),
-    ),
-  );
+      transitionBuilder: (_, animation, _, child) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween(begin: 0.92, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Material(

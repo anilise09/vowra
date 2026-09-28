@@ -1,4 +1,5 @@
 import 'package:ember_app/features/discovery/swipe_card_stack.dart';
+import 'package:ember_app/features/matches/match_celebration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -147,5 +148,39 @@ void main() {
     await tester.pumpAndSettle();
     await done;
     expect(swiped, [SwipeDirection.left]);
+  });
+
+  testWidgets('a match lands with one firm haptic', (tester) async {
+    final haptics = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          haptics.add(call.arguments as String);
+        }
+        return null;
+      },
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => MatchCelebration.show(
+              context,
+              peerName: 'Maya',
+              peerPhotoAsset: 'assets/profiles/maya.png',
+              ownInitial: 'A',
+              superLike: false,
+              onMessage: () {},
+            ),
+            child: const Text('go'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('match-celebration')), findsOneWidget);
+    expect(haptics, ['HapticFeedbackType.heavyImpact']);
   });
 }
