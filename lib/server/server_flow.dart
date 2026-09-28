@@ -644,6 +644,7 @@ DemoProfile _detailed(ServerPerson person) => DetailedProfile(
   lifestyle: person.lifestyle,
   prompts: person.prompts,
   reasons: person.reasons,
+  gender: person.gender,
 );
 
 String _accountOf(String photoKey) =>

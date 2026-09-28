@@ -22,6 +22,7 @@ void main() {
     await tapNext(tester);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.ensureVisible(find.byKey(const Key('intent-figuring_it_out')));
     await tester.tap(find.byKey(const Key('intent-figuring_it_out')));
     await tester.pump();

@@ -21,6 +21,10 @@ export const mutuallyEligible = (me: string, other: string) => `
   AND EXISTS (SELECT 1 FROM accounts elig_a JOIN profiles elig_p ON elig_p.account_id = elig_a.id
               WHERE elig_a.id = ${other} AND elig_a.age_state = 'adult_verified'
                 AND elig_a.lifecycle = 'active')
+  AND EXISTS (SELECT 1 FROM profiles elig_me, profiles elig_them
+              WHERE elig_me.account_id = ${me} AND elig_them.account_id = ${other}
+                AND (cardinality(elig_me.show_me) = 0 OR elig_them.gender = ANY(elig_me.show_me))
+                AND (cardinality(elig_them.show_me) = 0 OR elig_me.gender = ANY(elig_them.show_me)))
   AND NOT EXISTS (SELECT 1 FROM blocks elig_b
                   WHERE (elig_b.blocker = ${me} AND elig_b.blocked = ${other})
                      OR (elig_b.blocker = ${other} AND elig_b.blocked = ${me}))`;
@@ -55,7 +59,8 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     );
     const candidates = await db.query<CompatibilityProfile & { account_id: string }>(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent,
-              p.bio, p.interests, p.lifestyle, p.prompts, p.demo_portrait
+              p.bio, p.interests, p.lifestyle, p.prompts, p.demo_portrait,
+              CASE WHEN p.show_gender THEN p.gender END AS gender
        FROM accounts a JOIN profiles p ON p.account_id = a.id
        WHERE ${mutuallyEligible('$1::uuid', 'a.id')}
          AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.from_account = $1 AND s.to_account = a.id)
@@ -155,6 +160,7 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     const people = await db.query(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent, p.bio,
               p.interests, p.lifestyle, p.prompts, p.demo_portrait,
+              CASE WHEN p.show_gender THEN p.gender END AS gender,
               s.kind = 'super_like' AS super_like
        FROM swipes s JOIN accounts a ON a.id = s.from_account JOIN profiles p ON p.account_id = a.id
        WHERE s.to_account = $1 AND s.kind IN ('like','super_like')

@@ -1,3 +1,4 @@
+import 'gender.dart';
 import 'lifestyle.dart';
 import 'profile_prompt.dart';
 
@@ -23,6 +24,9 @@ class UserProfile {
     this.callReadyByDefault = false,
     this.lifestyle = const {},
     this.prompts = const [],
+    this.gender,
+    this.showMe = const {},
+    this.showGender = false,
   });
 
   final String displayName;
@@ -34,6 +38,16 @@ class UserProfile {
   final bool callReadyByDefault;
   final Map<LifestyleTopic, String> lifestyle;
   final List<ProfilePrompt> prompts;
+
+  /// How this person identifies; used for matching.
+  final Gender? gender;
+
+  /// Who this person wants to meet; empty means everyone. Private: it is
+  /// only ever used for matching and never shown to anyone else.
+  final Set<Gender> showMe;
+
+  /// Whether [gender] is shown on the profile card.
+  final bool showGender;
 
   static const availableInterests = [
     'Arts',

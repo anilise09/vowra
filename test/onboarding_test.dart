@@ -16,7 +16,7 @@ void main() {
       await startOnboarding(tester);
 
       expect(find.text('What should matches call you?'), findsOneWidget);
-      expect(find.text('Step 1 of 7'), findsOneWidget);
+      expect(find.text('Step 1 of 9'), findsOneWidget);
       expect(find.text('PROTOTYPE PROFILE · NOT A REAL PERSON'), findsNothing);
     },
   );
@@ -36,6 +36,17 @@ void main() {
 
     expect(find.byKey(const Key('onboarding-skip')), findsNothing);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
+    await tapNext(tester);
+
+    // Gender is required; "Show me" starts at everyone.
+    expect(find.byKey(const Key('onboarding-skip')), findsNothing);
+    expect(nextEnabled(tester), isFalse);
+    await tester.tap(find.byKey(const Key('gender-nonbinary')));
+    await tester.pump();
+    expect(nextEnabled(tester), isTrue);
+    await tapNext(tester);
+    expect(find.text('Who would you like to meet?'), findsOneWidget);
+    expect(nextEnabled(tester), isTrue);
     await tapNext(tester);
 
     expect(find.byKey(const Key('onboarding-skip')), findsNothing);
@@ -71,6 +82,7 @@ void main() {
     await tapNext(tester);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '30');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.ensureVisible(find.byKey(const Key('intent-casual')));
     await tester.tap(find.byKey(const Key('intent-casual')));
     await tester.pump();
@@ -103,6 +115,7 @@ void main() {
     await tapNext(tester);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '30');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.ensureVisible(find.byKey(const Key('intent-casual')));
     await tester.tap(find.byKey(const Key('intent-casual')));
     await tester.pump();
@@ -147,6 +160,81 @@ void main() {
     );
   });
 
+  testWidgets('gender and "show me" reach the profile editor', (tester) async {
+    Future<void> pick(String key) async {
+      await tester.ensureVisible(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pump();
+    }
+
+    await startOnboarding(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-name')), 'Alex');
+    await tapNext(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-age')), '30');
+    await tapNext(tester);
+    await pick('gender-man');
+    await pick('onboarding-show-gender');
+    await tester.pump();
+    await tapNext(tester);
+
+    bool chosen(String key) =>
+        tester
+            .widget<Semantics>(
+              find
+                  .ancestor(
+                    of: find.byKey(Key(key)),
+                    matching: find.byType(Semantics),
+                  )
+                  .first,
+            )
+            .properties
+            .selected ??
+        false;
+    expect(chosen('showme-everyone'), isTrue);
+    await pick('showme-woman');
+    await tester.pump();
+    expect(chosen('showme-everyone'), isFalse);
+    expect(chosen('showme-woman'), isTrue);
+    await pick('showme-man');
+    await pick('showme-nonbinary');
+    await tester.pump();
+    expect(chosen('showme-everyone'), isTrue, reason: 'all three = everyone');
+    await pick('showme-woman');
+    await pick('showme-man');
+    await tapNext(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('intent-casual')));
+    await tester.tap(find.byKey(const Key('intent-casual')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('interest-Music')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('onboarding-skip')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding-skip')));
+    await tester.pumpAndSettle();
+    await tapNext(tester);
+    await dismissSwipeTutorial(tester);
+
+    await tester.tap(find.byKey(const Key('profile-tab')));
+    await tester.pumpAndSettle();
+    expect(find.text('Man'), findsOneWidget);
+    FilterChip chip(String key) =>
+        tester.widget<FilterChip>(find.byKey(Key(key)));
+    expect(chip('profile-showme-woman').selected, isTrue);
+    expect(chip('profile-showme-man').selected, isTrue);
+    expect(chip('profile-showme-nonbinary').selected, isFalse);
+    expect(chip('profile-showme-everyone').selected, isFalse);
+    expect(
+      tester
+          .widget<SwitchListTile>(find.byKey(const Key('profile-show-gender')))
+          .value,
+      isTrue,
+    );
+  });
+
   testWidgets('headlines use the name; lifestyle is optional and counted', (
     tester,
   ) async {
@@ -159,6 +247,7 @@ void main() {
     );
     await tester.enterText(find.byKey(const Key('onboarding-age')), '30');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.ensureVisible(find.byKey(const Key('intent-casual')));
     await tester.tap(find.byKey(const Key('intent-casual')));
     await tester.pump();

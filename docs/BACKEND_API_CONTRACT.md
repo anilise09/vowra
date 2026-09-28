@@ -26,6 +26,11 @@ Accepts only:
 - `call_ready_by_default`
 - `lifestyle`: optional habits, at most one answer per topic from fixed lists (drinking, smoking, exercise, pets; `lib/domain/lifestyle.dart`)
 - `prompts`: up to two answers (1-150 characters, no control characters) to distinct questions from a fixed list (`lib/domain/profile_prompt.dart`)
+- `gender`: one of `woman`, `man`, `nonbinary` (sent only once chosen; there is no "unset")
+- `show_me`: any of the same values, de-duplicated and sorted; empty means everyone
+- `show_gender`: whether `gender` appears to other people (default false)
+
+Added 2026-09-28 (BE-8): discovery, swipes and "Likes you" require a two-way match of `gender` against `show_me` on both sides. `show_me` is sensitive (it can reveal orientation): it is returned only to its owner by `GET /v1/me/profile` and never to anyone else. Other people receive `gender` only when `show_gender` is true.
 
 Added 2026-09-27 (BE-3c): habits and prompts are public profile details the person chooses to show, like the bio. Free text is limited to prompt answers and the bio; topics, answers and questions are fixed lists repeated on the server.
 

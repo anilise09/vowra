@@ -1,5 +1,6 @@
 import 'package:ember_app/data/account_profile_api.dart';
 import 'package:ember_app/domain/account_profile_contract.dart';
+import 'package:ember_app/domain/gender.dart';
 import 'package:ember_app/domain/user_profile.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -25,7 +26,9 @@ void main() {
       'call_ready_by_default',
       'lifestyle',
       'prompts',
-    });
+      'show_me',
+      'show_gender',
+    }, reason: 'gender is only sent once chosen');
     for (final forbidden in const [
       'age',
       'date_of_birth',
@@ -38,6 +41,23 @@ void main() {
     ]) {
       expect(payload.containsKey(forbidden), isFalse);
     }
+  });
+
+  test('gender and "show me" use the server keys, sorted', () {
+    const profile = UserProfile(
+      displayName: 'Alex',
+      age: 31,
+      intent: RelationshipIntent.longTerm,
+      bio: '',
+      interests: ['Books'],
+      gender: Gender.nonbinary,
+      showMe: {Gender.woman, Gender.man},
+      showGender: true,
+    );
+    final payload = ProfileMutation.fromLocalProfile(profile).toContractMap();
+    expect(payload['gender'], 'nonbinary');
+    expect(payload['show_me'], ['man', 'woman']);
+    expect(payload['show_gender'], isTrue);
   });
 
   test(

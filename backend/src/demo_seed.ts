@@ -9,6 +9,8 @@ export interface DemoProfile {
   bio: string;
   interests: string[];
   portrait: string;
+  /** Reviewed for every portrait (lib/data/demo_genders.dart). */
+  gender: 'woman' | 'man' | 'nonbinary';
 }
 
 const intentKeys: Record<string, string> = {
@@ -71,8 +73,10 @@ export async function seedDemo(
       await tx.query(
         `INSERT INTO profiles (account_id, display_name, relationship_intent, bio, interests,
                                show_distance_band, call_ready_by_default, updated_at,
-                               lifestyle, prompts, public_age, demo_portrait)
-         VALUES ($1, $2, $3, $4, $5, true, false, $6, $7::jsonb, '[]'::jsonb, $8, $9)`,
+                               lifestyle, prompts, public_age, demo_portrait,
+                               gender, show_gender)
+         VALUES ($1, $2, $3, $4, $5, true, false, $6, $7::jsonb, '[]'::jsonb, $8, $9,
+                 $10, true)`,
         [
           id,
           person.name,
@@ -83,6 +87,7 @@ export async function seedDemo(
           JSON.stringify(habitsFor(index)),
           person.age,
           person.portrait,
+          person.gender,
         ],
       );
     });

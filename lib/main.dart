@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data/api/vawra_api.dart';
+import 'data/demo_genders.dart';
 import 'data/discovery_interaction_repository.dart';
 import 'data/discovery_safety_service.dart';
 import 'data/match_repository.dart';
@@ -12,6 +13,7 @@ import 'domain/demo_profile.dart';
 import 'domain/discovery_interaction.dart';
 import 'domain/discovery_preferences.dart';
 import 'domain/explore_hub.dart';
+import 'domain/gender.dart';
 import 'domain/match_connection.dart';
 import 'domain/safety_report.dart';
 import 'domain/user_profile.dart';
@@ -2991,6 +2993,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
+  /// The sample people you asked to meet. They are open to everyone, so
+  /// only your side of the two-way check applies.
+  List<DemoProfile> get _wantedProfiles => profiles
+      .where(
+        (p) => wantsToMeet(
+          userProfile?.showMe ?? const {},
+          demoGenders[p.assetPath],
+        ),
+      )
+      .toList();
+
   /// Explore: hub grid, or the chosen hub's own swipe deck.
   Widget _explore(BuildContext context) {
     final hub = activeHub;
@@ -2998,7 +3011,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     final liked = interactionRepository.likedProfiles();
     final passed = interactionRepository.rejectedProfileAssets();
     final blocked = interactionRepository.blockedProfileAssets();
-    final available = profiles.where(
+    final available = _wantedProfiles.where(
       (p) =>
           !liked.containsKey(p.assetPath) &&
           !passed.contains(p.assetPath) &&
@@ -3018,7 +3031,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     title: hub?.title ?? 'Find your match',
     extraPhotos: extraProfilePhotos,
     onBack: hub == null ? null : () => setState(() => activeHub = null),
-    profiles: hub == null ? profiles : profiles.where(hub.includes).toList(),
+    profiles: hub == null
+        ? _wantedProfiles
+        : _wantedProfiles.where(hub.includes).toList(),
     preferences: discoveryPreferences,
     blockedProfileAssets: interactionRepository.blockedProfileAssets(),
     likedProfiles: interactionRepository.likedProfiles(),

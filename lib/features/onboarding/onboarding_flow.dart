@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../domain/gender.dart';
 import '../../domain/lifestyle.dart';
 import '../../domain/user_profile.dart';
 import '../../theme/vawra_theme.dart';
 import '../shared/lifestyle_picker.dart';
 
-/// One question per screen. Name, age, intent and interests are required;
+/// One question per screen. Name, age, gender, intent and interests are
+/// required ("show me" starts at everyone);
 /// the bio can be skipped; privacy and call defaults are pre-set safely.
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({
@@ -24,7 +26,17 @@ class OnboardingFlow extends StatefulWidget {
   State<OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
-enum _Step { name, age, intent, interests, lifestyle, bio, privacy }
+enum _Step {
+  name,
+  age,
+  gender,
+  showMe,
+  intent,
+  interests,
+  lifestyle,
+  bio,
+  privacy,
+}
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
   final nameController = TextEditingController();
@@ -34,6 +46,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   final bioController = TextEditingController();
   var step = _Step.name;
   RelationshipIntent? intent;
+  Gender? gender;
+  var showGender = false;
+
+  /// Empty means everyone.
+  final showMe = <Gender>{};
   final interests = <String>{};
   var showDistanceBand = true;
   var callReadyByDefault = false;
@@ -52,6 +69,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool get _canContinue => switch (step) {
     _Step.name => UserProfile.validateName(nameController.text) == null,
     _Step.age => UserProfile.validateAge(ageController.text) == null,
+    _Step.gender => gender != null,
+    _Step.showMe => true,
     _Step.intent => intent != null,
     _Step.interests => interests.isNotEmpty,
     _Step.lifestyle => lifestyle.isNotEmpty,
@@ -72,6 +91,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           showDistanceBand: showDistanceBand,
           callReadyByDefault: callReadyByDefault,
           lifestyle: Map.unmodifiable(lifestyle),
+          gender: gender,
+          showMe: Set.unmodifiable(showMe),
+          showGender: showGender,
         ),
       );
       return;
@@ -247,6 +269,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         'Nice to meet you, $_firstName. How old are you?',
         'Vawra is for adults 18 and over. Only your age is shown, never a birthday.',
       ),
+      _Step.gender => (
+        'How do you identify?',
+        'Used to match you with people looking for you. You choose whether it shows on your profile.',
+      ),
+      _Step.showMe => (
+        'Who would you like to meet?',
+        'Pick one or more. This is private: it is only used for matching and never shown to anyone.',
+      ),
       _Step.intent => (
         'What are you hoping to find?',
         'Shown on your profile so expectations are clear from the start.',
@@ -299,6 +329,53 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             focusNode: ageFocus,
             onChanged: () => setState(() {}),
             onSubmitted: _next,
+          ),
+          _Step.gender => Column(
+            children: [
+              for (final value in Gender.values)
+                _ChoiceCard(
+                  key: Key('gender-${value.backendKey}'),
+                  icon: _genderIcon(value),
+                  title: value.label,
+                  selected: gender == value,
+                  onTap: () => setState(() => gender = value),
+                ),
+              SwitchListTile(
+                key: const Key('onboarding-show-gender'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Show my gender on my profile'),
+                subtitle: const Text(
+                  'Off by default. You can change it later.',
+                ),
+                value: showGender,
+                onChanged: (value) => setState(() => showGender = value),
+              ),
+            ],
+          ),
+          _Step.showMe => Column(
+            children: [
+              _ChoiceCard(
+                key: const Key('showme-everyone'),
+                icon: Icons.groups_rounded,
+                title: 'Everyone',
+                selected: showMe.isEmpty,
+                onTap: () => setState(showMe.clear),
+              ),
+              for (final value in Gender.values)
+                _ChoiceCard(
+                  key: Key('showme-${value.backendKey}'),
+                  icon: _genderIcon(value),
+                  title: value.plural,
+                  selected: showMe.contains(value),
+                  onTap: () => setState(() {
+                    showMe.contains(value)
+                        ? showMe.remove(value)
+                        : showMe.add(value);
+                    // All three is the same as everyone.
+                    if (showMe.length == Gender.values.length) showMe.clear();
+                  }),
+                ),
+            ],
           ),
           _Step.intent => Column(
             children: RelationshipIntent.values
@@ -402,6 +479,12 @@ class _AgeField extends StatelessWidget {
   }
 }
 
+IconData _genderIcon(Gender gender) => switch (gender) {
+  Gender.woman => Icons.female_rounded,
+  Gender.man => Icons.male_rounded,
+  Gender.nonbinary => Icons.person_outline_rounded,
+};
+
 class _IntentCard extends StatelessWidget {
   const _IntentCard({
     required this.intent,
@@ -433,65 +516,97 @@ class _IntentCard extends StatelessWidget {
         'Still deciding, and that is fine.',
       ),
     };
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Semantics(
-        selected: selected,
-        button: true,
-        child: Material(
-          color: selected ? VawraColors.blush : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: selected ? VawraColors.coral : const Color(0xFFE2D7DE),
-              width: selected ? 2 : 1,
-            ),
+    return _ChoiceCard(
+      key: Key('intent-${intent.backendKey}'),
+      icon: icon,
+      title: intent.label,
+      detail: detail,
+      selected: selected,
+      onTap: onTap,
+    );
+  }
+}
+
+/// A large tappable answer: blush with a coral edge once chosen. The [key]
+/// goes on the tappable area so tests and taps land on the same thing.
+class _ChoiceCard extends StatelessWidget {
+  const _ChoiceCard({
+    required Key key,
+    required this.icon,
+    required this.title,
+    this.detail,
+    required this.selected,
+    required this.onTap,
+  }) : _tapKey = key;
+
+  final Key _tapKey;
+  final IconData icon;
+  final String title;
+  final String? detail;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected ? VawraColors.blush : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: selected ? VawraColors.coral : const Color(0xFFE2D7DE),
+            width: selected ? 2 : 1,
           ),
-          child: InkWell(
-            key: Key('intent-${intent.backendKey}'),
-            borderRadius: BorderRadius.circular(20),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: selected
-                        ? VawraColors.coral
-                        : VawraColors.lavender,
-                    child: Icon(
-                      icon,
-                      color: selected ? Colors.white : VawraColors.plum,
-                    ),
+        ),
+        child: InkWell(
+          key: _tapKey,
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: selected
+                      ? VawraColors.coral
+                      : VawraColors.lavender,
+                  child: Icon(
+                    icon,
+                    color: selected ? Colors.white : VawraColors.plum,
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          intent.label,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      if (detail case final detail?) ...[
                         const SizedBox(height: 2),
                         Text(detail),
                       ],
-                    ),
+                    ],
                   ),
-                  if (selected)
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: VawraColors.coral,
-                    ),
-                ],
-              ),
+                ),
+                if (selected)
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: VawraColors.coral,
+                  ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _InterestPicker extends StatelessWidget {

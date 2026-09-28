@@ -433,6 +433,16 @@ class DiscoveryDeck extends StatelessWidget {
                       style: Theme.of(sheetContext).textTheme.titleMedium,
                     ),
                   ),
+                  if (profile is DetailedProfile && profile.gender != null)
+                    _DetailSection(
+                      key: const Key('detail-gender'),
+                      icon: Icons.person_outline_rounded,
+                      title: 'Gender',
+                      child: Text(
+                        profile.gender!.label,
+                        style: Theme.of(sheetContext).textTheme.titleMedium,
+                      ),
+                    ),
                   if (profile is DetailedProfile && profile.reasons.isNotEmpty)
                     _DetailSection(
                       key: const Key('detail-reasons'),

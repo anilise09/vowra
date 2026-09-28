@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/gender.dart';
 import '../../domain/lifestyle.dart';
 import '../../domain/profile_prompt.dart';
 import '../../domain/user_profile.dart';
@@ -36,6 +37,9 @@ class _ProfileEditorState extends State<ProfileEditor> {
   late bool callReadyByDefault;
   late Map<LifestyleTopic, String> lifestyle;
   late List<ProfilePrompt> prompts;
+  Gender? gender;
+  late Set<Gender> showMe;
+  late bool showGender;
 
   @override
   void initState() {
@@ -50,6 +54,9 @@ class _ProfileEditorState extends State<ProfileEditor> {
     callReadyByDefault = profile?.callReadyByDefault ?? false;
     lifestyle = {...?profile?.lifestyle};
     prompts = [...?profile?.prompts];
+    gender = profile?.gender;
+    showMe = {...?profile?.showMe};
+    showGender = profile?.showGender ?? false;
     bioController.addListener(_refresh);
   }
 
@@ -188,6 +195,46 @@ class _ProfileEditorState extends State<ProfileEditor> {
             onChanged: (value) => setState(() => intent = value ?? intent),
           ),
           const SizedBox(height: 16),
+          DropdownButtonFormField<Gender>(
+            key: const Key('profile-gender'),
+            initialValue: gender,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'I am'),
+            items: Gender.values
+                .map(
+                  (value) =>
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                )
+                .toList(),
+            onChanged: (value) => setState(() => gender = value ?? gender),
+          ),
+          const SizedBox(height: 16),
+          Text('Show me', style: Theme.of(context).textTheme.titleMedium),
+          const Text('Private. Only used to find matches, never shown.'),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            children: [
+              FilterChip(
+                key: const Key('profile-showme-everyone'),
+                label: const Text('Everyone'),
+                selected: showMe.isEmpty,
+                onSelected: (_) => setState(showMe.clear),
+              ),
+              for (final value in Gender.values)
+                FilterChip(
+                  key: Key('profile-showme-${value.backendKey}'),
+                  label: Text(value.plural),
+                  selected: showMe.contains(value),
+                  onSelected: (selected) => setState(() {
+                    selected ? showMe.add(value) : showMe.remove(value);
+                    // All three is the same as everyone.
+                    if (showMe.length == Gender.values.length) showMe.clear();
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
           TextFormField(
             key: const Key('profile-bio'),
             controller: bioController,
@@ -254,6 +301,17 @@ class _ProfileEditorState extends State<ProfileEditor> {
               child: Column(
                 children: [
                   SwitchListTile(
+                    key: const Key('profile-show-gender'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Show my gender on my profile'),
+                    subtitle: const Text('Off means only matching uses it.'),
+                    value: showGender,
+                    onChanged: gender == null
+                        ? null
+                        : (value) => setState(() => showGender = value),
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Show a coarse distance band'),
                     subtitle: const Text('Exact location is never displayed.'),
@@ -301,6 +359,9 @@ class _ProfileEditorState extends State<ProfileEditor> {
     callReadyByDefault: callReadyByDefault,
     lifestyle: Map.unmodifiable(lifestyle),
     prompts: List.unmodifiable(prompts),
+    gender: gender,
+    showMe: Set.unmodifiable(showMe),
+    showGender: showGender,
   );
 
   void _save() {
@@ -318,6 +379,9 @@ class _ProfileEditorState extends State<ProfileEditor> {
         callReadyByDefault: callReadyByDefault,
         lifestyle: Map.unmodifiable(lifestyle),
         prompts: List.unmodifiable(prompts),
+        gender: gender,
+        showMe: Set.unmodifiable(showMe),
+        showGender: showGender,
       ),
     );
   }

@@ -61,12 +61,48 @@ void main() {
     await tapNext(tester);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.tap(find.byKey(const Key('intent-open_to_long_term')));
     await tester.pumpAndSettle();
 
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/vawra_onboarding.png'),
+    );
+  });
+
+  testWidgets('onboarding gender visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await startOnboarding(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-name')), 'Alex');
+    await tapNext(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('gender-woman')));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_onboarding_gender.png'),
+    );
+  });
+
+  testWidgets('onboarding show-me visual baseline', (tester) async {
+    await usePhoneViewport(tester);
+    await startOnboarding(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-name')), 'Alex');
+    await tapNext(tester);
+    await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('gender-woman')));
+    await tester.pump();
+    await tapNext(tester);
+    await tester.tap(find.byKey(const Key('showme-man')));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/vawra_onboarding_show_me.png'),
     );
   });
 
@@ -77,6 +113,7 @@ void main() {
     await tapNext(tester);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.tap(find.byKey(const Key('intent-open_to_long_term')));
     await tester.pump();
     await tapNext(tester);
@@ -114,6 +151,7 @@ void main() {
     await tapNext(tester);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.tap(find.byKey(const Key('intent-open_to_long_term')));
     await tester.pump();
     await tapNext(tester);

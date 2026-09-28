@@ -1,3 +1,4 @@
+import 'gender.dart';
 import 'lifestyle.dart';
 import 'profile_prompt.dart';
 import 'user_profile.dart';
@@ -27,6 +28,9 @@ class ProfileMutation {
     required this.callReadyByDefault,
     this.lifestyle = const {},
     this.prompts = const [],
+    this.gender,
+    this.showMe = const {},
+    this.showGender = false,
   });
 
   factory ProfileMutation.fromLocalProfile(UserProfile profile) =>
@@ -39,6 +43,9 @@ class ProfileMutation {
         callReadyByDefault: profile.callReadyByDefault,
         lifestyle: Map.unmodifiable(profile.lifestyle),
         prompts: List.unmodifiable(profile.prompts),
+        gender: profile.gender,
+        showMe: Set.unmodifiable(profile.showMe),
+        showGender: profile.showGender,
       );
 
   final String displayName;
@@ -54,6 +61,13 @@ class ProfileMutation {
   /// Up to two answers to fixed questions.
   final List<ProfilePrompt> prompts;
 
+  /// Unset until chosen; the server keeps its value when absent.
+  final Gender? gender;
+
+  /// Sensitive: only used for matching, never returned to other people.
+  final Set<Gender> showMe;
+  final bool showGender;
+
   Map<String, Object> toContractMap() => {
     'display_name': displayName,
     'relationship_intent': intent.backendKey,
@@ -68,6 +82,9 @@ class ProfileMutation {
       for (final prompt in prompts)
         {'question': prompt.question, 'answer': prompt.answer},
     ],
+    'gender': ?gender?.backendKey,
+    'show_me': [for (final g in showMe) g.backendKey]..sort(),
+    'show_gender': showGender,
   };
 }
 

@@ -55,6 +55,7 @@ void main() {
     await tapNext(tester);
     await tester.enterText(find.byKey(const Key('onboarding-age')), '31');
     await tapNext(tester);
+    await answerGenderSteps(tester);
     await tester.tap(find.byKey(const Key('intent-long_term')));
     await tester.pump();
     await tapNext(tester);

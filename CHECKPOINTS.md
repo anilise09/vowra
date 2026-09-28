@@ -1,5 +1,26 @@
 # Checkpoints
 
+## BE-8 - "I am" and "Show me": two-way gender matching (2026-09-28)
+
+- Discover used to show everyone regardless of who a person wanted to meet. Onboarding now asks
+  "How do you identify?" (Woman, Man, Non-binary; required) and "Who would you like to meet?"
+  (Everyone, or any mix of Women, Men and Non-binary people; picking all three is Everyone).
+  Setup is 9 steps. Both screens reuse the existing choice-card style; the current UI is kept.
+- Matching is two-way on the server: two people see each other only if each is in the other's
+  "Show me" (empty = everyone). The same check guards Discover, swipes and "Likes you". Someone
+  with no gender set only appears to people open to everyone.
+- "Show me" is private: it is only used for matching and never returned to anyone else. Gender is
+  shown on a card's details only if the person turns on "Show my gender on my profile" (off by
+  default). The Profile editor carries all three fields, so saving never wipes them.
+- The 260 sample profiles got a reviewed gender each (`lib/data/demo_genders.dart`, from looking
+  at every portrait); the export fails if one is missing. Demo members show their gender and are
+  open to everyone. Prototype mode filters the sample people by your "Show me" too.
+- Migration `006_gender_show_me.sql`. Tests: backend two-way matrix, swipe and likes-you guards,
+  privacy of `show_me`, gender only when shown, invalid values (removing the reverse check fails
+  two tests); app contract keys, API round-trip, onboarding to Profile editor (dropping "Show me"
+  in the editor fails it), two new visual baselines. Flutter 187 passed (one existing skip),
+  backend 57, analysis and type-check clean.
+
 ## UI-6 - Mobile page and platform audit (2026-09-28)
 
 - Inspected the actual Welcome and seven onboarding steps on a dedicated Android 14 virtual

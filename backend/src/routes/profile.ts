@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { audit, fail, noContent, requireAccount, type Services } from '../context.js';
 import {
+  genders,
   intents,
   interests,
   lifestyleOptions,
@@ -33,6 +34,9 @@ const profilePatch = z
     prompts: z
       .array(z.object({ question: z.enum(promptQuestions), answer: z.string().max(1000) }).strict())
       .max(promptRules.maxPrompts),
+    gender: z.enum(genders),
+    show_me: z.array(z.enum(genders)).max(genders.length),
+    show_gender: z.boolean(),
   })
   .partial()
   .strict();
@@ -47,6 +51,9 @@ interface ProfileRow {
   public_age: number | null;
   lifestyle: Record<string, string>;
   prompts: { question: string; answer: string }[];
+  gender: string | null;
+  show_me: string[];
+  show_gender: boolean;
 }
 
 export function profileRoutes(app: FastifyInstance, services: Services) {
@@ -56,7 +63,8 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
     (
       await db.query<ProfileRow>(
         `SELECT display_name, relationship_intent, bio, interests, show_distance_band,
-                call_ready_by_default, public_age, lifestyle, prompts
+                call_ready_by_default, public_age, lifestyle, prompts, gender, show_me,
+                show_gender
          FROM profiles WHERE account_id = $1`,
         [accountId],
       )
@@ -97,6 +105,7 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
       patch.bio = patch.bio.trim();
     }
     if (patch.interests) patch.interests = [...new Set(patch.interests)].sort();
+    if (patch.show_me) patch.show_me = [...new Set(patch.show_me)].sort();
     if (patch.prompts) {
       const cleaned = normalizePrompts(patch.prompts);
       if ('error' in cleaned) return fail(422, cleaned.error);
@@ -110,8 +119,8 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
       await db.query(
         `INSERT INTO profiles (account_id, display_name, relationship_intent, bio, interests,
                                show_distance_band, call_ready_by_default, updated_at,
-                               lifestyle, prompts)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb)`,
+                               lifestyle, prompts, gender, show_me, show_gender)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11, $12, $13)`,
         [
           account.id,
           patch.display_name,
@@ -123,6 +132,9 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
           now,
           JSON.stringify(patch.lifestyle ?? {}),
           JSON.stringify(patch.prompts ?? []),
+          patch.gender ?? null,
+          patch.show_me ?? [],
+          patch.show_gender ?? false,
         ],
       );
     } else {
@@ -130,7 +142,8 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
       await db.query(
         `UPDATE profiles SET display_name = $2, relationship_intent = $3, bio = $4,
                 interests = $5, show_distance_band = $6, call_ready_by_default = $7,
-                updated_at = $8, lifestyle = $9::jsonb, prompts = $10::jsonb
+                updated_at = $8, lifestyle = $9::jsonb, prompts = $10::jsonb,
+                gender = $11, show_me = $12, show_gender = $13
          WHERE account_id = $1`,
         [
           account.id,
@@ -143,6 +156,9 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
           now,
           JSON.stringify(merged.lifestyle),
           JSON.stringify(merged.prompts),
+          merged.gender,
+          merged.show_me,
+          merged.show_gender,
         ],
       );
     }

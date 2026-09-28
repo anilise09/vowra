@@ -1,3 +1,4 @@
+import 'gender.dart';
 import 'lifestyle.dart';
 import 'match_reason.dart';
 import 'profile_prompt.dart';
@@ -37,6 +38,7 @@ class DetailedProfile extends DemoProfile {
     this.lifestyle = const {},
     this.prompts = const [],
     this.reasons = const [],
+    this.gender,
   });
 
   final Map<LifestyleTopic, String> lifestyle;
@@ -44,4 +46,7 @@ class DetailedProfile extends DemoProfile {
 
   /// Why the two of you might click, as the server explains its order.
   final List<MatchReason> reasons;
+
+  /// Only set when the person chose to show it.
+  final Gender? gender;
 }

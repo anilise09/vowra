@@ -46,6 +46,9 @@ Future<void> onboard(WidgetTester tester) async {
   await tapShown(tester, find.byKey(const Key('onboarding-next')));
   await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
   await tapShown(tester, find.byKey(const Key('onboarding-next')));
+  await tapShown(tester, find.byKey(const Key('gender-woman')));
+  await tapShown(tester, find.byKey(const Key('onboarding-next')));
+  await tapShown(tester, find.byKey(const Key('onboarding-next')));
   await tapShown(tester, find.byKey(const Key('intent-open_to_long_term')));
   await tapShown(tester, find.byKey(const Key('onboarding-next')));
   await tapShown(tester, find.byKey(const Key('interest-Books')));

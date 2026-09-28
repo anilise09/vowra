@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../domain/account_profile_contract.dart';
+import '../../domain/gender.dart';
 import '../../domain/lifestyle.dart';
 import '../../domain/match_reason.dart';
 import '../../domain/profile_prompt.dart';
@@ -39,6 +40,7 @@ class ServerPerson {
     this.prompts = const [],
     this.reasons = const [],
     this.demoPortrait,
+    this.gender,
   });
 
   final String accountId;
@@ -55,6 +57,9 @@ class ServerPerson {
   /// Local test server only: a bundled synthetic portrait.
   final String? demoPortrait;
 
+  /// Only present when this person chose to show it.
+  final Gender? gender;
+
   factory ServerPerson.fromJson(Map<String, dynamic> json) => ServerPerson(
     accountId: json['account_id'] as String,
     name: json['display_name'] as String,
@@ -67,6 +72,7 @@ class ServerPerson {
     prompts: parsePrompts(json['prompts']),
     reasons: MatchReason.parse(json['reasons']),
     demoPortrait: json['demo_portrait'] as String?,
+    gender: Gender.fromKey(json['gender']),
   );
 }
 
@@ -479,6 +485,12 @@ class VawraApi {
               callReadyByDefault: profile['call_ready_by_default'] as bool,
               lifestyle: parseLifestyle(profile['lifestyle']),
               prompts: parsePrompts(profile['prompts']),
+              gender: Gender.fromKey(profile['gender']),
+              showMe: {
+                for (final key in (profile['show_me'] as List?) ?? const [])
+                  ?Gender.fromKey(key),
+              },
+              showGender: (profile['show_gender'] as bool?) ?? false,
             ),
     );
   }

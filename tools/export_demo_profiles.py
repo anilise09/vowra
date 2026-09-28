@@ -10,6 +10,7 @@ import re
 
 SRC = 'lib/main.dart'
 OUT = 'backend/fixtures/demo_profiles.json'
+GENDERS = 'lib/data/demo_genders.dart'
 
 STR = r"'((?:[^'\\]|\\.)*)'"
 ENTRY = re.compile(
@@ -38,6 +39,14 @@ def main():
             'interests': [unescape(i) for i in re.findall(STR, interests)],
             'portrait': portrait,
         })
+    genders = dict(re.findall(
+        r"'(assets/profiles/[^']+)': Gender\.(\w+)",
+        io.open(GENDERS, encoding='utf-8').read(),
+    ))
+    for person in people:
+        if person['portrait'] not in genders:
+            raise SystemExit(f"no reviewed gender for {person['portrait']} in {GENDERS}")
+        person['gender'] = genders[person['portrait']]
     expected = block.count('DemoProfile(')
     if len(people) != expected:
         raise SystemExit(f'parsed {len(people)} of {expected} profiles; fix the pattern')

@@ -23,6 +23,19 @@ Future<void> tapNext(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Answers "How do you identify?" and leaves "Show me" at everyone.
+Future<void> answerGenderSteps(
+  WidgetTester tester, {
+  String gender = 'woman',
+}) async {
+  final choice = find.byKey(Key('gender-$gender'));
+  await tester.ensureVisible(choice);
+  await tester.pumpAndSettle();
+  await tester.tap(choice);
+  await tapNext(tester);
+  await tapNext(tester);
+}
+
 /// Completes the required onboarding steps, skipping the optional bio.
 Future<void> enterDiscovery(WidgetTester tester) async {
   await startOnboarding(tester);
@@ -30,6 +43,7 @@ Future<void> enterDiscovery(WidgetTester tester) async {
   await tapNext(tester);
   await tester.enterText(find.byKey(const Key('onboarding-age')), '28');
   await tapNext(tester);
+  await answerGenderSteps(tester);
   await tester.tap(find.byKey(const Key('intent-open_to_long_term')));
   await tester.pump();
   await tapNext(tester);

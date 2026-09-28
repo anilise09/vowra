@@ -8,6 +8,8 @@ export const intents = [
   'figuring_it_out',
 ] as const;
 
+export const genders = ['woman', 'man', 'nonbinary'] as const;
+
 export const interests = [
   'Arts',
   'Books',

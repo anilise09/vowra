@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:ember_app/data/api/vawra_api.dart';
+import 'package:ember_app/domain/gender.dart';
 import 'package:ember_app/domain/lifestyle.dart';
 import 'package:ember_app/domain/profile_prompt.dart';
 import 'package:ember_app/domain/safety_report.dart';
@@ -273,6 +274,8 @@ void main() {
       'call_ready_by_default',
       'lifestyle',
       'prompts',
+      'show_me',
+      'show_gender',
     });
     expect(sent['relationship_intent'], 'open_to_long_term');
     expect(
@@ -306,6 +309,48 @@ void main() {
     expect(me.profile?.lifestyle, {LifestyleTopic.exercise: 'Daily'});
     expect(me.profile?.prompts.single.answer, 'trains');
   });
+
+  test(
+    'gender and "show me" round-trip; a shown gender reaches others',
+    () async {
+      final server = FakeVawraServer();
+      final api = VawraApi(
+        Uri.parse('http://vawra.test'),
+        client: server.client,
+      );
+      await api.requestSignIn('alex@example.test');
+      await api.exchange(server.outbox.last);
+      await api.saveProfile(
+        const UserProfile(
+          displayName: 'Alex',
+          age: 28,
+          intent: RelationshipIntent.casual,
+          bio: '',
+          interests: ['Books'],
+          gender: Gender.woman,
+          showMe: {Gender.man},
+          showGender: true,
+        ),
+      );
+      final me = await api.me();
+      expect(me.profile?.gender, Gender.woman);
+      expect(me.profile?.showMe, {Gender.man});
+      expect(me.profile?.showGender, isTrue);
+
+      final person = ServerPerson.fromJson({
+        'account_id': 'a1',
+        'display_name': 'Sam',
+        'gender': 'nonbinary',
+      });
+      expect(person.gender, Gender.nonbinary);
+      expect(
+        ServerPerson.fromJson({'account_id': 'a2', 'display_name': 'Kai'})
+            .gender,
+        isNull,
+        reason: 'hidden unless they chose to show it',
+      );
+    },
+  );
 
   test('report reasons use the server names', () {
     expect(ReportReason.values.map((r) => r.backendKey), [
