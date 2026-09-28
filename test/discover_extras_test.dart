@@ -15,7 +15,7 @@ void main() {
     '2–5 km away',
     'A bio long enough to be shown here.',
     ['Books'],
-    'assets/profiles/maya.png',
+    'assets/profiles/maya.webp',
   );
   const far = DemoProfile(
     'Far',
@@ -24,7 +24,7 @@ void main() {
     '20–50 km away',
     'A bio long enough to be shown here.',
     ['Books'],
-    'assets/profiles/elena.png',
+    'assets/profiles/elena.webp',
   );
 
   test('distance preference uses only the far edge of the band', () {

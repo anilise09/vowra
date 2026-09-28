@@ -14,7 +14,7 @@ void main() {
     '2–5 km away',
     'Sunday markets, tiny concerts, and ambitious pasta experiments.',
     ['Kindness', 'Live music', 'Cooking'],
-    'assets/profiles/maya.png',
+    'assets/profiles/maya.webp',
   );
 
   test('report storage is local and exposed as an immutable view', () {
@@ -62,7 +62,7 @@ void main() {
       '5–10 km away',
       'Bookshop regular.',
       ['Books'],
-      'assets/profiles/elena.png',
+      'assets/profiles/elena.webp',
     );
     final interactions = MemoryDiscoveryInteractionRepository();
     final matches = MemoryMatchRepository(

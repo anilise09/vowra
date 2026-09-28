@@ -497,7 +497,7 @@ void main() {
   ) async {
     final server = FakeVawraServer()
       ..verified = true
-      ..addPerson('Maya', demoPortrait: 'assets/profiles/maya.png')
+      ..addPerson('Maya', demoPortrait: 'assets/profiles/maya.webp')
       ..profile = {
         'display_name': 'Alex',
         'relationship_intent': 'casual',
@@ -517,7 +517,7 @@ void main() {
         (w) =>
             w is Image &&
             w.image is AssetImage &&
-            (w.image as AssetImage).assetName == 'assets/profiles/maya.png',
+            (w.image as AssetImage).assetName == 'assets/profiles/maya.webp',
       ),
       findsWidgets,
     );

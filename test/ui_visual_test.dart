@@ -42,7 +42,7 @@ void main() {
     await enterDiscovery(tester);
     await tester.runAsync(() async {
       await precacheImage(
-        const AssetImage('assets/profiles/maya.png'),
+        const AssetImage('assets/profiles/maya.webp'),
         tester.element(find.byKey(const Key('discovery-card-gesture'))),
       );
     });

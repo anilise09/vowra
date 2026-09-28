@@ -11,7 +11,7 @@ void main() {
     '2–5 km away',
     'Sunday markets, tiny concerts, and ambitious pasta experiments.',
     ['Kindness', 'Live music', 'Cooking'],
-    'assets/profiles/maya.png',
+    'assets/profiles/maya.webp',
   );
 
   test('records one local like and backend-shaped event sequence', () {

@@ -12,7 +12,7 @@ void main() {
     '2–5 km away',
     'A bio long enough to be shown here.',
     ['Books'],
-    'assets/profiles/maya.png',
+    'assets/profiles/maya.webp',
   );
 
   Widget deck(Map<String, List<String>> extra) => MaterialApp(
@@ -44,7 +44,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       deck({
-        'assets/profiles/maya.png': ['assets/profiles/elena.png'],
+        'assets/profiles/maya.webp': ['assets/profiles/elena.webp'],
       }),
     );
     expect(find.byKey(const Key('photo-segments')), findsOneWidget);

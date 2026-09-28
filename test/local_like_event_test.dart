@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('local like creates outbound and notification preview events', () {
     final events = localLikeEventsFor(
-      profileAssetPath: 'assets/profiles/maya.png',
+      profileAssetPath: 'assets/profiles/maya.webp',
       profileName: 'Maya',
       createdAt: DateTime.utc(2026, 9, 22, 12),
     );
@@ -18,7 +18,7 @@ void main() {
 
   test('mutual like appends a connectable free-core event', () {
     final events = localLikeEventsFor(
-      profileAssetPath: 'assets/profiles/maya.png',
+      profileAssetPath: 'assets/profiles/maya.webp',
       profileName: 'Maya',
       createdAt: DateTime.utc(2026, 9, 22, 12),
       mutualLike: true,

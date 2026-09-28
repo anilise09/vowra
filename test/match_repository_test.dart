@@ -11,7 +11,7 @@ void main() {
     '2–5 km away',
     'Sunday markets, tiny concerts, and ambitious pasta experiments.',
     ['Kindness', 'Live music', 'Cooking'],
-    'assets/profiles/maya.png',
+    'assets/profiles/maya.webp',
   );
 
   test('creates a match only for profiles with an incoming like', () {
@@ -48,7 +48,7 @@ void main() {
     repository.createMutualLike(maya);
 
     expect(
-      repository.blockProfile('assets/profiles/other.png')?.isActive,
+      repository.blockProfile('assets/profiles/other.webp')?.isActive,
       isTrue,
     );
     final blocked = repository.blockProfile(maya.assetPath);

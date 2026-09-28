@@ -168,7 +168,7 @@ void main() {
             onPressed: () => MatchCelebration.show(
               context,
               peerName: 'Maya',
-              peerPhotoAsset: 'assets/profiles/maya.png',
+              peerPhotoAsset: 'assets/profiles/maya.webp',
               ownInitial: 'A',
               superLike: false,
               onMessage: () {},

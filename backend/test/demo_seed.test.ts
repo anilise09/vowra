@@ -26,7 +26,7 @@ describe('demo members for the local test server', () => {
     const seen = res.json().people as { demo_portrait: string; interests: string[] }[];
     expect(seen).toHaveLength(50);
     for (const p of seen) {
-      expect(p.demo_portrait).toMatch(/^assets\/profiles\/.+\.png$/);
+      expect(p.demo_portrait).toMatch(/^assets\/profiles\/.+\.webp$/);
       for (const i of p.interests) {
         expect(['Arts', 'Books', 'Cooking', 'Fitness', 'Music', 'Outdoors', 'Travel']).toContain(i);
       }
@@ -39,7 +39,7 @@ describe('demo members for the local test server', () => {
       method: 'PATCH',
       url: '/v1/me/profile',
       headers: me.auth,
-      payload: { demo_portrait: 'assets/profiles/maya.png' },
+      payload: { demo_portrait: 'assets/profiles/maya.webp' },
     });
     expect(res.statusCode).toBe(400);
     expect(res.json().error).toBe('unknown_field');

@@ -16,7 +16,7 @@ void main() {
 
   test('discovery reports use stable moderation backend keys', () {
     final report = DiscoveryProfileReport(
-      profileAssetPath: 'assets/profiles/synthetic.png',
+      profileAssetPath: 'assets/profiles/synthetic.webp',
       profileName: 'Maya',
       reason: ReportReason.scam,
       createdAt: DateTime.utc(2026, 9, 22),

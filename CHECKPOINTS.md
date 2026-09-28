@@ -1,5 +1,18 @@
 # Checkpoints
 
+## Size - The app drops from 729 MB to 138 MB (2026-09-28)
+
+- The 260 sample portraits (plus one extra photo) were 615 MB of PNG. They are now WebP at quality
+  85 and full resolution: 44 MB. A side-by-side crop is indistinguishable; the changed visual
+  baselines differ by at most 13/255 per pixel (mean under 1), with no layout movement.
+- The first rebuild still reported 720 MB although the APK held only 138 MB: Gradle's incremental
+  packager left the old entries as dead space. A clean package gives 138.3 MB for all three CPU
+  types; a per-CPU store build will be smaller still.
+- Every reference moved to `.webp` (app, fixture, generator, tests). The local test server's demo
+  members were re-seeded so their portraits point at the new files.
+- Seven untracked `np_*.png` portraits (about 18 MB, not referenced anywhere) still sit in
+  `assets/profiles/`, so they are bundled; left untouched pending the owner's call.
+
 ## BE-8 - "I am" and "Show me": two-way gender matching (2026-09-28)
 
 - Discover used to show everyone regardless of who a person wanted to meet. Onboarding now asks

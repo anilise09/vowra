@@ -342,7 +342,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   SafetyReport? safetyReport;
   MatchConnection? connection;
 
-  static const incomingLikeProfileAssets = {'assets/profiles/maya.png'};
+  static const incomingLikeProfileAssets = {'assets/profiles/maya.webp'};
 
   /// The first visit to Chats shows the date-safely guide once.
   void _selectTab(int index) {
@@ -376,7 +376,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Sunday markets, tiny concerts, and ambitious pasta experiments.',
       ['Kindness', 'Live music', 'Cooking'],
-      'assets/profiles/maya.png',
+      'assets/profiles/maya.webp',
     ),
     DemoProfile(
       'Elena',
@@ -385,7 +385,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Bookshop regular, neighborhood explorer, and enthusiastic brunch host.',
       ['Books', 'Cooking', 'Arts'],
-      'assets/profiles/elena.png',
+      'assets/profiles/elena.webp',
     ),
     DemoProfile(
       'Amina',
@@ -394,7 +394,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Plant lover, weekend cyclist, and always looking for a new gallery.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/amina.png',
+      'assets/profiles/amina.webp',
     ),
     DemoProfile(
       'Sofia',
@@ -403,7 +403,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Farmers markets, live jazz, and dinners that run pleasantly late.',
       ['Music', 'Cooking', 'Travel'],
-      'assets/profiles/sofia.png',
+      'assets/profiles/sofia.webp',
     ),
     DemoProfile(
       'Mei',
@@ -412,7 +412,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Museum afternoons, design books, and finding the best noodles in town.',
       ['Arts', 'Books', 'Travel'],
-      'assets/profiles/mei.png',
+      'assets/profiles/mei.webp',
     ),
     DemoProfile(
       'Nadia',
@@ -421,7 +421,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside walks, contemporary fiction, and finding the perfect flatbread.',
       ['Books', 'Outdoors', 'Cooking'],
-      'assets/profiles/nadia.png',
+      'assets/profiles/nadia.webp',
     ),
     DemoProfile(
       'Grace',
@@ -430,7 +430,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Early bakery runs, dance classes, and hosting game nights.',
       ['Cooking', 'Fitness', 'Music'],
-      'assets/profiles/grace.png',
+      'assets/profiles/grace.webp',
     ),
     DemoProfile(
       'Valentina',
@@ -439,7 +439,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Garden weekends, live theater, and making travel plans over coffee.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/valentina.png',
+      'assets/profiles/valentina.webp',
     ),
     DemoProfile(
       'Leila',
@@ -448,7 +448,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Gallery openings, architecture walks, and slow Sunday breakfasts.',
       ['Arts', 'Books', 'Cooking'],
-      'assets/profiles/leila.png',
+      'assets/profiles/leila.webp',
     ),
     DemoProfile(
       'Chloe',
@@ -457,7 +457,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Lakeside picnics, indie films, and learning new recipes.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/chloe.png',
+      'assets/profiles/chloe.webp',
     ),
     DemoProfile(
       'Camila',
@@ -466,7 +466,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'City gardens, weekend dancing, and sharing ambitious home cooking.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/camila.png',
+      'assets/profiles/camila.webp',
     ),
     DemoProfile(
       'Derya',
@@ -475,7 +475,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Waterfront walks, live comedy, and a carefully curated reading list.',
       ['Books', 'Arts', 'Outdoors'],
-      'assets/profiles/derya.png',
+      'assets/profiles/derya.webp',
     ),
     DemoProfile(
       'Thuy',
@@ -484,7 +484,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Libraries, quiet courtyards, and planning trips around great food.',
       ['Books', 'Travel', 'Cooking'],
-      'assets/profiles/thuy.png',
+      'assets/profiles/thuy.webp',
     ),
     DemoProfile(
       'Selam',
@@ -493,7 +493,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Botanical walks, dance workouts, and trying every café nearby.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/selam.png',
+      'assets/profiles/selam.webp',
     ),
     DemoProfile(
       'Amelie',
@@ -502,7 +502,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Flower markets, sketchbooks, and films with excellent soundtracks.',
       ['Arts', 'Music', 'Travel'],
-      'assets/profiles/amelie.png',
+      'assets/profiles/amelie.webp',
     ),
     DemoProfile(
       'Zuri',
@@ -511,7 +511,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Community gardens, morning runs, and cooking for friends.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/zuri.png',
+      'assets/profiles/zuri.webp',
     ),
     DemoProfile(
       'Ines',
@@ -520,7 +520,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'City overlooks, pottery classes, and slow weekend breakfasts.',
       ['Arts', 'Travel', 'Cooking'],
-      'assets/profiles/ines.png',
+      'assets/profiles/ines.webp',
     ),
     DemoProfile(
       'Yara',
@@ -529,7 +529,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Courtyard cafés, contemporary novels, and live acoustic sets.',
       ['Books', 'Music', 'Arts'],
-      'assets/profiles/yara.png',
+      'assets/profiles/yara.webp',
     ),
     DemoProfile(
       'Sari',
@@ -538,7 +538,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside cycling, design markets, and finding excellent noodles.',
       ['Fitness', 'Arts', 'Cooking'],
-      'assets/profiles/sari.png',
+      'assets/profiles/sari.webp',
     ),
     DemoProfile(
       'Anya',
@@ -547,7 +547,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Outdoor book stalls, classical concerts, and winter walks.',
       ['Books', 'Music', 'Outdoors'],
-      'assets/profiles/anya.png',
+      'assets/profiles/anya.webp',
     ),
     DemoProfile(
       'Aisha',
@@ -556,7 +556,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Tropical gardens, craft workshops, and long weekend lunches.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/aisha.png',
+      'assets/profiles/aisha.webp',
     ),
     DemoProfile(
       'Lucia',
@@ -565,7 +565,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Waterfront sunsets, salsa nights, and neighborhood food finds.',
       ['Music', 'Fitness', 'Cooking'],
-      'assets/profiles/lucia.png',
+      'assets/profiles/lucia.webp',
     ),
     DemoProfile(
       'Kasia',
@@ -574,7 +574,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Autumn walks, mystery novels, and learning new recipes.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/kasia.png',
+      'assets/profiles/kasia.webp',
     ),
     DemoProfile(
       'Hodan',
@@ -583,7 +583,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Botanical courtyards, thoughtful conversation, and museum weekends.',
       ['Outdoors', 'Books', 'Arts'],
-      'assets/profiles/hodan.png',
+      'assets/profiles/hodan.webp',
     ),
     DemoProfile(
       'Mariam',
@@ -592,7 +592,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Golden-hour walks, family recipes, and independent films.',
       ['Outdoors', 'Cooking', 'Arts'],
-      'assets/profiles/mariam.png',
+      'assets/profiles/mariam.webp',
     ),
     DemoProfile(
       'Noura',
@@ -601,7 +601,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Coastal gardens, jazz evenings, and shared meals.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/noura.png',
+      'assets/profiles/noura.webp',
     ),
     DemoProfile(
       'Elise',
@@ -610,7 +610,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Sculpture parks, cycling, and quiet Sunday cafés.',
       ['Arts', 'Fitness', 'Books'],
-      'assets/profiles/elise.png',
+      'assets/profiles/elise.webp',
     ),
     DemoProfile(
       'Adwoa',
@@ -619,7 +619,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Garden walks, live music, and dinner with friends.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/adwoa.png',
+      'assets/profiles/adwoa.webp',
     ),
     DemoProfile(
       'Rina',
@@ -628,7 +628,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront walks, design exhibits, and weekend travel.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/rina.png',
+      'assets/profiles/rina.webp',
     ),
     DemoProfile(
       'Milena',
@@ -637,7 +637,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Riverside evenings, novels, and ambitious baking.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/milena.png',
+      'assets/profiles/milena.webp',
     ),
     DemoProfile(
       'Samira',
@@ -646,7 +646,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Garden walks, music, and shared dinners.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/samira.png',
+      'assets/profiles/samira.webp',
     ),
     DemoProfile(
       'Maeve',
@@ -655,7 +655,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal paths, novels, and live shows.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/maeve.png',
+      'assets/profiles/maeve.webp',
     ),
     DemoProfile(
       'Lindiwe',
@@ -664,7 +664,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical walks, dance, and weekend cooking.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/lindiwe.png',
+      'assets/profiles/lindiwe.webp',
     ),
     DemoProfile(
       'Petra',
@@ -673,7 +673,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Marina evenings, photography, and travel.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/petra.png',
+      'assets/profiles/petra.webp',
     ),
     DemoProfile(
       'Noor',
@@ -682,7 +682,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Courtyard cafés, books, and museum days.',
       ['Books', 'Arts', 'Cooking'],
-      'assets/profiles/noor.png',
+      'assets/profiles/noor.webp',
     ),
     DemoProfile(
       'Nino',
@@ -691,7 +691,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Hillside gardens, architecture, and long dinners.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/nino.png',
+      'assets/profiles/nino.webp',
     ),
     DemoProfile(
       'Marisol',
@@ -700,7 +700,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical walks, dancing, and weekend markets.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/marisol.png',
+      'assets/profiles/marisol.webp',
     ),
     DemoProfile(
       'Keza',
@@ -709,7 +709,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Lakeside walks, books, and live jazz.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/keza.png',
+      'assets/profiles/keza.webp',
     ),
     DemoProfile(
       'Aino',
@@ -718,7 +718,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Harbor gardens, design, and hiking weekends.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/aino.png',
+      'assets/profiles/aino.webp',
     ),
     DemoProfile(
       'Rima',
@@ -727,7 +727,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Stone courtyards, museums, and shared recipes.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/rima.png',
+      'assets/profiles/rima.webp',
     ),
     DemoProfile(
       'Oksana',
@@ -736,7 +736,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Courtyard gardens, architecture, and weekend baking.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/oksana.png',
+      'assets/profiles/oksana.webp',
     ),
     DemoProfile(
       'Isidora',
@@ -745,7 +745,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical walks, dancing, and independent films.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/isidora.png',
+      'assets/profiles/isidora.webp',
     ),
     DemoProfile(
       'Abena',
@@ -754,7 +754,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Garden afternoons, live music, and dinner with friends.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/abena.png',
+      'assets/profiles/abena.webp',
     ),
     DemoProfile(
       'Freyja',
@@ -763,7 +763,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront walks, design books, and quiet road trips.',
       ['Outdoors', 'Books', 'Travel'],
-      'assets/profiles/freyja.png',
+      'assets/profiles/freyja.webp',
     ),
     DemoProfile(
       'Dalia',
@@ -772,7 +772,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Stone courtyards, family recipes, and museum weekends.',
       ['Outdoors', 'Cooking', 'Arts'],
-      'assets/profiles/dalia.png',
+      'assets/profiles/dalia.webp',
     ),
     DemoProfile(
       'Irina',
@@ -781,7 +781,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Old-town walks, architecture, and relaxed dinner parties.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/elena_ro.png',
+      'assets/profiles/elena_ro.webp',
     ),
     DemoProfile(
       'Awa',
@@ -790,7 +790,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Riverside gardens, live music, and Sunday reading.',
       ['Outdoors', 'Music', 'Books'],
-      'assets/profiles/awa.png',
+      'assets/profiles/awa.webp',
     ),
     DemoProfile(
       'Anahit',
@@ -799,7 +799,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Mountain views, museums, and trying new recipes.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/anahit.png',
+      'assets/profiles/anahit.webp',
     ),
     DemoProfile(
       'Simone',
@@ -808,7 +808,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Coastal gardens, dancing, and spontaneous road trips.',
       ['Outdoors', 'Fitness', 'Travel'],
-      'assets/profiles/simone.png',
+      'assets/profiles/simone.webp',
     ),
     DemoProfile(
       'Margot',
@@ -817,7 +817,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Canal walks, design books, and intimate concerts.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/elise_be.png',
+      'assets/profiles/elise_be.webp',
     ),
     DemoProfile(
       'Kavya',
@@ -826,7 +826,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Campus gardens, indie films, and experimental cooking.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ind_kavya.png',
+      'assets/profiles/ind_kavya.webp',
       'Indian',
     ),
     DemoProfile(
@@ -836,7 +836,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront walks, novels, and hosting relaxed dinners.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/ind_meera.png',
+      'assets/profiles/ind_meera.webp',
       'Indian',
     ),
     DemoProfile(
@@ -846,7 +846,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Gallery courtyards, live music, and weekend travel.',
       ['Arts', 'Music', 'Travel'],
-      'assets/profiles/ind_zoya.png',
+      'assets/profiles/ind_zoya.webp',
       'Indian',
     ),
     DemoProfile(
@@ -856,7 +856,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Botanical afternoons, architecture, and family recipes.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ind_nandini.png',
+      'assets/profiles/ind_nandini.webp',
       'Indian',
     ),
     DemoProfile(
@@ -866,7 +866,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'City parks, morning runs, and spontaneous road trips.',
       ['Outdoors', 'Fitness', 'Travel'],
-      'assets/profiles/ind_rhea.png',
+      'assets/profiles/ind_rhea.webp',
       'Indian',
     ),
     DemoProfile(
@@ -876,7 +876,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Library gardens, book clubs, and relaxed neighborhood dinners.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/ind_tara.png',
+      'assets/profiles/ind_tara.webp',
       'Indian',
     ),
     DemoProfile(
@@ -886,7 +886,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Riverside evenings, live music, and photography walks.',
       ['Outdoors', 'Music', 'Arts'],
-      'assets/profiles/ind_isha.png',
+      'assets/profiles/ind_isha.webp',
       'Indian',
     ),
     DemoProfile(
@@ -896,7 +896,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'City plazas, morning runs, and weekend road trips.',
       ['Outdoors', 'Fitness', 'Travel'],
-      'assets/profiles/ind_priya.png',
+      'assets/profiles/ind_priya.webp',
       'Indian',
     ),
     DemoProfile(
@@ -906,7 +906,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Heritage gardens, architecture, and cooking for friends.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ind_leela.png',
+      'assets/profiles/ind_leela.webp',
       'Indian',
     ),
     DemoProfile(
@@ -916,7 +916,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal parks, novels, and finding small live venues.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/ind_sana.png',
+      'assets/profiles/ind_sana.webp',
       'Indian',
     ),
     DemoProfile(
@@ -926,7 +926,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'University gardens, design podcasts, and weekend baking.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/pak_ayesha.png',
+      'assets/profiles/pak_ayesha.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -936,7 +936,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside walks, books, and small live shows.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/pak_hira.png',
+      'assets/profiles/pak_hira.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -946,7 +946,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Arts courtyards, photography, and spontaneous travel.',
       ['Arts', 'Outdoors', 'Travel'],
-      'assets/profiles/pak_mahnoor.png',
+      'assets/profiles/pak_mahnoor.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -956,7 +956,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Botanical afternoons, architecture, and relaxed dinners.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/pak_saba.png',
+      'assets/profiles/pak_saba.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -966,7 +966,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'City parks, morning runs, and film nights.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/pak_alina.png',
+      'assets/profiles/pak_alina.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -976,7 +976,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Bookshop courtyards, design podcasts, and weekend baking.',
       ['Books', 'Arts', 'Cooking'],
-      'assets/profiles/pak_eman.png',
+      'assets/profiles/pak_eman.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -986,7 +986,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Riverside gardens, live music, and relaxed city breaks.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/pak_laiba.png',
+      'assets/profiles/pak_laiba.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -996,7 +996,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Arts courtyards, photography, and dinners with friends.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/pak_mehwish.png',
+      'assets/profiles/pak_mehwish.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -1006,7 +1006,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical walks, morning fitness, and independent films.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/pak_rabia.png',
+      'assets/profiles/pak_rabia.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -1016,7 +1016,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Museum gardens, thoughtful books, and long weekend drives.',
       ['Arts', 'Books', 'Travel'],
-      'assets/profiles/pak_sidra.png',
+      'assets/profiles/pak_sidra.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -1026,7 +1026,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical courtyards, design books, and weekend baking.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/bd_tasnim.png',
+      'assets/profiles/bd_tasnim.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1036,7 +1036,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside evenings, live music, and relaxed city walks.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/bd_nusrat.png',
+      'assets/profiles/bd_nusrat.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1046,7 +1046,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Arts gardens, photography, and cooking for friends.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/bd_farzana.png',
+      'assets/profiles/bd_farzana.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1056,7 +1056,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Cycling paths, morning workouts, and independent films.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/bd_jannat.png',
+      'assets/profiles/bd_jannat.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1066,7 +1066,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Museum courtyards, thoughtful novels, and road trips.',
       ['Arts', 'Books', 'Travel'],
-      'assets/profiles/bd_rukhsana.png',
+      'assets/profiles/bd_rukhsana.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1076,7 +1076,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Library gardens, thoughtful books, and neighborhood dinners.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/bd_sharmin.png',
+      'assets/profiles/bd_sharmin.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1086,7 +1086,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Riverside parks, live shows, and spontaneous city breaks.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/bd_mitu.png',
+      'assets/profiles/bd_mitu.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1096,7 +1096,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Architecture walks, photography, and relaxed cooking.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/bd_tanjila.png',
+      'assets/profiles/bd_tanjila.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1106,7 +1106,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Lakeside art, morning fitness, and independent films.',
       ['Arts', 'Fitness', 'Outdoors'],
-      'assets/profiles/bd_lamis.png',
+      'assets/profiles/bd_lamis.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1116,7 +1116,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Botanical terraces, novels, and long weekend drives.',
       ['Outdoors', 'Books', 'Travel'],
-      'assets/profiles/bd_nabila.png',
+      'assets/profiles/bd_nabila.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -1126,7 +1126,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Bookshop afternoons, urban sketching, and trying new noodle spots.',
       ['Books', 'Arts', 'Cooking'],
-      'assets/profiles/cn_yuxin.png',
+      'assets/profiles/cn_yuxin.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1136,7 +1136,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside cycling, live jazz, and carefully planned weekend trips.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/cn_wenqi.png',
+      'assets/profiles/cn_wenqi.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1146,7 +1146,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Contemporary galleries, botanical walks, and dinner parties with friends.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/cn_xinyi.png',
+      'assets/profiles/cn_xinyi.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1156,7 +1156,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Architecture podcasts, literary fiction, and quiet coastal escapes.',
       ['Arts', 'Books', 'Travel'],
-      'assets/profiles/cn_jia.png',
+      'assets/profiles/cn_jia.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1166,7 +1166,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Morning runs, independent films, and finding intimate concert venues.',
       ['Fitness', 'Arts', 'Music'],
-      'assets/profiles/cn_ruolan.png',
+      'assets/profiles/cn_ruolan.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1176,7 +1176,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Library courtyards, literary fiction, and home cooking.',
       ['Books', 'Arts', 'Cooking'],
-      'assets/profiles/cn_lihua.png',
+      'assets/profiles/cn_lihua.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1186,7 +1186,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Riverside cycling, live shows, and weekend city breaks.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/cn_mengyao.png',
+      'assets/profiles/cn_mengyao.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1196,7 +1196,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Sculpture gardens, architecture, and dinners with friends.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/cn_qian.png',
+      'assets/profiles/cn_qian.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1206,7 +1206,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Flower markets, photography, and independent films.',
       ['Outdoors', 'Arts', 'Books'],
-      'assets/profiles/cn_shanshan.png',
+      'assets/profiles/cn_shanshan.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1216,7 +1216,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal hikes, travel writing, and acoustic music.',
       ['Outdoors', 'Travel', 'Music'],
-      'assets/profiles/cn_xiaoyu.png',
+      'assets/profiles/cn_xiaoyu.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -1226,7 +1226,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical afternoons, design books, and relaxed home cooking.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/jp_aiko.png',
+      'assets/profiles/jp_aiko.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1236,7 +1236,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront walks, live jazz, and carefully planned getaways.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/jp_emi.png',
+      'assets/profiles/jp_emi.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1246,7 +1246,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Ceramics studios, independent films, and neighborhood cafes.',
       ['Arts', 'Books', 'Cooking'],
-      'assets/profiles/jp_nanami.png',
+      'assets/profiles/jp_nanami.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1256,7 +1256,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Sculpture gardens, architecture, and long weekend drives.',
       ['Arts', 'Outdoors', 'Travel'],
-      'assets/profiles/jp_sayaka.png',
+      'assets/profiles/jp_sayaka.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1266,7 +1266,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Cycling paths, photography walks, and intimate concerts.',
       ['Fitness', 'Arts', 'Music'],
-      'assets/profiles/jp_yui.png',
+      'assets/profiles/jp_yui.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1276,7 +1276,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Rose gardens, illustration books, and weekend baking.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/jp_akari.png',
+      'assets/profiles/jp_akari.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1286,7 +1286,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Canal walks, thoughtful novels, and live acoustic sets.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/jp_chihiro.png',
+      'assets/profiles/jp_chihiro.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1296,7 +1296,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Modern architecture, photography, and relaxed city breaks.',
       ['Arts', 'Outdoors', 'Travel'],
-      'assets/profiles/jp_kaori.png',
+      'assets/profiles/jp_kaori.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1306,7 +1306,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Coastal trails, morning fitness, and independent cinema.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/jp_misaki.png',
+      'assets/profiles/jp_misaki.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1316,7 +1316,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Library gardens, home cooking, and long weekend drives.',
       ['Books', 'Cooking', 'Travel'],
-      'assets/profiles/jp_tomomi.png',
+      'assets/profiles/jp_tomomi.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -1326,7 +1326,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Campus gardens, illustration, and trying new recipes.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ph_althea.png',
+      'assets/profiles/ph_althea.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1336,7 +1336,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront walks, live music, and weekend escapes.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/ph_bianca.png',
+      'assets/profiles/ph_bianca.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1346,7 +1346,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Arts centers, photography, and relaxed dinner parties.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/ph_camille.png',
+      'assets/profiles/ph_camille.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1356,7 +1356,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Botanical afternoons, literary fiction, and acoustic shows.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/ph_denise.png',
+      'assets/profiles/ph_denise.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1366,7 +1366,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal paths, morning fitness, and spontaneous road trips.',
       ['Outdoors', 'Fitness', 'Travel'],
-      'assets/profiles/ph_mariel.png',
+      'assets/profiles/ph_mariel.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1376,7 +1376,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Riverside cycling, graphic novels, and weekend food hunts.',
       ['Fitness', 'Books', 'Cooking'],
-      'assets/profiles/ph_bea.png',
+      'assets/profiles/ph_bea.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1386,7 +1386,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Library courtyards, architecture, and intimate jazz sets.',
       ['Books', 'Arts', 'Music'],
-      'assets/profiles/ph_celeste.png',
+      'assets/profiles/ph_celeste.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1396,7 +1396,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Community gardens, photography, and cooking for friends.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ph_inez.png',
+      'assets/profiles/ph_inez.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1406,7 +1406,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal hikes, morning training, and spontaneous travel.',
       ['Outdoors', 'Fitness', 'Travel'],
-      'assets/profiles/ph_katrina.png',
+      'assets/profiles/ph_katrina.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1416,7 +1416,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Sculpture parks, literary memoirs, and relaxed dinners.',
       ['Arts', 'Books', 'Cooking'],
-      'assets/profiles/ph_liza.png',
+      'assets/profiles/ph_liza.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -1426,7 +1426,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Riverside walks, illustration, and weekend baking.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/kr_jisoo.png',
+      'assets/profiles/kr_jisoo.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1436,7 +1436,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Library gardens, literary fiction, and intimate concerts.',
       ['Books', 'Outdoors', 'Music'],
-      'assets/profiles/kr_minji.png',
+      'assets/profiles/kr_minji.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1446,7 +1446,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Sculpture courtyards, architecture, and relaxed travel.',
       ['Arts', 'Outdoors', 'Travel'],
-      'assets/profiles/kr_sora.png',
+      'assets/profiles/kr_sora.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1456,7 +1456,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Coastal trails, morning fitness, and photography walks.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/kr_yuna.png',
+      'assets/profiles/kr_yuna.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1466,7 +1466,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Botanical afternoons, thoughtful books, and dinner parties.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/kr_hyejin.png',
+      'assets/profiles/kr_hyejin.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1476,7 +1476,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Ceramics workshops, tiny galleries, and experimental baking.',
       ['Arts', 'Cooking', 'Outdoors'],
-      'assets/profiles/kr_eunchae.png',
+      'assets/profiles/kr_eunchae.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1486,7 +1486,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Community gardens, trail runs, and cooking from scratch.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/kr_dabin.png',
+      'assets/profiles/kr_dabin.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1496,7 +1496,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Architecture walks, essay collections, and quiet city breaks.',
       ['Arts', 'Books', 'Travel'],
-      'assets/profiles/kr_nari.png',
+      'assets/profiles/kr_nari.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1506,7 +1506,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '20–50 km away',
       'Waterfront mornings, folk playlists, and lively dinner tables.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/kr_seoyeon.png',
+      'assets/profiles/kr_seoyeon.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1516,7 +1516,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Botanical sketches, memoirs, and unhurried train journeys.',
       ['Arts', 'Books', 'Travel'],
-      'assets/profiles/kr_mirae.png',
+      'assets/profiles/kr_mirae.webp',
       'Korean',
     ),
     DemoProfile(
@@ -1526,7 +1526,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Sculpture courtyards, morning runs, and late-night playlists.',
       ['Arts', 'Fitness', 'Music'],
-      'assets/profiles/mx_ximena.png',
+      'assets/profiles/mx_ximena.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1536,7 +1536,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Rooftop gardens, design books, and relaxed weekend cooking.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/mx_renata.png',
+      'assets/profiles/mx_renata.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1546,7 +1546,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Lakeside walks, live vocals, and dinner with a full table.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/mx_paloma.png',
+      'assets/profiles/mx_paloma.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1556,7 +1556,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '20–50 km away',
       'Modern art, architecture trips, and quiet literary essays.',
       ['Arts', 'Travel', 'Books'],
-      'assets/profiles/mx_itzel.png',
+      'assets/profiles/mx_itzel.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1566,7 +1566,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal trails, botanical sketches, and thoughtful memoirs.',
       ['Outdoors', 'Arts', 'Books'],
-      'assets/profiles/mx_fernanda.png',
+      'assets/profiles/mx_fernanda.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1576,7 +1576,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Library courtyards, illustrated essays, and finding new running routes.',
       ['Books', 'Arts', 'Fitness'],
-      'assets/profiles/mx_abril.png',
+      'assets/profiles/mx_abril.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1586,7 +1586,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Ceramics afternoons, neighborhood gardens, and ambitious weekend meals.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/mx_marisol.png',
+      'assets/profiles/mx_marisol.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1596,7 +1596,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '20–50 km away',
       'Conservatory walks, live jazz, and slow journeys with a good book.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/mx_nayeli.png',
+      'assets/profiles/mx_nayeli.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1606,7 +1606,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Waterfront mornings, modern architecture, and thoughtful memoirs.',
       ['Outdoors', 'Arts', 'Books'],
-      'assets/profiles/mx_adriana.png',
+      'assets/profiles/mx_adriana.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1616,7 +1616,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Community gardens, family recipes, and music that fills the kitchen.',
       ['Outdoors', 'Cooking', 'Music'],
-      'assets/profiles/mx_teresa.png',
+      'assets/profiles/mx_teresa.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -1626,7 +1626,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Coffee walks, pickup basketball, and cooking for friends.',
       ['Fitness', 'Cooking', 'Music'],
-      'assets/profiles/marcus.png',
+      'assets/profiles/marcus.webp',
     ),
     DemoProfile(
       'Daniel',
@@ -1635,7 +1635,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Record collector, amateur photographer, and reliable road-trip DJ.',
       ['Music', 'Arts', 'Travel'],
-      'assets/profiles/daniel.png',
+      'assets/profiles/daniel.webp',
     ),
     DemoProfile(
       'Arjun',
@@ -1644,7 +1644,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Runner, home cook, and the person who reads every museum label.',
       ['Fitness', 'Cooking', 'Arts'],
-      'assets/profiles/arjun.png',
+      'assets/profiles/arjun.webp',
     ),
     DemoProfile(
       'Ethan',
@@ -1653,7 +1653,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Community gardener, history reader, and beginner bread baker.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/ethan.png',
+      'assets/profiles/ethan.webp',
     ),
     DemoProfile(
       'Minjun',
@@ -1662,7 +1662,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'City walks, independent films, and planning the next hiking weekend.',
       ['Arts', 'Outdoors', 'Travel'],
-      'assets/profiles/minjun.png',
+      'assets/profiles/minjun.webp',
     ),
     DemoProfile(
       'Jamal',
@@ -1671,7 +1671,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Botanical gardens, jazz playlists, and cooking with friends.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/jamal.png',
+      'assets/profiles/jamal.webp',
     ),
     DemoProfile(
       'Luca',
@@ -1680,7 +1680,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Old-town cafés, cycling, and an unreasonable number of cookbooks.',
       ['Fitness', 'Books', 'Cooking'],
-      'assets/profiles/luca.png',
+      'assets/profiles/luca.webp',
     ),
     DemoProfile(
       'Tomas',
@@ -1689,7 +1689,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Weekend football, street photography, and hunting down great tacos.',
       ['Fitness', 'Arts', 'Cooking'],
-      'assets/profiles/tomas.png',
+      'assets/profiles/tomas.webp',
     ),
     DemoProfile(
       'Andre',
@@ -1698,7 +1698,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront runs, soul records, and planning relaxed dinner parties.',
       ['Fitness', 'Music', 'Cooking'],
-      'assets/profiles/andre.png',
+      'assets/profiles/andre.webp',
     ),
     DemoProfile(
       'Noah',
@@ -1707,7 +1707,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Mountain trails, small-town cafés, and documentary nights.',
       ['Outdoors', 'Travel', 'Arts'],
-      'assets/profiles/noah.png',
+      'assets/profiles/noah.webp',
     ),
     DemoProfile(
       'Kwame',
@@ -1716,7 +1716,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Public gardens, live percussion, and cooking for a full table.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/kwame.png',
+      'assets/profiles/kwame.webp',
     ),
     DemoProfile(
       'Ronan',
@@ -1725,7 +1725,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal hikes, history podcasts, and finding welcoming pubs.',
       ['Outdoors', 'Books', 'Travel'],
-      'assets/profiles/ronan.png',
+      'assets/profiles/ronan.webp',
     ),
     DemoProfile(
       'Omar',
@@ -1734,7 +1734,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Museum afternoons, pickup football, and perfecting breakfast.',
       ['Arts', 'Fitness', 'Cooking'],
-      'assets/profiles/omar.png',
+      'assets/profiles/omar.webp',
     ),
     DemoProfile(
       'Niran',
@@ -1743,7 +1743,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Rainy park walks, street food, and a growing vinyl collection.',
       ['Outdoors', 'Cooking', 'Music'],
-      'assets/profiles/niran.png',
+      'assets/profiles/niran.webp',
     ),
     DemoProfile(
       'Nikos',
@@ -1752,7 +1752,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Marina evenings, architecture, and hosting relaxed Sunday lunches.',
       ['Travel', 'Arts', 'Cooking'],
-      'assets/profiles/nikos.png',
+      'assets/profiles/nikos.webp',
     ),
     DemoProfile(
       'Mateo',
@@ -1761,7 +1761,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Colorful neighborhoods, weekend football, and sunset photography.',
       ['Arts', 'Fitness', 'Travel'],
-      'assets/profiles/mateo.png',
+      'assets/profiles/mateo.webp',
     ),
     DemoProfile(
       'Emmanuel',
@@ -1770,7 +1770,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Public gardens, contemporary art, and elaborate Sunday dinners.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/emmanuel.png',
+      'assets/profiles/emmanuel.webp',
     ),
     DemoProfile(
       'Tane',
@@ -1779,7 +1779,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Waterfront trails, social basketball, and discovering new music.',
       ['Outdoors', 'Fitness', 'Music'],
-      'assets/profiles/tane.png',
+      'assets/profiles/tane.webp',
     ),
     DemoProfile(
       'Pavel',
@@ -1788,7 +1788,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Old-town walks, history books, and experimenting with bread.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/pavel.png',
+      'assets/profiles/pavel.webp',
     ),
     DemoProfile(
       'Farid',
@@ -1797,7 +1797,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical gardens, documentary films, and generous dinner tables.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/farid.png',
+      'assets/profiles/farid.webp',
     ),
     DemoProfile(
       'Daan',
@@ -1806,7 +1806,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Canal cycling, live music, and experimental home cooking.',
       ['Fitness', 'Music', 'Cooking'],
-      'assets/profiles/daan.png',
+      'assets/profiles/daan.webp',
     ),
     DemoProfile(
       'Idrissa',
@@ -1815,7 +1815,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Art spaces, community events, and a great Sunday playlist.',
       ['Arts', 'Music', 'Outdoors'],
-      'assets/profiles/idrissa.png',
+      'assets/profiles/idrissa.webp',
     ),
     DemoProfile(
       'Sebastian',
@@ -1824,7 +1824,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Hilltop hikes, street photography, and late coffee.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/sebastian.png',
+      'assets/profiles/sebastian.webp',
     ),
     DemoProfile(
       'Andrei',
@@ -1833,7 +1833,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Old-town walks, tennis, and hosting relaxed dinners.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/andrei.png',
+      'assets/profiles/andrei.webp',
     ),
     DemoProfile(
       'Timur',
@@ -1842,7 +1842,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Modern gardens, architecture books, and weekend road trips.',
       ['Outdoors', 'Books', 'Travel'],
-      'assets/profiles/timur.png',
+      'assets/profiles/timur.webp',
     ),
     DemoProfile(
       'Youssef',
@@ -1851,7 +1851,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Courtyard cafés, running, and cooking for friends.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/youssef.png',
+      'assets/profiles/youssef.webp',
     ),
     DemoProfile(
       'Henrik',
@@ -1860,7 +1860,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Harbor walks, design books, and live concerts.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/henrik.png',
+      'assets/profiles/henrik.webp',
     ),
     DemoProfile(
       'Chinedu',
@@ -1869,7 +1869,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical trails, basketball, and film nights.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/chinedu.png',
+      'assets/profiles/chinedu.webp',
     ),
     DemoProfile(
       'Rafael',
@@ -1878,7 +1878,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'City plazas, street photography, and weekend cooking.',
       ['Arts', 'Travel', 'Cooking'],
-      'assets/profiles/rafael.png',
+      'assets/profiles/rafael.webp',
     ),
     DemoProfile(
       'Batu',
@@ -1887,7 +1887,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Public gardens, hiking, and architecture podcasts.',
       ['Outdoors', 'Fitness', 'Books'],
-      'assets/profiles/batu.png',
+      'assets/profiles/batu.webp',
     ),
     DemoProfile(
       'Karim',
@@ -1896,7 +1896,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Seaside walks, running, and home cooking.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/karim.png',
+      'assets/profiles/karim.webp',
     ),
     DemoProfile(
       'Marek',
@@ -1905,7 +1905,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'River walks, history, and small concerts.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/marek.png',
+      'assets/profiles/marek.webp',
     ),
     DemoProfile(
       'Tendai',
@@ -1914,7 +1914,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'City gardens, jazz, and dinner parties.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/tendai.png',
+      'assets/profiles/tendai.webp',
     ),
     DemoProfile(
       'Joao',
@@ -1923,7 +1923,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'City overlooks, football, and photography.',
       ['Travel', 'Fitness', 'Arts'],
-      'assets/profiles/joao.png',
+      'assets/profiles/joao.webp',
     ),
     DemoProfile(
       'Ari',
@@ -1932,7 +1932,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Harbor trails, hiking, and film nights.',
       ['Outdoors', 'Travel', 'Arts'],
-      'assets/profiles/ari.png',
+      'assets/profiles/ari.webp',
     ),
     DemoProfile(
       'Diego',
@@ -1941,7 +1941,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Hilltop walks, football, and photography.',
       ['Outdoors', 'Fitness', 'Arts'],
-      'assets/profiles/diego.png',
+      'assets/profiles/diego.webp',
     ),
     DemoProfile(
       'Dawit',
@@ -1950,7 +1950,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Botanical trails, jazz, and Sunday cooking.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/dawit.png',
+      'assets/profiles/dawit.webp',
     ),
     DemoProfile(
       'Lars',
@@ -1959,7 +1959,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Waterfront hikes, books, and live shows.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/lars.png',
+      'assets/profiles/lars.webp',
     ),
     DemoProfile(
       'Giorgi',
@@ -1968,7 +1968,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Garden terraces, architecture, and dinner parties.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/giorgi.png',
+      'assets/profiles/giorgi.webp',
     ),
     DemoProfile(
       'Sami',
@@ -1977,7 +1977,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal walks, running, and weekend travel.',
       ['Outdoors', 'Fitness', 'Travel'],
-      'assets/profiles/sami.png',
+      'assets/profiles/sami.webp',
     ),
     DemoProfile(
       'Luka',
@@ -1986,7 +1986,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Seaside walks, photography, and cooking for friends.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/luka.png',
+      'assets/profiles/luka.webp',
     ),
     DemoProfile(
       'Nicolas',
@@ -1995,7 +1995,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Hillside trails, live music, and weekend travel.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/nicolas.png',
+      'assets/profiles/nicolas.webp',
     ),
     DemoProfile(
       'Kato',
@@ -2004,7 +2004,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Lakeside gardens, jazz records, and Sunday brunch.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/kato.png',
+      'assets/profiles/kato.webp',
     ),
     DemoProfile(
       'Mikkel',
@@ -2013,7 +2013,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Waterfront runs, novels, and small concerts.',
       ['Fitness', 'Books', 'Music'],
-      'assets/profiles/mikkel.png',
+      'assets/profiles/mikkel.webp',
     ),
     DemoProfile(
       'Yacine',
@@ -2022,7 +2022,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Garden terraces, architecture, and coastal drives.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/yacine.png',
+      'assets/profiles/yacine.webp',
     ),
     DemoProfile(
       'Stefan',
@@ -2031,7 +2031,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside walks, photography, and cooking for friends.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/stefan.png',
+      'assets/profiles/stefan.webp',
     ),
     DemoProfile(
       'Andres',
@@ -2040,7 +2040,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Botanical trails, live shows, and weekend travel.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/andres.png',
+      'assets/profiles/andres.webp',
     ),
     DemoProfile(
       'Alain',
@@ -2049,7 +2049,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Garden afternoons, jazz, and ambitious home cooking.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/alain.png',
+      'assets/profiles/alain.webp',
     ),
     DemoProfile(
       'Cian',
@@ -2058,7 +2058,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Coastal hikes, novels, and small live venues.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/cian.png',
+      'assets/profiles/cian.webp',
     ),
     DemoProfile(
       'Zaid',
@@ -2067,7 +2067,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Courtyard gardens, architecture, and long weekend drives.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/omar_jo.png',
+      'assets/profiles/omar_jo.webp',
     ),
     DemoProfile(
       'Vihaan',
@@ -2076,7 +2076,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Tree-lined walks, photography, and Sunday cooking.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ind_vihaan.png',
+      'assets/profiles/ind_vihaan.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2086,7 +2086,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Lakeside paths, jazz playlists, and history books.',
       ['Outdoors', 'Music', 'Books'],
-      'assets/profiles/ind_kabir.png',
+      'assets/profiles/ind_kabir.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2096,7 +2096,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Garden runs, live shows, and weekend getaways.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/ind_rohan.png',
+      'assets/profiles/ind_rohan.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2106,7 +2106,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Stone courtyards, architecture, and ambitious dinners.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ind_dev.png',
+      'assets/profiles/ind_dev.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2116,7 +2116,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Riverside evenings, books, and planning the next trip.',
       ['Outdoors', 'Books', 'Travel'],
-      'assets/profiles/ind_imran.png',
+      'assets/profiles/ind_imran.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2126,7 +2126,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Museum gardens, design, and Sunday brunch experiments.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/ind_neel.png',
+      'assets/profiles/ind_neel.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2136,7 +2136,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Leafy trails, history books, and acoustic shows.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/ind_aditya.png',
+      'assets/profiles/ind_aditya.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2146,7 +2146,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Waterfront walks, fitness, and spontaneous travel.',
       ['Outdoors', 'Fitness', 'Travel'],
-      'assets/profiles/ind_sameer.png',
+      'assets/profiles/ind_sameer.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2156,7 +2156,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Botanical terraces, jazz, and hosting dinner nights.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/ind_kunal.png',
+      'assets/profiles/ind_kunal.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2166,7 +2166,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Arts campuses, architecture, and long weekend drives.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/ind_aarav.png',
+      'assets/profiles/ind_aarav.webp',
       'Indian',
     ),
     DemoProfile(
@@ -2176,7 +2176,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Tree-lined walks, photography, and cooking for friends.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/pak_hamza.png',
+      'assets/profiles/pak_hamza.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2186,7 +2186,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Lakeside paths, history books, and jazz.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/pak_bilal.png',
+      'assets/profiles/pak_bilal.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2196,7 +2196,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Garden runs, live shows, and weekend travel.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/pak_usman.png',
+      'assets/profiles/pak_usman.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2206,7 +2206,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Courtyard architecture, novels, and Sunday cooking.',
       ['Arts', 'Books', 'Cooking'],
-      'assets/profiles/pak_farhan.png',
+      'assets/profiles/pak_farhan.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2216,7 +2216,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Waterfront evenings, music, and long road trips.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/pak_daniyal.png',
+      'assets/profiles/pak_daniyal.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2226,7 +2226,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'University walks, pickup games, and neighborhood cafés.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/pak_shahzaib.png',
+      'assets/profiles/pak_shahzaib.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2236,7 +2236,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Cultural centers, history books, and acoustic shows.',
       ['Arts', 'Books', 'Music'],
-      'assets/profiles/pak_fahad.png',
+      'assets/profiles/pak_fahad.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2246,7 +2246,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'City-park runs, photography, and spontaneous travel.',
       ['Fitness', 'Arts', 'Travel'],
-      'assets/profiles/pak_waleed.png',
+      'assets/profiles/pak_waleed.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2256,7 +2256,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Heritage gardens, ambitious cooking, and jazz evenings.',
       ['Outdoors', 'Cooking', 'Music'],
-      'assets/profiles/pak_noman.png',
+      'assets/profiles/pak_noman.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2266,7 +2266,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront walks, design, and relaxed road trips.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/pak_saad.png',
+      'assets/profiles/pak_saad.webp',
       'Pakistani',
     ),
     DemoProfile(
@@ -2276,7 +2276,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'University walks, photography, and neighborhood cafés.',
       ['Outdoors', 'Arts', 'Cooking'],
-      'assets/profiles/bd_tanvir.png',
+      'assets/profiles/bd_tanvir.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2286,7 +2286,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside routes, history books, and live jazz.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/bd_shakib.png',
+      'assets/profiles/bd_shakib.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2296,7 +2296,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Arts courtyards, ambitious dinners, and weekend travel.',
       ['Arts', 'Cooking', 'Travel'],
-      'assets/profiles/bd_mahmud.png',
+      'assets/profiles/bd_mahmud.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2306,7 +2306,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Lakeside runs, design, and spontaneous road trips.',
       ['Fitness', 'Arts', 'Travel'],
-      'assets/profiles/bd_rafi.png',
+      'assets/profiles/bd_rafi.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2316,7 +2316,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront evenings, cooking, and small live venues.',
       ['Outdoors', 'Cooking', 'Music'],
-      'assets/profiles/bd_zayed.png',
+      'assets/profiles/bd_zayed.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2326,7 +2326,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Library walks, photography, and cooking for friends.',
       ['Books', 'Arts', 'Cooking'],
-      'assets/profiles/bd_arif.png',
+      'assets/profiles/bd_arif.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2336,7 +2336,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverfront evenings, history books, and live music.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/bd_faisal.png',
+      'assets/profiles/bd_faisal.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2346,7 +2346,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Sculpture gardens, ambitious dinners, and road trips.',
       ['Arts', 'Cooking', 'Travel'],
-      'assets/profiles/bd_rezaul.png',
+      'assets/profiles/bd_rezaul.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2356,7 +2356,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Cycling routes, design, and weekend travel.',
       ['Fitness', 'Arts', 'Travel'],
-      'assets/profiles/bd_imtiaz.png',
+      'assets/profiles/bd_imtiaz.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2366,7 +2366,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront walks, home cooking, and small live venues.',
       ['Outdoors', 'Cooking', 'Music'],
-      'assets/profiles/bd_sohan.png',
+      'assets/profiles/bd_sohan.webp',
       'Bangladeshi',
     ),
     DemoProfile(
@@ -2376,7 +2376,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Park runs, street photography, and cooking ambitious Sunday lunches.',
       ['Fitness', 'Arts', 'Cooking'],
-      'assets/profiles/cn_haoran.png',
+      'assets/profiles/cn_haoran.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2386,7 +2386,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'History books, small music venues, and train trips to new cities.',
       ['Books', 'Music', 'Travel'],
-      'assets/profiles/cn_junjie.png',
+      'assets/profiles/cn_junjie.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2396,7 +2396,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Bouldering sessions, design exhibitions, and exploring neighborhood cafes.',
       ['Fitness', 'Arts', 'Cooking'],
-      'assets/profiles/cn_wei.png',
+      'assets/profiles/cn_wei.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2406,7 +2406,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Lakeside walks, jazz records, and long-form science writing.',
       ['Outdoors', 'Music', 'Books'],
-      'assets/profiles/cn_zhen.png',
+      'assets/profiles/cn_zhen.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2416,7 +2416,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Sculpture gardens, regional cooking, and relaxed road trips.',
       ['Arts', 'Cooking', 'Travel'],
-      'assets/profiles/cn_bo.png',
+      'assets/profiles/cn_bo.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2426,7 +2426,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Campus walks, pickup games, and neighborhood cafes.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/cn_cheng.png',
+      'assets/profiles/cn_cheng.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2436,7 +2436,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Canal walks, history books, and live jazz.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/cn_ming.png',
+      'assets/profiles/cn_ming.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2446,7 +2446,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Design exhibitions, photography, and spontaneous trips.',
       ['Arts', 'Fitness', 'Travel'],
-      'assets/profiles/cn_tao.png',
+      'assets/profiles/cn_tao.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2456,7 +2456,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Botanical paths, ambitious cooking, and thoughtful novels.',
       ['Outdoors', 'Cooking', 'Books'],
-      'assets/profiles/cn_yichen.png',
+      'assets/profiles/cn_yichen.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2466,7 +2466,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Waterfront evenings, live music, and weekend road trips.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/cn_liang.png',
+      'assets/profiles/cn_liang.webp',
       'Chinese',
     ),
     DemoProfile(
@@ -2476,7 +2476,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Campus gardens, pickup games, and Sunday cooking.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/jp_daichi.png',
+      'assets/profiles/jp_daichi.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2486,7 +2486,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Harbor walks, history books, and small live venues.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/jp_haruto.png',
+      'assets/profiles/jp_haruto.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2496,7 +2496,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Design museums, street photography, and spontaneous travel.',
       ['Arts', 'Fitness', 'Travel'],
-      'assets/profiles/jp_kenta.png',
+      'assets/profiles/jp_kenta.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2506,7 +2506,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Woodland gardens, thoughtful novels, and ambitious dinners.',
       ['Outdoors', 'Books', 'Cooking'],
-      'assets/profiles/jp_ren.png',
+      'assets/profiles/jp_ren.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2516,7 +2516,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside evenings, acoustic shows, and weekend road trips.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/jp_sota.png',
+      'assets/profiles/jp_sota.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2526,7 +2526,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Sculpture courtyards, jazz records, and history books.',
       ['Arts', 'Music', 'Books'],
-      'assets/profiles/jp_hiroshi.png',
+      'assets/profiles/jp_hiroshi.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2536,7 +2536,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Canal cycling, photography, and cooking for friends.',
       ['Fitness', 'Arts', 'Cooking'],
-      'assets/profiles/jp_koji.png',
+      'assets/profiles/jp_koji.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2546,7 +2546,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Botanical afternoons, literary essays, and quiet travel.',
       ['Outdoors', 'Books', 'Travel'],
-      'assets/profiles/jp_masato.png',
+      'assets/profiles/jp_masato.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2556,7 +2556,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Cycling routes, live shows, and spontaneous road trips.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/jp_naoki.png',
+      'assets/profiles/jp_naoki.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2566,7 +2566,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Performing arts, architecture walks, and ambitious dinners.',
       ['Arts', 'Outdoors', 'Cooking'],
-      'assets/profiles/jp_takumi.png',
+      'assets/profiles/jp_takumi.webp',
       'Japanese',
     ),
     DemoProfile(
@@ -2576,7 +2576,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Tree-lined walks, pickup games, and cooking for friends.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/ph_enzo.png',
+      'assets/profiles/ph_enzo.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2586,7 +2586,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Riverside evenings, history books, and live jazz.',
       ['Outdoors', 'Books', 'Music'],
-      'assets/profiles/ph_gabriel.png',
+      'assets/profiles/ph_gabriel.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2596,7 +2596,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Design museums, street photography, and weekend travel.',
       ['Arts', 'Fitness', 'Travel'],
-      'assets/profiles/ph_joaquin.png',
+      'assets/profiles/ph_joaquin.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2606,7 +2606,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Tropical gardens, ambitious dinners, and thoughtful novels.',
       ['Outdoors', 'Cooking', 'Books'],
-      'assets/profiles/ph_luis.png',
+      'assets/profiles/ph_luis.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2616,7 +2616,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Harbor walks, small concerts, and spontaneous city breaks.',
       ['Outdoors', 'Music', 'Travel'],
-      'assets/profiles/ph_paolo.png',
+      'assets/profiles/ph_paolo.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2626,7 +2626,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Skate parks, live music, and budget weekend adventures.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/ph_adrian.png',
+      'assets/profiles/ph_adrian.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2636,7 +2636,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Market courtyards, ambitious cooking, and history podcasts.',
       ['Outdoors', 'Cooking', 'Books'],
-      'assets/profiles/ph_carlo.png',
+      'assets/profiles/ph_carlo.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2646,7 +2646,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Conservatory walks, sculpture, and long road trips.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/ph_dante.png',
+      'assets/profiles/ph_dante.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2656,7 +2656,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Library terraces, design books, and acoustic concerts.',
       ['Books', 'Arts', 'Music'],
-      'assets/profiles/ph_miguel.png',
+      'assets/profiles/ph_miguel.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2666,7 +2666,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Harbor walks, strength training, and dinner experiments.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/ph_ramon.png',
+      'assets/profiles/ph_ramon.webp',
       'Filipino',
     ),
     DemoProfile(
@@ -2676,7 +2676,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Arts plazas, live shows, and spontaneous city breaks.',
       ['Arts', 'Music', 'Travel'],
-      'assets/profiles/kr_jihoon.png',
+      'assets/profiles/kr_jihoon.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2686,7 +2686,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Market courtyards, ambitious cooking, and history books.',
       ['Outdoors', 'Cooking', 'Books'],
-      'assets/profiles/kr_minho.png',
+      'assets/profiles/kr_minho.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2696,7 +2696,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Conservatory walks, sculpture, and long road trips.',
       ['Outdoors', 'Arts', 'Travel'],
-      'assets/profiles/kr_seojun.png',
+      'assets/profiles/kr_seojun.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2706,7 +2706,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Library terraces, design podcasts, and acoustic music.',
       ['Books', 'Arts', 'Music'],
-      'assets/profiles/kr_taeyang.png',
+      'assets/profiles/kr_taeyang.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2716,7 +2716,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Harbor walks, strength training, and Sunday cooking.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/kr_hyunwoo.png',
+      'assets/profiles/kr_hyunwoo.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2726,7 +2726,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Climbing sessions, live sets, and finding the best dumplings.',
       ['Fitness', 'Music', 'Cooking'],
-      'assets/profiles/kr_donghyun.png',
+      'assets/profiles/kr_donghyun.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2736,7 +2736,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Independent bookshops, jazz records, and slow weekend travel.',
       ['Books', 'Music', 'Travel'],
-      'assets/profiles/kr_kyungmin.png',
+      'assets/profiles/kr_kyungmin.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2746,7 +2746,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Lakeside rides, strength work, and ambitious home cooking.',
       ['Outdoors', 'Fitness', 'Cooking'],
-      'assets/profiles/kr_jaeho.png',
+      'assets/profiles/kr_jaeho.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2756,7 +2756,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '20–50 km away',
       'Public art, old soul albums, and spontaneous road trips.',
       ['Arts', 'Music', 'Travel'],
-      'assets/profiles/kr_sungmin.png',
+      'assets/profiles/kr_sungmin.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2766,7 +2766,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Coastal walks, history books, and patient landscape sketches.',
       ['Outdoors', 'Books', 'Arts'],
-      'assets/profiles/kr_woobin.png',
+      'assets/profiles/kr_woobin.webp',
       'Korean',
     ),
     DemoProfile(
@@ -2776,7 +2776,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Riverside runs, small concerts, and spontaneous city breaks.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/mx_emiliano.png',
+      'assets/profiles/mx_emiliano.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2786,7 +2786,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Woodworking projects, strength training, and Sunday cooking.',
       ['Arts', 'Fitness', 'Cooking'],
-      'assets/profiles/mx_gael.png',
+      'assets/profiles/mx_gael.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2796,7 +2796,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Greenhouse afternoons, history books, and slow train travel.',
       ['Outdoors', 'Books', 'Travel'],
-      'assets/profiles/mx_balam.png',
+      'assets/profiles/mx_balam.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2806,7 +2806,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '20–50 km away',
       'Hill walks, old records, and cooking for a lively crowd.',
       ['Outdoors', 'Music', 'Cooking'],
-      'assets/profiles/mx_armando.png',
+      'assets/profiles/mx_armando.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2816,7 +2816,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Library terraces, landscape drawing, and unhurried journeys.',
       ['Books', 'Arts', 'Travel'],
-      'assets/profiles/mx_salvador.png',
+      'assets/profiles/mx_salvador.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2826,7 +2826,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '2–5 km away',
       'Courtyard coffee, strength training, and cooking without a recipe.',
       ['Fitness', 'Cooking', 'Music'],
-      'assets/profiles/mx_mauricio.png',
+      'assets/profiles/mx_mauricio.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2836,7 +2836,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '5–10 km away',
       'Long bike trails, live sets, and planning the next road trip.',
       ['Fitness', 'Music', 'Travel'],
-      'assets/profiles/mx_hector.png',
+      'assets/profiles/mx_hector.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2846,7 +2846,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Museum afternoons, design histories, and unhurried city walks.',
       ['Arts', 'Books', 'Outdoors'],
-      'assets/profiles/mx_rodrigo.png',
+      'assets/profiles/mx_rodrigo.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2856,7 +2856,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '20–50 km away',
       'Lakeside walks, patient home cooking, and landscape photography.',
       ['Outdoors', 'Cooking', 'Arts'],
-      'assets/profiles/mx_ignacio.png',
+      'assets/profiles/mx_ignacio.webp',
       'Mexican',
     ),
     DemoProfile(
@@ -2866,7 +2866,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       '10–20 km away',
       'Park chess, history books, and train journeys with no fixed schedule.',
       ['Books', 'Travel', 'Outdoors'],
-      'assets/profiles/mx_cesar.png',
+      'assets/profiles/mx_cesar.webp',
       'Mexican',
     ),
   ];

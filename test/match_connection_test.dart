@@ -5,7 +5,7 @@ void main() {
   const active = MatchConnection(
     matchId: 'synthetic-1',
     peerName: 'Maya',
-    peerProfileAssetPath: 'assets/profiles/maya.png',
+    peerProfileAssetPath: 'assets/profiles/maya.webp',
   );
 
   test('call request requires active match and mutual readiness', () {
