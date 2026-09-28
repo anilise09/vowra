@@ -5,11 +5,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/app_flow.dart';
 
 void main() {
+  testWidgets('welcome reading panel reaches the bottom on a tall phone', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 932));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const VawraApp());
+    await tester.pumpAndSettle();
+    expect(
+      tester.getBottomLeft(find.byKey(const Key('welcome-reading-panel'))).dy,
+      closeTo(932, 1),
+    );
+  });
+
   testWidgets('requires adult and community-rule consent', (tester) async {
     await tester.pumpWidget(const VawraApp());
     expect(
       find.image(
-        const AssetImage('assets/branding/vawra_company_lockup_transparent.png'),
+        const AssetImage(
+          'assets/branding/vawra_company_lockup_transparent.png',
+        ),
       ),
       findsOneWidget,
     );

@@ -1,5 +1,6 @@
 import 'package:ember_app/features/discovery/discovery_deck.dart'
     show maxCardWidth;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -110,6 +111,44 @@ void main() {
           tester.platformDispatcher.clearTextScaleFactorTestValue();
         });
         await walkApp(tester);
+      });
+    }
+  }
+  // This exercises Flutter's iOS platform branch and realistic safe areas on
+  // Windows. It is not a substitute for an iOS Simulator or device run on macOS.
+  for (final device in devices.where(
+    (device) =>
+        device.name == 'Pixel / iPhone 393x852' ||
+        device.name == 'Pro Max 430x932',
+  )) {
+    for (final textScale in const [1.0, 1.3]) {
+      testWidgets('iOS-style ${device.name} at ${textScale}x text', (
+        tester,
+      ) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        const dpr = 3.0;
+        tester.view
+          ..devicePixelRatio = dpr
+          ..physicalSize = device.size * dpr
+          ..padding = FakeViewPadding(
+            top: device.top * dpr,
+            bottom: device.bottom * dpr,
+          )
+          ..viewPadding = FakeViewPadding(
+            top: device.top * dpr,
+            bottom: device.bottom * dpr,
+          );
+        tester.platformDispatcher.textScaleFactorTestValue = textScale;
+        addTearDown(() {
+          tester.view.reset();
+          tester.platformDispatcher.clearTextScaleFactorTestValue();
+        });
+        try {
+          await walkApp(tester);
+        } finally {
+          // Flutter checks debug globals before addTearDown callbacks run.
+          debugDefaultTargetPlatformOverride = null;
+        }
       });
     }
   }

@@ -6,10 +6,11 @@ Vawra is the current product name and visual identity. Public launch under that 
 
 ## Status
 
-UI-4 replaces the generic typed header with the approved transparent company lockup, refreshes
-Welcome with its ribbon artwork, and polishes Discover's materials and navigation. The 9-device
-matrix (normal and larger text) and full Flutter suite pass; a walkthrough of this exact build
-on a physical phone is still pending. See `CHECKPOINTS.md`.
+UI-5 uses the approved transparent company lockup and aligns Discover's primary Pass and Like
+actions with their swipe meanings. The latest audit anchors Welcome's reading panel on tall
+phones and passes 22 Android/iOS-style device-and-text-size runs plus the full Flutter suite.
+Real iOS Simulator and physical-phone review of this exact build remain pending. See
+`CHECKPOINTS.md` and `docs/UI_PLATFORM_AUDIT.md`.
 
 The offline prototype has synthetic profiles, onboarding, swipe discovery, Explore, matches,
 chat and safety flows. A local-only backend adds accounts, age-gated discovery, real matches

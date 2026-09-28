@@ -1,5 +1,21 @@
 # Checkpoints
 
+## UI-6 - Mobile page and platform audit (2026-09-28)
+
+- Inspected the actual Welcome and seven onboarding steps on a dedicated Android 14 virtual
+  device. The Welcome panel left excessive blank space on a tall screen; it now reaches the
+  bottom of the safe viewport and still scrolls on compact phones. Added a regression test and
+  updated the Welcome visual baseline.
+- Expanded the device matrix from 18 to 22 cases: four iOS-style Flutter rendering runs add
+  iPhone/Pro Max safe areas and normal/larger text. These are Windows widget tests, **not** an
+  Apple simulator or physical-device validation.
+- Full Flutter suite: 182 passed with one existing skip. Backend: 53 tests and type-check pass.
+  Flutter analysis is clean and a debug APK builds. No Higgsfield credits used.
+- A separate virtual device became unstable as Discover opened (system UI ANR); it was stopped.
+  The existing shared emulator was not used further because QuietWall was in its foreground.
+  Interactive Discover and other tabs on a phone and actual iOS simulator testing remain pending.
+  See `docs/UI_PLATFORM_AUDIT.md` for the exact coverage and Mac handoff.
+
 ## UI-5 - Discover action hierarchy and connected Profile copy (2026-09-28)
 
 - Discover's Pass and Like controls are now equal-sized primary actions, with plum Pass and
