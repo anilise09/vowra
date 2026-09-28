@@ -1,5 +1,24 @@
 # Checkpoints
 
+## BE-9 - Download a copy of your data (2026-09-28)
+
+- Settings > Privacy has "Download a copy of your data" (server builds only), and so does the
+  "Your account will be deleted" screen, so a person can take their data before it goes. The
+  page shows the account, profile, activity counts and matches in plain sections, lists what is
+  not in the file, and "Copy the full file" puts the JSON on the clipboard. Nothing is written to
+  the phone.
+- `GET /v1/me/export` needs a recent sign-in, like deletion; an older sign-in confirms with a code
+  first, and Back then returns to Settings. 5 copies a day, `no-store`, audited by kind and time.
+- The file holds only the person's own data: the messages they sent (never what others sent them),
+  the other person's display name only, no account IDs, no lookup keys or tokens.
+- This is a smaller first step than the contract's asynchronous archive, recorded there: the server
+  stores no media yet. The archive replaces it when photos arrive.
+- Tests: backend contents and exclusions, recent sign-in, pending deletion, daily limit (removing
+  the sign-in check or leaking the other person's messages each fails a test); app export from
+  Settings with copy, the code confirmation and Back, and from the deletion screen (skipping the
+  return to Settings fails a test). Checked on the local server with a synthetic member. Flutter
+  190 passed (one existing skip), backend 62.
+
 ## Size - The app drops from 729 MB to 138 MB (2026-09-28)
 
 - The 260 sample portraits (plus one extra photo) were 615 MB of PNG. They are now WebP at quality

@@ -2,8 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { audit, fail, noContent, requireAccount, type Account, type Services } from '../context.js';
 
 /**
- * Deletion needs a sign-in within the reauthentication window: a stolen or
- * forgotten session on some device is never enough on its own.
+ * Deletion and data export need a sign-in within the reauthentication
+ * window: a stolen or forgotten session on some device is never enough.
  */
 async function requireRecentSignIn(services: Services, account: Account) {
   const [family] = await services.db.query<{ created_at: Date }>(
@@ -16,8 +16,124 @@ async function requireRecentSignIn(services: Services, account: Account) {
   }
 }
 
+const iso = (d: Date | string | null) => (d == null ? null : new Date(d).toISOString());
+
+/** Exports allowed per account in a rolling day. */
+export const exportsPerDay = 5;
+
 export function lifecycleRoutes(app: FastifyInstance, services: Services) {
-  const { db, clock } = services;
+  const { db, clock, sealer } = services;
+
+  /**
+   * A copy of what the server holds about the person asking. Other people's
+   * messages, profiles and account IDs are left out, and so are internal
+   * moderation notes; things kept only on the phone are not on the server.
+   */
+  app.get('/v1/me/export', async (request, reply) => {
+    const account = requireAccount(request);
+    await requireRecentSignIn(services, account);
+    const me = account.id;
+    const [recent] = await db.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM audit_events
+       WHERE account_id = $1 AND kind = 'data_exported' AND created_at > $2`,
+      [me, new Date(clock.now().getTime() - 24 * 60 * 60 * 1000)],
+    );
+    if ((recent?.n ?? 0) >= exportsPerDay) fail(429, 'rate_limited');
+    const [acct] = await db.query<{
+      email_sealed: string;
+      created_at: Date;
+      age_state: string;
+      lifecycle: string;
+      deletion_effective_at: Date | null;
+      share_read_receipts: boolean;
+    }>(
+      `SELECT email_sealed, created_at, age_state, lifecycle, deletion_effective_at,
+              share_read_receipts
+       FROM accounts WHERE id = $1`,
+      [me],
+    );
+    const [profile] = await db.query<Record<string, unknown>>(
+      `SELECT display_name, relationship_intent, bio, interests, lifestyle, prompts, gender,
+              show_me, show_gender, show_distance_band, call_ready_by_default, public_age,
+              updated_at
+       FROM profiles WHERE account_id = $1`,
+      [me],
+    );
+    const swipes = await db.query<{ kind: string; created_at: Date }>(
+      'SELECT kind, created_at FROM swipes WHERE from_account = $1 ORDER BY created_at',
+      [me],
+    );
+    const matches = await db.query<{
+      id: string;
+      status: string;
+      created_at: Date;
+      peer_name: string | null;
+    }>(
+      `SELECT m.id, m.status, m.created_at, p.display_name AS peer_name
+       FROM matches m
+       LEFT JOIN profiles p ON p.account_id =
+         CASE WHEN m.account_low = $1 THEN m.account_high ELSE m.account_low END
+       WHERE m.account_low = $1 OR m.account_high = $1
+       ORDER BY m.created_at`,
+      [me],
+    );
+    const sent = await db.query<{ match_id: string; body: string; created_at: Date }>(
+      'SELECT match_id, body, created_at FROM messages WHERE author_id = $1 ORDER BY created_at',
+      [me],
+    );
+    const blocks = await db.query<{ created_at: Date }>(
+      'SELECT created_at FROM blocks WHERE blocker = $1 ORDER BY created_at',
+      [me],
+    );
+    const reports = await db.query<{ reason: string; state: string; created_at: Date }>(
+      'SELECT reason, state, created_at FROM reports WHERE reporter = $1 ORDER BY created_at',
+      [me],
+    );
+    const signIns = await db.query<{ created_at: Date; revoked_at: Date | null }>(
+      'SELECT created_at, revoked_at FROM session_families WHERE account_id = $1 ORDER BY created_at',
+      [me],
+    );
+    const events = await db.query<{ kind: string; created_at: Date }>(
+      'SELECT kind, created_at FROM audit_events WHERE account_id = $1 ORDER BY created_at',
+      [me],
+    );
+    const now = clock.now();
+    await audit(db, me, 'data_exported', now);
+    reply.header('cache-control', 'no-store');
+    return {
+      format: 'vawra-export-1',
+      generated_at: now.toISOString(),
+      account: {
+        email: acct ? sealer.open(acct.email_sealed) : null,
+        created_at: iso(acct?.created_at ?? null),
+        age_state: acct?.age_state,
+        lifecycle: acct?.lifecycle,
+        deletion_effective_at: iso(acct?.deletion_effective_at ?? null),
+        share_read_receipts: acct?.share_read_receipts,
+      },
+      profile: profile
+        ? { ...profile, updated_at: iso(profile.updated_at as Date) }
+        : null,
+      swipes: swipes.map((s) => ({ kind: s.kind, at: iso(s.created_at) })),
+      matches: matches.map((m) => ({
+        with: m.peer_name,
+        status: m.status,
+        matched_at: iso(m.created_at),
+        messages_you_sent: sent
+          .filter((x) => x.match_id === m.id)
+          .map((x) => ({ at: iso(x.created_at), text: x.body })),
+      })),
+      blocks: blocks.map((b) => ({ at: iso(b.created_at) })),
+      reports_you_made: reports.map((r) => ({ reason: r.reason, state: r.state, at: iso(r.created_at) })),
+      sign_ins: signIns.map((s) => ({ signed_in_at: iso(s.created_at), ended_at: iso(s.revoked_at) })),
+      security_events: events.map((e) => ({ kind: e.kind, at: iso(e.created_at) })),
+      not_included: [
+        'Messages other people sent you, their profiles and their account IDs',
+        'Internal safety and moderation notes',
+        'Anything kept only on your phone',
+      ],
+    };
+  });
 
   app.post('/v1/me/deletion', async (request, reply) => {
     const account = requireAccount(request);

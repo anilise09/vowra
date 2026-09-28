@@ -97,6 +97,9 @@ class FakeVawraServer {
   /// reauthentication window. Tests set it false to age the sign-in.
   bool recentSignIn = true;
 
+  /// How many times the data export was served.
+  int exports = 0;
+
   /// The server's deletion date while a deletion is scheduled.
   DateTime? deletionAt;
   bool _revoked = false;
@@ -252,6 +255,46 @@ class FakeVawraServer {
             : 'active',
         'deletion_effective_at': deletionAt?.toIso8601String(),
         'profile': profile,
+      });
+    }
+    if (path == '/v1/me/export') {
+      if (!recentSignIn) return _error(403, 'reauthentication_required');
+      exports++;
+      return _json(200, {
+        'format': 'vawra-export-1',
+        'generated_at': '2026-09-28T12:00:00.000Z',
+        'account': {
+          'email': 'alex@example.test',
+          'created_at': '2026-09-20T12:00:00.000Z',
+          'age_state': verified ? 'adult_verified' : 'assurance_required',
+          'lifecycle': deletionAt != null ? 'deletion_scheduled' : 'active',
+          'deletion_effective_at': deletionAt?.toIso8601String(),
+          'share_read_receipts': shareReceipts,
+        },
+        'profile': profile,
+        'swipes': [
+          {'kind': 'like', 'at': '2026-09-21T12:00:00.000Z'},
+          {'kind': 'pass', 'at': '2026-09-21T12:01:00.000Z'},
+        ],
+        'matches': [
+          {
+            'with': 'Maya',
+            'status': 'active',
+            'matched_at': '2026-09-21T12:02:00.000Z',
+            'messages_you_sent': [
+              {'at': '2026-09-21T12:03:00.000Z', 'text': 'Hi Maya'},
+            ],
+          },
+        ],
+        'blocks': <Object>[],
+        'reports_you_made': <Object>[],
+        'sign_ins': [
+          {'signed_in_at': '2026-09-28T11:00:00.000Z', 'ended_at': null},
+        ],
+        'security_events': <Object>[],
+        'not_included': [
+          'Messages other people sent you, their profiles and their account IDs',
+        ],
       });
     }
     if (path == '/v1/me/deletion') {

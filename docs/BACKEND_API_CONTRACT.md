@@ -36,6 +36,10 @@ Added 2026-09-27 (BE-3c): habits and prompts are public profile details the pers
 
 The client contract in `ProfileMutation` intentionally cannot send age, date of birth, coordinates, account ID, verification, entitlement, match, block, or moderation state. The server repeats all public-text validation, normalizes bounded fields, and applies rate limits. A successful edit does not prove adulthood or unlock dating features.
 
+### `GET /v1/me/export`
+
+A copy of what the server holds about the authenticated account (details and exclusions in `DATA_LIFECYCLE_CONTRACT.md`). Requires a recent sign-in (`403 reauthentication_required` otherwise) and allows 5 per day (`429 rate_limited`). Added 2026-09-28 (BE-9).
+
 ## Age and identity
 
 Typing an adult age in the app is user input, not age assurance. Dating features remain denied until the server records a successful result from a reviewed regional age-assurance flow. The app receives only one of `assurance_required`, `pending_review`, `adult_verified`, or `rejected`; it never receives evidence documents or biometric material from the service.

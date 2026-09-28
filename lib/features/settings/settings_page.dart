@@ -19,7 +19,11 @@ class SettingsPage extends StatefulWidget {
     this.onSignOut,
     this.shareReadReceipts,
     this.onShareReadReceiptsChanged,
+    this.onDownloadData,
   });
+
+  /// A copy of what the server holds; null hides it (prototype).
+  final VoidCallback? onDownloadData;
 
   /// Read receipts and typing; null hides the switch (prototype).
   final bool? shareReadReceipts;
@@ -266,9 +270,9 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         const _Heading('Privacy'),
         if (widget.live)
-          const _Group(
+          _Group(
             children: [
-              ListTile(
+              const ListTile(
                 leading: Icon(Icons.lock_outline_rounded),
                 title: Text('What Vawra keeps'),
                 subtitle: Text(
@@ -278,6 +282,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   'location.',
                 ),
               ),
+              if (widget.onDownloadData case final download?)
+                _Row(
+                  key: const Key('settings-export'),
+                  icon: Icons.download_rounded,
+                  title: 'Download a copy of your data',
+                  onTap: download,
+                ),
             ],
           )
         else

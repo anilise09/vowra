@@ -495,6 +495,10 @@ class VawraApi {
     );
   }
 
+  /// Everything the server holds about this account, as its JSON. Needs a
+  /// recent sign-in, like deletion.
+  Future<Map<String, dynamic>> exportData() => _send('GET', '/v1/me/export');
+
   /// Sends only the fields [ProfileMutation] allows. Age is never sent.
   Future<void> saveProfile(UserProfile profile) => _send(
     'PATCH',

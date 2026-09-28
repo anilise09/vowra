@@ -2,6 +2,7 @@ import 'package:ember_app/data/api/vawra_api.dart';
 import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/app_flow.dart';
@@ -705,6 +706,125 @@ void main() {
     expect(find.text('my sourdough starter'), findsOneWidget);
     // An empty bio has no empty "About" section.
     expect(find.text('About Maya'), findsNothing);
+  });
+
+  group('download my data', () {
+    Map<String, dynamic> profile() => {
+      'display_name': 'Alex',
+      'relationship_intent': 'casual',
+      'bio': '',
+      'interests': <String>['Books'],
+      'show_distance_band': true,
+      'call_ready_by_default': false,
+      'public_age': 28,
+      'gender': 'man',
+      'show_me': <String>['woman'],
+      'show_gender': false,
+    };
+
+    Future<void> openExport(WidgetTester tester) async {
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('profile-tab')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('open-settings')));
+      await _settle(tester);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings-export')),
+        200,
+      );
+      await tester.ensureVisible(find.byKey(const Key('settings-export')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('settings-export')));
+      await _settle(tester);
+    }
+
+    testWidgets('shows what the server holds and copies the full file', (
+      tester,
+    ) async {
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied = (call.arguments as Map)['text'] as String;
+          }
+          return null;
+        },
+      );
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      await openExport(tester);
+
+      expect(server.exports, 1);
+      expect(find.text('Your data'), findsOneWidget);
+      expect(find.text('alex@example.test'), findsOneWidget);
+      expect(find.text('Women'), findsOneWidget, reason: 'Show me');
+      await tester.scrollUntilVisible(find.text('Maya'), 200);
+      expect(find.text('Maya'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('export-copy')),
+        -200,
+      );
+      await tester.tap(find.byKey(const Key('export-copy')));
+      await _settle(tester);
+      expect(copied, contains('"format": "vawra-export-1"'));
+      expect(copied, contains('Hi Maya'));
+      expect(
+        find.textContaining('Paste it somewhere only you'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'an old sign-in confirms first, then Back returns to Settings',
+      (tester) async {
+        final server = FakeVawraServer()
+          ..verified = true
+          ..profile = profile();
+        await _signIn(tester, server);
+        await _settle(tester);
+        server.recentSignIn = false;
+        await openExport(tester);
+        expect(server.exports, 0);
+        expect(find.textContaining('To download your data'), findsOneWidget);
+        await tester.enterText(
+          find.byKey(const Key('sign-in-email')),
+          'alex@example.test',
+        );
+        await tester.tap(find.byKey(const Key('send-code')));
+        await _settle(tester);
+        await tester.enterText(
+          find.byKey(const Key('sign-in-code')),
+          server.outbox.last,
+        );
+        await tester.tap(find.byKey(const Key('verify-code')));
+        await _settle(tester);
+        expect(server.exports, 1);
+        expect(find.text('Your data'), findsOneWidget);
+
+        await tester.pageBack();
+        await _settle(tester);
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.textContaining('To download your data'), findsNothing);
+      },
+    );
+
+    testWidgets('can be taken while deletion is pending', (tester) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile()
+        ..deletionAt = DateTime.utc(2026, 10, 4, 12);
+      await _signIn(tester, server);
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('deletion-export')));
+      await _settle(tester);
+      expect(server.exports, 1);
+      expect(find.text('Deletion scheduled'), findsOneWidget);
+    });
   });
 
   group('account deletion', () {

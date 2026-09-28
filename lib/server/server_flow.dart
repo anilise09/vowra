@@ -25,6 +25,7 @@ import '../features/shared/profile_image.dart';
 import '../main.dart' show SafetySheet, WelcomeScreen;
 import '../theme/vawra_navigation_shell.dart';
 import '../theme/vawra_theme.dart';
+import 'data_export_page.dart';
 
 /// Plain-language text for a failed call. Server codes never reach the screen
 /// raw, and nothing reveals whether an email has an account.
@@ -222,6 +223,31 @@ Future<void> withFreshSignIn(
       ),
     );
   }
+}
+
+/// Fetches the person's data (confirming a recent sign-in first when the
+/// server asks) and opens it above the page it was asked from.
+Future<void> openDataExport(NavigatorState navigator, VawraApi api) async {
+  Route<dynamic>? from;
+  navigator.popUntil((route) {
+    from = route;
+    return true;
+  });
+  late Map<String, dynamic> data;
+  await withFreshSignIn(
+    navigator,
+    api,
+    reason: 'download your data',
+    action: () async => data = await api.exportData(),
+    then: (nav) async {
+      nav.popUntil((route) => route == from);
+      unawaited(
+        nav.push(
+          MaterialPageRoute<void>(builder: (_) => DataExportPage(data: data)),
+        ),
+      );
+    },
+  );
 }
 
 /// Email and a one-time code. No password is ever created. With
@@ -460,6 +486,15 @@ class _DeletionScheduledScreenState extends State<DeletionScheduledScreen> {
     }
   }
 
+  Future<void> _export() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await openDataExport(Navigator.of(context), widget.api);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeApiError(e))));
+    }
+  }
+
   void _toStart() => Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute<void>(builder: (_) => WelcomeScreen(api: widget.api)),
     (_) => false,
@@ -504,6 +539,13 @@ class _DeletionScheduledScreenState extends State<DeletionScheduledScreen> {
                 key: const Key('keep-account'),
                 onPressed: busy ? null : _keep,
                 child: const Text('Keep my account'),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                key: const Key('deletion-export'),
+                onPressed: busy ? null : _export,
+                icon: const Icon(Icons.download_rounded),
+                label: const Text('Download a copy of your data'),
               ),
               const SizedBox(height: 8),
               TextButton(
@@ -1003,6 +1045,14 @@ class _ServerHomeState extends State<ServerHome> {
     }
   }
 
+  Future<void> _downloadData(NavigatorState navigator) async {
+    try {
+      await openDataExport(navigator, api);
+    } catch (e) {
+      if (mounted && !_signedOutBy(e)) _toast(context, describeApiError(e));
+    }
+  }
+
   Future<void> _setShareReceipts(bool on) async {
     try {
       final saved = await api.setShareReadReceipts(on);
@@ -1136,6 +1186,7 @@ class _ServerHomeState extends State<ServerHome> {
           onSignOut: () => _signOut(navigator, api),
           shareReadReceipts: shareReceipts ?? false,
           onShareReadReceiptsChanged: _setShareReceipts,
+          onDownloadData: () => _downloadData(navigator),
         ),
       ),
     );
