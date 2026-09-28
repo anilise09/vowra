@@ -11,6 +11,7 @@ import '../domain/demo_profile.dart';
 import '../domain/discovery_interaction.dart';
 import '../domain/discovery_preferences.dart';
 import '../domain/match_connection.dart';
+import '../domain/openers.dart';
 import '../domain/safety_report.dart';
 import '../domain/user_profile.dart';
 import '../features/discovery/discovery_deck.dart';
@@ -1604,6 +1605,10 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
       startInThread: true,
       peerTyping: peerTyping,
       onComposing: _composing,
+      openers: openersFor(
+        sharedInterests: widget.match.sharedInterests,
+        peerPrompts: widget.match.peerPrompts,
+      ),
       onBack: () => Navigator.of(context).pop(),
       onSend: _send,
       onCallReadinessChanged: (value) => setState(() => callReady = value),

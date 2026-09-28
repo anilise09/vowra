@@ -413,6 +413,53 @@ void main() {
       expect(server.typingSent, 1);
     });
 
+    testWidgets('an empty chat offers openers from what you share', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..addPerson(
+          'Maya',
+          likesMe: true,
+          prompts: [
+            {'question': 'Ask me about…', 'answer': 'my sourdough starter'},
+          ],
+        )
+        ..profile = {
+          'display_name': 'Alex',
+          'relationship_intent': 'casual',
+          'bio': '',
+          'interests': <String>['Books'],
+          'show_distance_band': true,
+          'call_ready_by_default': false,
+          'public_age': 28,
+        };
+      await _signIn(tester, server);
+      await _settle(tester);
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('action-like')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('match-send-message')));
+      await _settle(tester);
+      expect(
+        find.text('Okay, I am asking: tell me about my sourdough starter!'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('You like books too!'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('opener-0')));
+      await tester.pump();
+      // It fills the box but sends nothing until the person does.
+      expect(server.messages, isEmpty);
+      await tester.tap(find.byKey(const Key('send-message')));
+      await _settle(tester);
+      expect(
+        server.messages.values.single.single['text'],
+        'Okay, I am asking: tell me about my sourdough starter!',
+      );
+      expect(find.byKey(const Key('openers')), findsNothing);
+    });
+
     testWidgets('the settings switch saves to the account', (tester) async {
       final server = FakeVawraServer()
         ..verified = true

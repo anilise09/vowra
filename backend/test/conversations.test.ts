@@ -53,6 +53,19 @@ describe('conversations', () => {
     expect((await matchesOf(ben))[0].unread).toBe(1);
   });
 
+  it('tells each person what they share, for opening lines', async () => {
+    const { ana, ben } = await pair();
+    await call(ana, 'PATCH', '/v1/me/profile', { interests: ['Books', 'Music', 'Travel'] });
+    await call(ben, 'PATCH', '/v1/me/profile', {
+      interests: ['Music', 'Books', 'Arts'],
+      prompts: [{ question: 'Ask me about…', answer: 'my sourdough starter' }],
+    });
+    const [m] = await matchesOf(ana);
+    expect(m.shared_interests).toEqual(['Books', 'Music']);
+    expect(m.peer_prompts).toEqual([{ question: 'Ask me about…', answer: 'my sourdough starter' }]);
+    expect(m).not.toHaveProperty('peer_interests');
+  });
+
   it('lists the most recent conversation first', async () => {
     const ana = await member(h, 'Ana');
     const ben = await member(h, 'Ben');

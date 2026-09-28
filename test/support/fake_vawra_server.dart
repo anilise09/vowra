@@ -322,6 +322,12 @@ class FakeVawraServer {
                 'peer_age': people[m.value]!['public_age'],
                 'last_message': messages[m.key]?.lastOrNull?['text'],
                 'last_message_mine': messages[m.key]?.lastOrNull?['mine'],
+                'shared_interests': [
+                  for (final i in people[m.value]!['interests'] as List)
+                    if ((profile?['interests'] as List?)?.contains(i) ?? false)
+                      i,
+                ],
+                'peer_prompts': people[m.value]!['prompts'],
                 'unread': [...?messages[m.key]?.skip(myRead[m.key] ?? 0)]
                     .where((x) => x['mine'] == false)
                     .length,

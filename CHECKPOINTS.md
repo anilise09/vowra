@@ -1,5 +1,18 @@
 # Checkpoints
 
+## BE-7 - Openers from what you share (2026-09-27)
+
+- An empty chat now suggests up to three first lines under "Start with something you share": the
+  other person's prompt answers first ("Okay, I am asking: tell me about my sourdough starter!"),
+  then shared interests ("You like books too! What are you reading at the moment?..."). Tapping one
+  fills the message box; nothing is sent until the person sends it, and the suggestions go away
+  after the first message.
+- `/v1/matches` adds `shared_interests` (computed on the server, the peer's full interest list is
+  not sent) and `peer_prompts`. Lines are written by hand in `lib/domain/openers.dart`; no text
+  generation service is involved.
+- Tests: backend shape (and that the peer's interest list is not exposed), opener wording and order,
+  and an app flow where tapping an opener sends nothing until Send.
+
 ## BE-6 - Better conversations: unread, "Your turn", mutual read receipts and typing (2026-09-27)
 
 - Chats now show an unread count per conversation and in the Chats tab, and "Your turn" when the

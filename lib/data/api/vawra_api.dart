@@ -74,6 +74,8 @@ class ServerMatch {
     required this.lastMessage,
     this.lastMessageMine,
     this.unread = 0,
+    this.sharedInterests = const [],
+    this.peerPrompts = const [],
   });
 
   final String matchId;
@@ -86,6 +88,10 @@ class ServerMatch {
   final bool? lastMessageMine;
   final int unread;
 
+  /// What you share, for opening lines in an empty chat.
+  final List<String> sharedInterests;
+  final List<ProfilePrompt> peerPrompts;
+
   /// The other person wrote last: it is your turn to reply.
   bool get yourTurn => lastMessage != null && lastMessageMine == false;
 
@@ -97,6 +103,10 @@ class ServerMatch {
     lastMessage: json['last_message'] as String?,
     lastMessageMine: json['last_message_mine'] as bool?,
     unread: (json['unread'] as int?) ?? 0,
+    sharedInterests: ((json['shared_interests'] as List?) ?? const [])
+        .whereType<String>()
+        .toList(),
+    peerPrompts: parsePrompts(json['peer_prompts']),
   );
 }
 

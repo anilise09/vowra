@@ -69,11 +69,20 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
 
   app.get('/v1/matches', async (request) => {
     const me = requireDatingAccess(request, { allowPaused: true });
+    const [mine] = await db.query<{ interests: string[] }>(
+      'SELECT interests FROM profiles WHERE account_id = $1',
+      [me.id],
+    );
     const matches = await db.query<
-      Record<string, unknown> & { last_message_mine: boolean | null; last_message_at: Date | null }
+      Record<string, unknown> & {
+        last_message_mine: boolean | null;
+        last_message_at: Date | null;
+        peer_interests: string[];
+      }
     >(
       `SELECT m.id AS match_id, m.created_at, p.account_id AS peer_account_id,
               p.display_name AS peer_name, p.public_age AS peer_age,
+              p.interests AS peer_interests, p.prompts AS peer_prompts,
               last.body AS last_message, last.author_id = $1 AS last_message_mine,
               last.created_at AS last_message_at,
               (SELECT count(*)::int FROM messages u
@@ -95,8 +104,10 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
       [me.id],
     );
     return {
-      matches: matches.map((m) => ({
+      // Shared interests and their prompts let the app suggest a first line.
+      matches: matches.map(({ peer_interests, ...m }) => ({
         ...m,
+        shared_interests: peer_interests.filter((i) => mine?.interests.includes(i)).sort(),
         last_message_mine: m.last_message_mine ?? null,
         last_message_at: m.last_message_at ? new Date(m.last_message_at).toISOString() : null,
       })),

@@ -371,6 +371,7 @@ class ChatTab extends StatefulWidget {
     this.onBack,
     this.peerTyping = false,
     this.onComposing,
+    this.openers = const [],
   });
 
   final MatchConnection? connection;
@@ -397,6 +398,9 @@ class ChatTab extends StatefulWidget {
 
   /// Called as the person types (the thread decides whether to signal it).
   final VoidCallback? onComposing;
+
+  /// Suggested first lines, shown while the conversation is empty.
+  final List<String> openers;
 
   @override
   State<ChatTab> createState() => _ChatTabState();
@@ -740,6 +744,56 @@ class _ChatTabState extends State<ChatTab> {
                 ),
               const SizedBox(height: 10),
               for (final message in widget.messages) _bubble(message),
+              if (widget.messages.isEmpty &&
+                  widget.openers.isNotEmpty &&
+                  match.canMessage)
+                Padding(
+                  key: const Key('openers'),
+                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Start with something you share',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: VawraColors.plum,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      for (final (i, line) in widget.openers.indexed)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: OutlinedButton(
+                            key: Key('opener-$i'),
+                            style: OutlinedButton.styleFrom(
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                            ),
+                            onPressed: () {
+                              composer.text = line;
+                              composer.selection = TextSelection.collapsed(
+                                offset: line.length,
+                              );
+                              setState(() {});
+                            },
+                            child: Text(line),
+                          ),
+                        ),
+                      const Text(
+                        'Tap one to put it in the message box, then make it '
+                        'your own.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: VawraColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (widget.peerTyping)
                 Padding(
                   key: const Key('peer-typing'),
