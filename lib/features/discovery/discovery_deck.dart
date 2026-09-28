@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../domain/conversation_access_policy.dart';
@@ -10,6 +12,9 @@ import '../../domain/safety_report.dart';
 import '../../theme/vawra_theme.dart';
 import '../shared/profile_image.dart';
 import 'swipe_card_stack.dart';
+
+/// The swipe card never gets wider than this, however wide the screen.
+const maxCardWidth = 560.0;
 
 class DiscoveryDeck extends StatelessWidget {
   const DiscoveryDeck({
@@ -149,24 +154,31 @@ class DiscoveryDeck extends StatelessWidget {
                 )
               else
                 Expanded(
-                  child: _SwipeArea(
-                    key: const Key('discovery-card-gesture'),
-                    profile: profile,
-                    front: _profileCard(context, profile, profileReport),
-                    back: nextProfile == null
-                        ? null
-                        : _profileCard(
-                            context,
-                            nextProfile,
-                            null,
-                            preview: true,
-                          ),
-                    superLikesLeft: superLikesLeft,
-                    canUndo: canUndo,
-                    onUndo: onUndo,
-                    onAction: (action) => onSwipeAction(profile, action),
-                    showTutorial: showTutorial,
-                    onTutorialDone: onTutorialDone,
+                  // A card stays card-sized on tablets and open foldables.
+                  child: Center(
+                    child: SizedBox(
+                      width: math.min(constraints.maxWidth, maxCardWidth),
+                      height: double.infinity,
+                      child: _SwipeArea(
+                        key: const Key('discovery-card-gesture'),
+                        profile: profile,
+                        front: _profileCard(context, profile, profileReport),
+                        back: nextProfile == null
+                            ? null
+                            : _profileCard(
+                                context,
+                                nextProfile,
+                                null,
+                                preview: true,
+                              ),
+                        superLikesLeft: superLikesLeft,
+                        canUndo: canUndo,
+                        onUndo: onUndo,
+                        onAction: (action) => onSwipeAction(profile, action),
+                        showTutorial: showTutorial,
+                        onTutorialDone: onTutorialDone,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -987,13 +999,17 @@ class _OverlayPill extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: Colors.white),
         const SizedBox(width: 5),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10.5,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.15,
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.15,
+            ),
           ),
         ),
       ],

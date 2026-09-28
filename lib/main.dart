@@ -24,6 +24,7 @@ import 'features/onboarding/onboarding_flow.dart';
 import 'features/profile/profile_editor.dart';
 import 'features/settings/settings_page.dart';
 import 'server/server_flow.dart';
+import 'theme/readable_width.dart';
 import 'theme/vawra_theme.dart';
 
 /// Without --dart-define=VAWRA_API=... the app is the offline prototype.
@@ -46,6 +47,7 @@ class VawraApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     title: 'Vawra',
     theme: VawraTheme.light,
+    builder: (context, child) => ReadableWidth(child: child!),
     home: switch (api) {
       final api? => SessionGate(api: api),
       null => const WelcomeScreen(),

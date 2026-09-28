@@ -10,7 +10,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Explore'), findsWidgets);
+    // Tiles grow with the text size, so this hub may be further down.
+    await tester.scrollUntilVisible(find.byKey(const Key('hub-books')), 200);
     expect(find.text('Bookworms'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('hub-books')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('hub-books')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('hub-back')), findsOneWidget);

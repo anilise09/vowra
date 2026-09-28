@@ -43,7 +43,8 @@ class ExploreTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SafeArea(
     child: CustomScrollView(
-      key: const Key('explore-scroll'),
+      // Coming back from a hub returns to the same place in the grid.
+      key: const PageStorageKey('explore-scroll'),
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
@@ -67,11 +68,14 @@ class ExploreTab extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
           sliver: SliverGrid.builder(
             itemCount: ExploreHub.all.length,
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            // Tall enough for a three-line title, two lines of subtitle and
+            // the count at the person's text size, on any width.
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 240,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 0.82,
+              mainAxisExtent:
+                  120 + 134 * MediaQuery.textScalerOf(context).scale(1),
             ),
             itemBuilder: (context, index) {
               final hub = ExploreHub.all[index];
@@ -137,6 +141,8 @@ class _HubTile extends StatelessWidget {
               const Spacer(),
               Text(
                 hub.title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,

@@ -72,114 +72,120 @@ class _DateSafelyGuideState extends State<DateSafelyGuide> {
   @override
   Widget build(BuildContext context) {
     final last = page == _pages.length - 1;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.shield_rounded, color: VawraColors.coral),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Date safely',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              TextButton(
-                key: const Key('safety-guide-close'),
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            // Tall enough for large text; each page also scrolls if needed.
-            height: (MediaQuery.sizeOf(context).height * 0.5).clamp(
-              300.0,
-              460.0,
-            ),
-            child: PageView(
-              key: const Key('safety-guide-pages'),
-              controller: controller,
-              onPageChanged: (value) => setState(() => page = value),
+    // On very short screens the sheet scrolls instead of overflowing.
+    return SingleChildScrollView(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
               children: [
-                for (final guide in _pages)
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 96,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [VawraColors.blush, VawraColors.lavender],
+                const Icon(Icons.shield_rounded, color: VawraColors.coral),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Date safely',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                TextButton(
+                  key: const Key('safety-guide-close'),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              // Tall enough for large text; each page also scrolls if needed.
+              height: (MediaQuery.sizeOf(context).height * 0.5).clamp(
+                300.0,
+                460.0,
+              ),
+              child: PageView(
+                key: const Key('safety-guide-pages'),
+                controller: controller,
+                onPageChanged: (value) => setState(() => page = value),
+                children: [
+                  for (final guide in _pages)
+                    SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 96,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  VawraColors.blush,
+                                  VawraColors.lavender,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(22),
                             ),
-                            borderRadius: BorderRadius.circular(22),
+                            child: Icon(
+                              guide.icon,
+                              size: 44,
+                              color: VawraColors.plum,
+                            ),
                           ),
-                          child: Icon(
-                            guide.icon,
-                            size: 44,
-                            color: VawraColors.plum,
-                          ),
-                        ),
-                        for (final (title, body) in guide.points) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            title,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(body),
+                          for (final (title, body) in guide.points) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              title,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(body),
+                          ],
                         ],
-                      ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < _pages.length; i++)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: i == page ? 18 : 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: i == page
+                          ? VawraColors.coral
+                          : const Color(0xFFE2D7DE),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
               ],
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 0; i < _pages.length; i++)
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: i == page ? 18 : 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: i == page
-                        ? VawraColors.coral
-                        : const Color(0xFFE2D7DE),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            key: const Key('safety-guide-next'),
-            onPressed: () => last
-                ? Navigator.pop(context)
-                : controller.nextPage(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOut,
-                  ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(last ? 'Got it' : 'Next'),
+            const SizedBox(height: 16),
+            FilledButton(
+              key: const Key('safety-guide-next'),
+              onPressed: () => last
+                  ? Navigator.pop(context)
+                  : controller.nextPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                    ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(last ? 'Got it' : 'Next'),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

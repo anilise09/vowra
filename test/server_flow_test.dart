@@ -722,6 +722,8 @@ void main() {
         find.byKey(const Key('settings-delete')),
         200,
       );
+      await tester.ensureVisible(find.byKey(const Key('settings-delete')));
+      await _settle(tester);
       await tester.tap(find.byKey(const Key('settings-delete')));
       await _settle(tester);
       expect(find.text('Delete your account?'), findsOneWidget);

@@ -342,11 +342,15 @@ class _MatchPill extends StatelessWidget {
       children: [
         Icon(icon, color: Colors.white, size: 17),
         const SizedBox(width: 7),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],

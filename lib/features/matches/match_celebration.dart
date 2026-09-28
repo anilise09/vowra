@@ -63,113 +63,144 @@ class MatchCelebration extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
-          child: Column(
-            children: [
-              const Spacer(),
-              SizedBox(
-                height: 150,
-                width: 240,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Positioned(
-                      left: 0,
-                      child: _Avatar(
-                        child: Text(
-                          ownInitial,
+        // Centred when it fits; scrolls on short screens or large text.
+        child: LayoutBuilder(
+          builder: (context, box) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: box.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
+                  child: Column(
+                    children: [
+                      const Spacer(),
+                      SizedBox(
+                        height: 150,
+                        width: 240,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Positioned(
+                              left: 0,
+                              child: _Avatar(
+                                child: Text(
+                                  ownInitial,
+                                  style: const TextStyle(
+                                    fontSize: 52,
+                                    fontWeight: FontWeight.w900,
+                                    color: VawraColors.plum,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: _Avatar(
+                                child: Image(
+                                  image: profileImage(peerPhotoAsset),
+                                  fit: BoxFit.cover,
+                                  width: 132,
+                                  height: 132,
+                                ),
+                              ),
+                            ),
+                            TweenAnimationBuilder<double>(
+                              // With reduced motion the heart is simply there.
+                              tween: Tween(
+                                begin:
+                                    MediaQuery.maybeDisableAnimationsOf(
+                                          context,
+                                        ) ??
+                                        false
+                                    ? 1
+                                    : 0,
+                                end: 1,
+                              ),
+                              duration: const Duration(milliseconds: 700),
+                              curve: Curves.elasticOut,
+                              builder: (_, value, child) =>
+                                  Transform.scale(scale: value, child: child),
+                              child: CircleAvatar(
+                                radius: 28,
+                                backgroundColor: Colors.white,
+                                child: Icon(
+                                  superLike
+                                      ? Icons.star_rounded
+                                      : Icons.favorite_rounded,
+                                  color: superLike
+                                      ? VawraColors.superLike
+                                      : VawraColors.coral,
+                                  size: 32,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        "It's a match!",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(color: Colors.white, fontSize: 42),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'You and $peerName like each other.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                        ),
+                      ),
+                      if (!isServerPerson(peerPhotoAsset) ||
+                          isDemoPerson(peerPhotoAsset)) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          isServerPerson(peerPhotoAsset)
+                              ? 'Test profile: $peerName is not a real person.'
+                              : 'Prototype match: $peerName is not a real person.',
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontSize: 52,
-                            fontWeight: FontWeight.w900,
-                            color: VawraColors.plum,
+                            color: Color(0xCCFFFFFF),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          key: const Key('match-send-message'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: VawraColors.plum,
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onMessage();
+                          },
+                          icon: const Icon(Icons.chat_bubble_rounded),
+                          label: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text('Send a message'),
                           ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      child: _Avatar(
-                        child: Image(
-                          image: profileImage(peerPhotoAsset),
-                          fit: BoxFit.cover,
-                          width: 132,
-                          height: 132,
+                      const SizedBox(height: 10),
+                      TextButton(
+                        key: const Key('match-keep-swiping'),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          'Keep swiping',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
-                    ),
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: 1),
-                      duration: const Duration(milliseconds: 700),
-                      curve: Curves.elasticOut,
-                      builder: (_, value, child) =>
-                          Transform.scale(scale: value, child: child),
-                      child: CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.white,
-                        child: Icon(
-                          superLike
-                              ? Icons.star_rounded
-                              : Icons.favorite_rounded,
-                          color: superLike
-                              ? VawraColors.superLike
-                              : VawraColors.coral,
-                          size: 32,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                "It's a match!",
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.displaySmall
-                    ?.copyWith(color: Colors.white, fontSize: 42),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'You and $peerName like each other.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 17),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Prototype match: $peerName is not a real person.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 13),
-              ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  key: const Key('match-send-message'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: VawraColors.plum,
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onMessage();
-                  },
-                  icon: const Icon(Icons.chat_bubble_rounded),
-                  label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text('Send a message'),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              TextButton(
-                key: const Key('match-keep-swiping'),
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Keep swiping',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

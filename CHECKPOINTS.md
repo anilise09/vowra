@@ -1,5 +1,26 @@
 # Checkpoints
 
+## UI-2 - Fits every phone, foldable and tablet (2026-09-28)
+
+- New `test/device_matrix_test.dart` walks onboarding, Discover, profile details, a match and its
+  chat, Explore, Matches, Profile and Settings on 9 devices (320x568 small phone, 360x640, S24 Ultra,
+  Pixel/iPhone, Pro Max, Fold cover, Fold open, tablet portrait and landscape) with their status and
+  navigation bars, at 1.0x and 1.3x text (the 1.8x sweep stays separate). Any overflow, or a control
+  still covered after scrolling to it, fails. Before this checkpoint 17 of 18 runs failed; now 18/18.
+- Fixed what it found: Explore tiles had a fixed shape their text outgrew (now sized from the text
+  size, titles up to three lines, never cut); the "It's a match" screen overflowed short screens
+  (now scrolls when it does not fit, still centred when it does); the date-safely guide sheet on
+  very short screens; long labels in two photo pills (now shortened with an ellipsis).
+- Tablets and open foldables: the app keeps a readable column (up to 720 wide, centred, Apple's
+  readable content width) and the swipe card is capped at 560 instead of stretching to 1248.
+- Phones stay upright (like other dating apps); tablets and open foldables turn freely; the rule
+  re-applies when a foldable opens or closes.
+- Coming back from an Explore hub returns to the same place in the grid (found by a test).
+- The match screen no longer calls real accounts "Prototype match"; demo members say "Test profile".
+  With reduced motion the match heart is simply there instead of popping.
+- The Explore golden was updated after checking old and new side by side: same look, tiles ~13%
+  taller so every title shows in full.
+
 ## UI-1 - Apple-style physics for the swipe card (2026-09-28)
 
 Using the apple-design skill (WWDC "Designing Fluid Interfaces"), the look stays as approved and the
