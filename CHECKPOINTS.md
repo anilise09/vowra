@@ -1,5 +1,18 @@
 # Checkpoints
 
+## Fix - Chats open at the newest message and follow new ones (2026-09-27)
+
+- Seen on the owner's Samsung: Maya's message arrived in 0.4 s but below the visible area, and a
+  long chat opened at the top. The thread is now a reversed list (offset 0 is the newest message),
+  sized to its content and pinned to the top, so short chats look exactly as approved (the chat
+  golden is unchanged) and long chats open at the latest message. New messages and "is typing" are
+  followed only when the person is already near the bottom, or when the message is their own.
+- A first attempt that jumped to the list's estimated end fell short on long chats (lazy layout);
+  the new test caught it.
+- Also confirmed on the Samsung against the local server: signed in stays signed in across an
+  update and relaunch; the "Why you might click" pill and details; unread badges; "Seen" and
+  "Maya is typing..." when both share; a message pushed from another account arriving in 0.4 s.
+
 ## Fix - Found on the owner's Samsung: body-less requests and system-button insets (2026-09-27)
 
 - Real bug, missed by every test: the app sent `Content-Type: application/json` on requests with no

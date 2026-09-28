@@ -490,11 +490,43 @@ class _ChatTabState extends State<ChatTab> {
     if (widget.openThreadRequest != oldWidget.openThreadRequest) {
       inThread = true;
     }
+    final grew = widget.messages.length > oldWidget.messages.length;
+    final startedTyping = widget.peerTyping && !oldWidget.peerTyping;
+    if (oldWidget.messages.isEmpty && grew) {
+      _toLatest(animate: false); // the conversation just loaded
+    } else if (grew || startedTyping) {
+      final mine =
+          grew && widget.messages.last.author == MessageAuthor.currentUser;
+      // Follow new messages only when already reading the latest ones, so
+      // someone scrolled up to older messages is not pulled away.
+      if (mine || _nearLatest) _toLatest();
+    }
+  }
+
+  final threadScroll = ScrollController();
+
+  bool get _nearLatest =>
+      !threadScroll.hasClients || threadScroll.position.pixels < 240;
+
+  void _toLatest({bool animate = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !threadScroll.hasClients) return;
+      if (animate) {
+        threadScroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      } else {
+        threadScroll.jumpTo(0);
+      }
+    });
   }
 
   @override
   void dispose() {
     composer.dispose();
+    threadScroll.dispose();
     super.dispose();
   }
 
@@ -698,116 +730,129 @@ class _ChatTabState extends State<ChatTab> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: ListView(
-            key: const Key('thread-scroll'),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            children: [
-              if (widget.report != null)
-                Card(
-                  color: const Color(0xFFFFF1D6),
-                  child: ListTile(
-                    leading: const Icon(Icons.flag_outlined),
-                    title: Text(
-                      'Report recorded: ${widget.report!.reason.label}',
-                    ),
-                    subtitle: Text(
-                      '${widget.report!.moderationState.label}. Saved in this device session only. No review team is connected.',
-                    ),
-                  ),
-                ),
-              Material(
-                color: VawraColors.blush,
-                borderRadius: BorderRadius.circular(18),
-                child: SwitchListTile(
-                  key: const Key('call-ready-switch'),
-                  title: const Text('Open to a call'),
-                  subtitle: Text(
-                    match.peerCallReady
-                        ? '${match.peerName} is also open to a call. Both must opt in.'
-                        : 'Both people opt in first. ${match.peerName} has not yet.',
-                  ),
-                  value: match.currentUserCallReady,
-                  onChanged: widget.onCallReadinessChanged,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (widget.messages.isNotEmpty)
-                Center(
-                  child: Text(
-                    _day(widget.messages.first.sentAt),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: VawraColors.muted,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 10),
-              for (final message in widget.messages) _bubble(message),
-              if (widget.messages.isEmpty &&
-                  widget.openers.isNotEmpty &&
-                  match.canMessage)
-                Padding(
-                  key: const Key('openers'),
-                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Start with something you share',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: VawraColors.plum,
-                        ),
+          // Short chats stay at the top, as designed; long ones fill the
+          // space and scroll.
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ListView(
+              key: const Key('thread-scroll'),
+              controller: threadScroll,
+              // Reversed, like every chat: offset 0 is always the newest
+              // message, so the chat opens there and can follow new ones
+              // without guessing the height of lazily built messages.
+              reverse: true,
+              // Sized to its messages (a page is at most 50) so a short chat
+              // is not pushed to the bottom.
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              children: [
+                if (widget.report != null)
+                  Card(
+                    color: const Color(0xFFFFF1D6),
+                    child: ListTile(
+                      leading: const Icon(Icons.flag_outlined),
+                      title: Text(
+                        'Report recorded: ${widget.report!.reason.label}',
                       ),
-                      const SizedBox(height: 8),
-                      for (final (i, line) in widget.openers.indexed)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: OutlinedButton(
-                            key: Key('opener-$i'),
-                            style: OutlinedButton.styleFrom(
-                              alignment: Alignment.centerLeft,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                            ),
-                            onPressed: () {
-                              composer.text = line;
-                              composer.selection = TextSelection.collapsed(
-                                offset: line.length,
-                              );
-                              setState(() {});
-                            },
-                            child: Text(line),
+                      subtitle: Text(
+                        '${widget.report!.moderationState.label}. Saved in this device session only. No review team is connected.',
+                      ),
+                    ),
+                  ),
+                Material(
+                  color: VawraColors.blush,
+                  borderRadius: BorderRadius.circular(18),
+                  child: SwitchListTile(
+                    key: const Key('call-ready-switch'),
+                    title: const Text('Open to a call'),
+                    subtitle: Text(
+                      match.peerCallReady
+                          ? '${match.peerName} is also open to a call. Both must opt in.'
+                          : 'Both people opt in first. ${match.peerName} has not yet.',
+                    ),
+                    value: match.currentUserCallReady,
+                    onChanged: widget.onCallReadinessChanged,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (widget.messages.isNotEmpty)
+                  Center(
+                    child: Text(
+                      _day(widget.messages.first.sentAt),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: VawraColors.muted,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                for (final message in widget.messages) _bubble(message),
+                if (widget.messages.isEmpty &&
+                    widget.openers.isNotEmpty &&
+                    match.canMessage)
+                  Padding(
+                    key: const Key('openers'),
+                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Start with something you share',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: VawraColors.plum,
                           ),
                         ),
-                      const Text(
-                        'Tap one to put it in the message box, then make it '
-                        'your own.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: VawraColors.muted,
+                        const SizedBox(height: 8),
+                        for (final (i, line) in widget.openers.indexed)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: OutlinedButton(
+                              key: Key('opener-$i'),
+                              style: OutlinedButton.styleFrom(
+                                alignment: Alignment.centerLeft,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                              ),
+                              onPressed: () {
+                                composer.text = line;
+                                composer.selection = TextSelection.collapsed(
+                                  offset: line.length,
+                                );
+                                setState(() {});
+                              },
+                              child: Text(line),
+                            ),
+                          ),
+                        const Text(
+                          'Tap one to put it in the message box, then make it '
+                          'your own.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: VawraColors.muted,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (widget.peerTyping)
-                Padding(
-                  key: const Key('peer-typing'),
-                  padding: const EdgeInsets.fromLTRB(6, 2, 6, 10),
-                  child: Text(
-                    '${match.peerName} is typing…',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontStyle: FontStyle.italic,
-                      color: VawraColors.muted,
+                      ],
                     ),
                   ),
-                ),
-            ],
+                if (widget.peerTyping)
+                  Padding(
+                    key: const Key('peer-typing'),
+                    padding: const EdgeInsets.fromLTRB(6, 2, 6, 10),
+                    child: Text(
+                      '${match.peerName} is typing…',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        color: VawraColors.muted,
+                      ),
+                    ),
+                  ),
+              ].reversed.toList(),
+            ),
           ),
         ),
         Container(

@@ -512,6 +512,32 @@ void main() {
       return server.matches.keys.single;
     }
 
+    testWidgets('long chats open at the latest message and follow new ones', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final matchId = await openChatWithMaya(tester, server);
+      await tester.tap(find.byKey(const Key('thread-back')));
+      await _settle(tester);
+      for (var i = 0; i < 25; i++) {
+        server.peerSays(matchId, 'Message number $i', nudge: false);
+      }
+      await tester.tap(find.byKey(const Key('chat-tab')));
+      await _settle(tester);
+      await closeSafetyGuideIfShown(tester);
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('conversation-Maya')));
+      await _settle(tester);
+      bool visible(String text) =>
+          find.text(text).hitTestable().evaluate().isNotEmpty;
+      expect(visible('Message number 24'), isTrue);
+      expect(visible('Message number 0'), isFalse);
+
+      server.peerSays(matchId, 'Newest one');
+      await _settle(tester);
+      expect(visible('Newest one'), isTrue);
+    });
+
     testWidgets('a reply shows at once from its nudge, not from a timer', (
       tester,
     ) async {
