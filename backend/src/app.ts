@@ -24,6 +24,21 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
       : false,
   });
 
+  // Accept an empty body sent with a JSON content type (common in clients
+  // for body-less POST/DELETE); anything else must be valid JSON.
+  app.removeContentTypeParser('application/json');
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (_request, body, done) => {
+    const text = (body as string).trim();
+    if (text === '') return done(null, undefined);
+    try {
+      done(null, JSON.parse(text));
+    } catch {
+      const error = new Error('invalid JSON') as Error & { statusCode: number };
+      error.statusCode = 400;
+      done(error, undefined);
+    }
+  });
+
   app.addHook('onRequest', async (request) => {
     const header = request.headers.authorization;
     if (!header?.startsWith('Bearer ')) return;

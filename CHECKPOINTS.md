@@ -1,5 +1,17 @@
 # Checkpoints
 
+## Fix - Found on the owner's Samsung: body-less requests and system-button insets (2026-09-27)
+
+- Real bug, missed by every test: the app sent `Content-Type: application/json` on requests with no
+  body, and the real server (Fastify) rejects that with 400. It silently broke marking chats read,
+  typing, pause and account deletion. Fixed in the app (the header only with a body) and on the
+  server (an empty body with a JSON content type is accepted; invalid JSON still gets 400). The
+  in-memory test server now rejects the same way Fastify does: with the old client code 17+ app tests
+  fail. A backend test covers body-less POSTs (it fails without the server fix).
+- Samsung three-button navigation hid part of the bottom bar and the profile sheet's Pass/Like row.
+  Both now sit above the system buttons (bottom safe area). New `test/insets_test.dart` simulates a
+  48 dp navigation bar; removing the sheet's safe area makes it fail. Goldens are unchanged.
+
 ## BE-7 - Openers from what you share (2026-09-27)
 
 - An empty chat now suggests up to three first lines under "Start with something you share": the

@@ -3010,53 +3010,57 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     ];
     return Scaffold(
       body: IndexedStack(index: selectedIndex, children: pages),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0x3D182465),
-              blurRadius: 26,
-              offset: const Offset(0, 12),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: NavigationBar(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: _selectTab,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.explore_outlined),
-                selectedIcon: Icon(Icons.explore_rounded),
-                label: 'Discover',
-              ),
-              NavigationDestination(
-                key: Key('explore-tab'),
-                icon: Icon(Icons.grid_view_outlined),
-                selectedIcon: Icon(Icons.grid_view_rounded),
-                label: 'Explore',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.favorite_outline),
-                selectedIcon: Icon(Icons.favorite_rounded),
-                label: 'Matches',
-              ),
-              NavigationDestination(
-                key: Key('chat-tab'),
-                icon: Icon(Icons.chat_bubble_outline),
-                selectedIcon: Icon(Icons.chat_bubble_rounded),
-                label: 'Chats',
-              ),
-              NavigationDestination(
-                key: Key('profile-tab'),
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: 'Profile',
+      // Above the system navigation buttons, never behind them.
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x3D182465),
+                blurRadius: 26,
+                offset: const Offset(0, 12),
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: NavigationBar(
+              selectedIndex: selectedIndex,
+              onDestinationSelected: _selectTab,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.explore_outlined),
+                  selectedIcon: Icon(Icons.explore_rounded),
+                  label: 'Discover',
+                ),
+                NavigationDestination(
+                  key: Key('explore-tab'),
+                  icon: Icon(Icons.grid_view_outlined),
+                  selectedIcon: Icon(Icons.grid_view_rounded),
+                  label: 'Explore',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.favorite_outline),
+                  selectedIcon: Icon(Icons.favorite_rounded),
+                  label: 'Matches',
+                ),
+                NavigationDestination(
+                  key: Key('chat-tab'),
+                  icon: Icon(Icons.chat_bubble_outline),
+                  selectedIcon: Icon(Icons.chat_bubble_rounded),
+                  label: 'Chats',
+                ),
+                NavigationDestination(
+                  key: Key('profile-tab'),
+                  icon: Icon(Icons.person_outline),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'Profile',
+                ),
+              ],
+            ),
           ),
         ),
       ),

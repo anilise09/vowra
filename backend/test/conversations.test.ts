@@ -139,6 +139,22 @@ describe('conversations', () => {
     expect((await call(ana, 'PATCH', '/v1/me/settings', { admin: true })).statusCode).toBe(400);
   });
 
+  it('body-less POSTs work even with a JSON content type', async () => {
+    const { ana, ben, matchId } = await pair();
+    const json = { ...ana.auth, 'content-type': 'application/json' };
+    for (const url of [`/v1/matches/${matchId}/read`, `/v1/matches/${matchId}/typing`, '/v1/me/pause']) {
+      const res = await h.app.inject({ method: 'POST', url, headers: json });
+      expect([url, res.statusCode]).toEqual([url, 204]);
+    }
+    const broken = await h.app.inject({
+      method: 'POST',
+      url: `/v1/matches/${matchId}/messages`,
+      headers: { ...ben.auth, 'content-type': 'application/json' },
+      payload: '{not json',
+    });
+    expect(broken.statusCode).toBe(400);
+  });
+
   it('only participants can mark read or send typing', async () => {
     const { matchId } = await pair();
     const stranger = await member(h, 'Cy');

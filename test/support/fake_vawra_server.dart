@@ -170,6 +170,11 @@ class FakeVawraServer {
 
   Future<http.Response> _handle(http.Request request) async {
     requests.add(request);
+    // Like the real server (Fastify): a JSON content type needs a JSON body.
+    if ((request.headers['content-type'] ?? '').contains('json') &&
+        request.body.isEmpty) {
+      return _error(400, 'invalid_request');
+    }
     final path = request.url.path;
     final body = request.body.isEmpty
         ? <String, dynamic>{}

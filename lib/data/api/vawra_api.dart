@@ -294,11 +294,15 @@ class VawraApi {
   }) async {
     if (auth) await _ensureFresh();
     final request = http.Request(method, base.resolve(path));
-    request.headers['content-type'] = 'application/json';
     if (auth && _access != null) {
       request.headers['authorization'] = 'Bearer $_access';
     }
-    if (body != null) request.body = jsonEncode(body);
+    // A JSON content type only with a JSON body: servers reject the header
+    // on an empty body (this broke read, typing, pause and deletion).
+    if (body != null) {
+      request.headers['content-type'] = 'application/json';
+      request.body = jsonEncode(body);
+    }
     final response = await http.Response.fromStream(
       await _client.send(request),
     );

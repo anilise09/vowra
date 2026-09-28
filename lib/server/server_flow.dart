@@ -1199,59 +1199,63 @@ class _ServerHomeState extends State<ServerHome> {
     ];
     return Scaffold(
       body: IndexedStack(index: tab, children: pages),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x3D182465),
-              blurRadius: 26,
-              offset: Offset(0, 12),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: NavigationBar(
-            selectedIndex: tab,
-            onDestinationSelected: _selectTab,
-            destinations: [
-              const NavigationDestination(
-                icon: Icon(Icons.explore_outlined),
-                selectedIcon: Icon(Icons.explore_rounded),
-                label: 'Discover',
-              ),
-              NavigationDestination(
-                icon: Badge(
-                  isLabelVisible: likes.isNotEmpty,
-                  child: const Icon(Icons.favorite_outline),
-                ),
-                selectedIcon: const Icon(Icons.favorite_rounded),
-                label: 'Matches',
-              ),
-              NavigationDestination(
-                key: const Key('chat-tab'),
-                icon: Badge(
-                  key: const Key('chats-unread'),
-                  isLabelVisible: _unreadTotal > 0,
-                  label: Text('$_unreadTotal'),
-                  child: const Icon(Icons.chat_bubble_outline),
-                ),
-                selectedIcon: Badge(
-                  isLabelVisible: _unreadTotal > 0,
-                  label: Text('$_unreadTotal'),
-                  child: const Icon(Icons.chat_bubble_rounded),
-                ),
-                label: 'Chats',
-              ),
-              const NavigationDestination(
-                key: Key('profile-tab'),
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: 'Profile',
+      // Above the system navigation buttons, never behind them.
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x3D182465),
+                blurRadius: 26,
+                offset: Offset(0, 12),
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: NavigationBar(
+              selectedIndex: tab,
+              onDestinationSelected: _selectTab,
+              destinations: [
+                const NavigationDestination(
+                  icon: Icon(Icons.explore_outlined),
+                  selectedIcon: Icon(Icons.explore_rounded),
+                  label: 'Discover',
+                ),
+                NavigationDestination(
+                  icon: Badge(
+                    isLabelVisible: likes.isNotEmpty,
+                    child: const Icon(Icons.favorite_outline),
+                  ),
+                  selectedIcon: const Icon(Icons.favorite_rounded),
+                  label: 'Matches',
+                ),
+                NavigationDestination(
+                  key: const Key('chat-tab'),
+                  icon: Badge(
+                    key: const Key('chats-unread'),
+                    isLabelVisible: _unreadTotal > 0,
+                    label: Text('$_unreadTotal'),
+                    child: const Icon(Icons.chat_bubble_outline),
+                  ),
+                  selectedIcon: Badge(
+                    isLabelVisible: _unreadTotal > 0,
+                    label: Text('$_unreadTotal'),
+                    child: const Icon(Icons.chat_bubble_rounded),
+                  ),
+                  label: 'Chats',
+                ),
+                const NavigationDestination(
+                  key: Key('profile-tab'),
+                  icon: Icon(Icons.person_outline),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'Profile',
+                ),
+              ],
+            ),
           ),
         ),
       ),

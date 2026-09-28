@@ -342,211 +342,216 @@ class DiscoveryDeck extends StatelessWidget {
     backgroundColor: VawraColors.canvas,
     builder: (sheetContext) => SizedBox(
       height: MediaQuery.sizeOf(sheetContext).height * 0.88,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 10, 14, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _NameAge(
-                    name: profile.name,
-                    age: profile.age,
-                    color: VawraColors.ink,
-                    size: 24,
+      // Keeps Pass and Like above three-button navigation.
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 10, 14, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _NameAge(
+                      name: profile.name,
+                      age: profile.age,
+                      color: VawraColors.ink,
+                      size: 24,
+                    ),
                   ),
-                ),
-                IconButton.filledTonal(
-                  key: const Key('close-profile-details'),
-                  tooltip: 'Close profile details',
-                  onPressed: () => Navigator.pop(sheetContext),
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                ),
-              ],
+                  IconButton.filledTonal(
+                    key: const Key('close-profile-details'),
+                    tooltip: 'Close profile details',
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView(
-              key: const Key('profile-details-scroll'),
-              padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
-              children: [
-                _DetailPhotos(photos: _photosOf(profile), name: profile.name),
-                const SizedBox(height: 12),
-                _DetailSection(
-                  icon: Icons.favorite_outline_rounded,
-                  title: 'Looking for',
-                  child: Text(
-                    profile.intent,
-                    style: Theme.of(sheetContext).textTheme.titleMedium,
-                  ),
-                ),
-                if (profile is DetailedProfile && profile.reasons.isNotEmpty)
+            Expanded(
+              child: ListView(
+                key: const Key('profile-details-scroll'),
+                padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+                children: [
+                  _DetailPhotos(photos: _photosOf(profile), name: profile.name),
+                  const SizedBox(height: 12),
                   _DetailSection(
-                    key: const Key('detail-reasons'),
-                    icon: Icons.auto_awesome_rounded,
-                    title: 'Why you might click',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final reason in profile.reasons)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  switch (reason.kind) {
-                                    ReasonKind.goal =>
-                                      Icons.favorite_outline_rounded,
-                                    ReasonKind.interests =>
-                                      Icons.auto_awesome_outlined,
-                                    ReasonKind.habit => Icons.spa_outlined,
-                                  },
-                                  size: 18,
-                                  color: VawraColors.coral,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(reason.text)),
-                              ],
-                            ),
-                          ),
-                        Text(
-                          'Vawra orders Discover by what you share. It never '
-                          'ranks people by popularity or looks.',
-                          style: Theme.of(sheetContext).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                if (profile.bio.trim().isNotEmpty)
-                  _DetailSection(
-                    icon: Icons.format_quote_rounded,
-                    title: 'About ${profile.name}',
+                    icon: Icons.favorite_outline_rounded,
+                    title: 'Looking for',
                     child: Text(
-                      profile.bio,
-                      style: Theme.of(sheetContext).textTheme.bodyLarge,
+                      profile.intent,
+                      style: Theme.of(sheetContext).textTheme.titleMedium,
                     ),
                   ),
-                if (profile is DetailedProfile)
-                  for (final (i, prompt) in profile.prompts.indexed)
+                  if (profile is DetailedProfile && profile.reasons.isNotEmpty)
                     _DetailSection(
-                      key: Key('detail-prompt-$i'),
-                      icon: Icons.chat_bubble_outline_rounded,
-                      title: prompt.question,
+                      key: const Key('detail-reasons'),
+                      icon: Icons.auto_awesome_rounded,
+                      title: 'Why you might click',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final reason in profile.reasons)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    switch (reason.kind) {
+                                      ReasonKind.goal =>
+                                        Icons.favorite_outline_rounded,
+                                      ReasonKind.interests =>
+                                        Icons.auto_awesome_outlined,
+                                      ReasonKind.habit => Icons.spa_outlined,
+                                    },
+                                    size: 18,
+                                    color: VawraColors.coral,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(reason.text)),
+                                ],
+                              ),
+                            ),
+                          Text(
+                            'Vawra orders Discover by what you share. It never '
+                            'ranks people by popularity or looks.',
+                            style: Theme.of(sheetContext).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (profile.bio.trim().isNotEmpty)
+                    _DetailSection(
+                      icon: Icons.format_quote_rounded,
+                      title: 'About ${profile.name}',
                       child: Text(
-                        prompt.answer,
+                        profile.bio,
                         style: Theme.of(sheetContext).textTheme.bodyLarge,
                       ),
                     ),
-                _DetailSection(
-                  icon: Icons.auto_awesome_outlined,
-                  title: 'Interests',
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: profile.interests
-                        .map((item) => Chip(label: Text(item)))
-                        .toList(),
-                  ),
-                ),
-                if (profile is DetailedProfile && profile.lifestyle.isNotEmpty)
+                  if (profile is DetailedProfile)
+                    for (final (i, prompt) in profile.prompts.indexed)
+                      _DetailSection(
+                        key: Key('detail-prompt-$i'),
+                        icon: Icons.chat_bubble_outline_rounded,
+                        title: prompt.question,
+                        child: Text(
+                          prompt.answer,
+                          style: Theme.of(sheetContext).textTheme.bodyLarge,
+                        ),
+                      ),
                   _DetailSection(
-                    key: const Key('detail-habits'),
-                    icon: Icons.spa_outlined,
-                    title: 'Habits',
+                    icon: Icons.auto_awesome_outlined,
+                    title: 'Interests',
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: [
-                        for (final entry in profile.lifestyle.entries)
-                          Chip(
-                            label: Text('${entry.key.label}: ${entry.value}'),
-                          ),
-                      ],
+                      children: profile.interests
+                          .map((item) => Chip(label: Text(item)))
+                          .toList(),
                     ),
                   ),
-                _DetailSection(
-                  icon: Icons.near_me_outlined,
-                  title: 'Distance',
-                  child: Text(
-                    isServerPerson(profile.assetPath)
-                        ? 'Not shown yet. Vawra never shows an exact location.'
-                        : '${profile.distanceBand}. Shown as a band; '
-                              'exact location is never shown.',
-                  ),
-                ),
-                if (profileReport != null)
+                  if (profile is DetailedProfile &&
+                      profile.lifestyle.isNotEmpty)
+                    _DetailSection(
+                      key: const Key('detail-habits'),
+                      icon: Icons.spa_outlined,
+                      title: 'Habits',
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final entry in profile.lifestyle.entries)
+                            Chip(
+                              label: Text('${entry.key.label}: ${entry.value}'),
+                            ),
+                        ],
+                      ),
+                    ),
                   _DetailSection(
-                    icon: Icons.flag_outlined,
-                    title: 'Your report',
+                    icon: Icons.near_me_outlined,
+                    title: 'Distance',
                     child: Text(
                       isServerPerson(profile.assetPath)
-                          ? '${profileReport.reason.label}. Sent to Vawra safety for review.'
-                          : '${profileReport.reason.label}. '
-                                '${profileReport.moderationState.label}. '
-                                'Saved on this device only; no review team is connected.',
+                          ? 'Not shown yet. Vawra never shows an exact location.'
+                          : '${profile.distanceBand}. Shown as a band; '
+                                'exact location is never shown.',
                     ),
                   ),
-                const SizedBox(height: 6),
-                _SafetyRow(
-                  key: const Key('details-block'),
-                  label: 'Block ${profile.name}',
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _handleSafetyAction(context, profile, 'block');
-                  },
-                ),
-                _SafetyRow(
-                  key: const Key('details-report'),
-                  label: 'Report ${profile.name}',
-                  destructive: true,
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _handleSafetyAction(context, profile, 'report');
-                  },
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(8, 4, 8, 0),
-                  child: Text(
-                    'Blocking and reporting are free and private. '
-                    'The other person is never told.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: VawraColors.muted),
+                  if (profileReport != null)
+                    _DetailSection(
+                      icon: Icons.flag_outlined,
+                      title: 'Your report',
+                      child: Text(
+                        isServerPerson(profile.assetPath)
+                            ? '${profileReport.reason.label}. Sent to Vawra safety for review.'
+                            : '${profileReport.reason.label}. '
+                                  '${profileReport.moderationState.label}. '
+                                  'Saved on this device only; no review team is connected.',
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  _SafetyRow(
+                    key: const Key('details-block'),
+                    label: 'Block ${profile.name}',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _handleSafetyAction(context, profile, 'block');
+                    },
                   ),
-                ),
-              ],
+                  _SafetyRow(
+                    key: const Key('details-report'),
+                    label: 'Report ${profile.name}',
+                    destructive: true,
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _handleSafetyAction(context, profile, 'report');
+                    },
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(8, 4, 8, 0),
+                    child: Text(
+                      'Blocking and reporting are free and private. '
+                      'The other person is never told.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: VawraColors.muted),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _ProfileActionButton(
-                  tooltip: 'Pass',
-                  icon: Icons.close_rounded,
-                  foreground: VawraColors.plum,
-                  background: Colors.white,
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    onSwipeAction(profile, DiscoverySwipeAction.reject);
-                  },
-                ),
-                const SizedBox(width: 38),
-                _ProfileActionButton(
-                  tooltip: 'Like',
-                  icon: Icons.favorite_rounded,
-                  foreground: Colors.white,
-                  background: VawraColors.coral,
-                  emphasized: true,
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    onSwipeAction(profile, DiscoverySwipeAction.like);
-                  },
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _ProfileActionButton(
+                    tooltip: 'Pass',
+                    icon: Icons.close_rounded,
+                    foreground: VawraColors.plum,
+                    background: Colors.white,
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      onSwipeAction(profile, DiscoverySwipeAction.reject);
+                    },
+                  ),
+                  const SizedBox(width: 38),
+                  _ProfileActionButton(
+                    tooltip: 'Like',
+                    icon: Icons.favorite_rounded,
+                    foreground: Colors.white,
+                    background: VawraColors.coral,
+                    emphasized: true,
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      onSwipeAction(profile, DiscoverySwipeAction.like);
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );
