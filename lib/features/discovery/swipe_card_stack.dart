@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/vawra_theme.dart';
+import 'swipe_physics.dart';
 
 enum SwipeDirection { left, right, up }
 
@@ -38,36 +40,58 @@ class SwipeCardStack extends StatefulWidget {
 }
 
 class SwipeCardStackState extends State<SwipeCardStack>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(vsync: this);
-  Offset _offset = Offset.zero;
-  Animation<Offset>? _animation;
+    with TickerProviderStateMixin {
+  // X and Y are separate springs: a single spring on the 2D distance would
+  // desync when the two axes move at different speeds.
+  late final AnimationController _x = AnimationController.unbounded(
+    vsync: this,
+  );
+  late final AnimationController _y = AnimationController.unbounded(
+    vsync: this,
+  );
+
+  /// Reduced motion only: the card fades instead of flying.
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 160),
+  );
   SwipeDirection? _leaving;
   Size _size = Size.zero;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(() {
-      final animation = _animation;
-      if (animation != null) setState(() => _offset = animation.value);
-    });
-  }
+  /// Where the card was grabbed: the lower half tilts the other way, like a
+  /// real card held low.
+  double _tiltSign = 1;
+
+  /// Past the commit line during the drag (for the haptic tick).
+  bool _armed = false;
+
+  Offset get _offset => Offset(_x.value, _y.value);
+
+  bool get _reduceMotion =>
+      MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
   @override
   void didUpdateWidget(SwipeCardStack oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.frontId != widget.frontId) {
-      _controller.stop();
-      _animation = null;
+      _x
+        ..stop()
+        ..value = 0;
+      _y
+        ..stop()
+        ..value = 0;
+      _fade.value = 0;
       _leaving = null;
-      _offset = Offset.zero;
+      _armed = false;
+      _tiltSign = 1;
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _x.dispose();
+    _y.dispose();
+    _fade.dispose();
     super.dispose();
   }
 
@@ -80,28 +104,31 @@ class SwipeCardStackState extends State<SwipeCardStack>
       widget.onSwipeUpBlocked?.call();
       return;
     }
-    // A small lean first so a button press reads like a real swipe.
-    final lean = switch (direction) {
-      SwipeDirection.left => Offset(-_size.width * 0.08, 0),
-      SwipeDirection.right => Offset(_size.width * 0.08, 0),
-      SwipeDirection.up => Offset(0, -_size.height * 0.06),
-    };
-    await _animateTo(lean, const Duration(milliseconds: 110), Curves.easeOut);
-    await _flyOff(direction);
+    if (!_reduceMotion) {
+      // A small lean first so a button press reads like a real swipe.
+      final lean = switch (direction) {
+        SwipeDirection.left => Offset(-_size.width * 0.08, 0),
+        SwipeDirection.right => Offset(_size.width * 0.08, 0),
+        SwipeDirection.up => Offset(0, -_size.height * 0.06),
+      };
+      const d = Duration(milliseconds: 110);
+      await Future.wait([
+        _x.animateTo(lean.dx, duration: d, curve: Curves.easeOut),
+        _y.animateTo(lean.dy, duration: d, curve: Curves.easeOut),
+      ]);
+    }
+    await _flyOff(direction, Offset.zero);
   }
 
-  Future<void> _animateTo(Offset target, Duration duration, Curve curve) {
-    _animation = Tween(
-      begin: _offset,
-      end: target,
-    ).animate(CurvedAnimation(parent: _controller, curve: curve));
-    _controller.duration = duration;
-    return _controller.forward(from: 0);
-  }
-
-  Future<void> _flyOff(SwipeDirection direction) async {
+  /// Leaves at the finger's speed (at least a brisk throw), in its direction.
+  Future<void> _flyOff(SwipeDirection direction, Offset velocity) async {
     _leaving = direction;
     HapticFeedback.lightImpact();
+    if (_reduceMotion) {
+      await _fade.forward(from: 0);
+      if (mounted) widget.onSwiped(direction);
+      return;
+    }
     final width = _size.width;
     final height = _size.height;
     final target = switch (direction) {
@@ -109,45 +136,75 @@ class SwipeCardStackState extends State<SwipeCardStack>
       SwipeDirection.right => Offset(width * 1.6, _offset.dy + height * 0.05),
       SwipeDirection.up => Offset(_offset.dx, -height * 1.4),
     };
-    await _animateTo(target, const Duration(milliseconds: 260), Curves.easeIn);
+    final distance = (target - _offset).distance;
+    final duration = flyOffDuration(distance, velocity.distance);
+    // A thrown card keeps its speed (linear); a button press accelerates away.
+    final curve = velocity == Offset.zero ? Curves.easeIn : Curves.linear;
+    await Future.wait([
+      _x.animateTo(target.dx, duration: duration, curve: curve),
+      _y.animateTo(target.dy, duration: duration, curve: curve),
+    ]);
     if (mounted) widget.onSwiped(direction);
+  }
+
+  /// Catching the card mid-motion stops it where it is, under the finger:
+  /// the new gesture starts from the on-screen position, never a jump.
+  void _onPanDown(DragDownDetails details) {
+    if (busy) return;
+    _x.stop();
+    _y.stop();
+    _tiltSign = details.localPosition.dy > _size.height / 2 ? -1 : 1;
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (busy) return;
-    setState(() => _offset += details.delta);
+    _x.value += details.delta.dx;
+    _y.value += details.delta.dy;
+    final armed = decideSwipe(_offset, Offset.zero, _size) != null;
+    if (armed != _armed) {
+      _armed = armed;
+      // Tick when crossing the line, so the finger feels the decision point.
+      if (armed) HapticFeedback.selectionClick();
+    }
   }
 
   void _onPanEnd(DragEndDetails details) {
     if (busy) return;
+    _armed = false;
     final velocity = details.velocity.pixelsPerSecond;
-    final horizontal = _offset.dx.abs() >= _offset.dy.abs();
-    SwipeDirection? direction;
-    if (horizontal) {
-      if (_offset.dx > _size.width * 0.28 ||
-          (velocity.dx > 900 && _offset.dx > 0)) {
-        direction = SwipeDirection.right;
-      } else if (_offset.dx < -_size.width * 0.28 ||
-          (velocity.dx < -900 && _offset.dx < 0)) {
-        direction = SwipeDirection.left;
-      }
-    } else if (_offset.dy < -_size.height * 0.2 ||
-        (velocity.dy < -900 && _offset.dy < 0)) {
-      direction = SwipeDirection.up;
-    }
+    // Decide from the drawn position (rubber-banded downwards).
+    final shown = _shownOffset;
+    var direction = decideSwipe(shown, velocity, _size);
     if (direction == SwipeDirection.up && !widget.canSwipeUp) {
       widget.onSwipeUpBlocked?.call();
       direction = null;
     }
     if (direction != null) {
-      _flyOff(direction);
-    } else {
-      _animateTo(
-        Offset.zero,
-        const Duration(milliseconds: 420),
-        Curves.elasticOut,
-      );
+      _y.value = shown.dy;
+      _flyOff(direction, velocity);
+      return;
     }
+    _y.value = shown.dy;
+    if (_reduceMotion) {
+      _x.value = 0;
+      _y.value = 0;
+      return;
+    }
+    // Back home on a spring that starts at the release speed: no seam between
+    // dragging and animating, and a little bounce because momentum preceded it.
+    _x.animateWith(
+      SpringSimulation(springAfterFlick, _x.value, 0, velocity.dx),
+    );
+    _y.animateWith(
+      SpringSimulation(springAfterFlick, _y.value, 0, velocity.dy),
+    );
+  }
+
+  /// Down is not a direction: past the resting point the card resists.
+  Offset get _shownOffset {
+    final raw = _offset;
+    if (raw.dy <= 0 || busy) return raw;
+    return Offset(raw.dx, rubberband(raw.dy, _size.height));
   }
 
   /// 0..1 progress toward a swipe decision, used for stamps and the back card.
@@ -159,37 +216,45 @@ class SwipeCardStackState extends State<SwipeCardStack>
   }
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      _size = constraints.biggest;
-      final angle = (_offset.dx / math.max(_size.width, 1)) * 0.35;
-      final likeOpacity = (_offset.dx / (_size.width * 0.25)).clamp(0.0, 1.0);
-      final nopeOpacity = (-_offset.dx / (_size.width * 0.25)).clamp(0.0, 1.0);
-      final superOpacity = _offset.dx.abs() > -_offset.dy
-          ? 0.0
-          : (-_offset.dy / (_size.height * 0.16)).clamp(0.0, 1.0);
-      final backScale = 0.93 + 0.07 * _progress;
-      return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          if (widget.back != null)
-            Positioned.fill(
-              child: Transform.scale(
-                scale: backScale,
-                child: IgnorePointer(child: widget.back),
-              ),
-            ),
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: Listenable.merge([_x, _y, _fade]),
+    builder: (context, _) => LayoutBuilder(builder: _layout),
+  );
+
+  Widget _layout(BuildContext context, BoxConstraints constraints) {
+    _size = constraints.biggest;
+    final shown = _shownOffset;
+    final angle = (shown.dx / math.max(_size.width, 1)) * 0.35 * _tiltSign;
+    final likeOpacity = (_offset.dx / (_size.width * 0.25)).clamp(0.0, 1.0);
+    final nopeOpacity = (-_offset.dx / (_size.width * 0.25)).clamp(0.0, 1.0);
+    final superOpacity = _offset.dx.abs() > -_offset.dy
+        ? 0.0
+        : (-_offset.dy / (_size.height * 0.16)).clamp(0.0, 1.0);
+    final backScale = 0.93 + 0.07 * _progress;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (widget.back != null)
           Positioned.fill(
-            child: GestureDetector(
-              key: const Key('swipe-front'),
-              behavior: HitTestBehavior.translucent,
-              onPanUpdate: _onPanUpdate,
-              onPanEnd: _onPanEnd,
+            child: Transform.scale(
+              scale: backScale,
+              child: IgnorePointer(child: widget.back),
+            ),
+          ),
+        Positioned.fill(
+          child: GestureDetector(
+            key: const Key('swipe-front'),
+            behavior: HitTestBehavior.translucent,
+            onPanDown: _onPanDown,
+            onPanUpdate: _onPanUpdate,
+            onPanEnd: _onPanEnd,
+            child: Opacity(
+              opacity: 1 - _fade.value,
               child: Transform.translate(
-                offset: _offset,
+                offset: shown,
                 child: Transform.rotate(
                   angle: angle,
-                  alignment: const Alignment(0, 1.4),
+                  alignment: Alignment(0, 1.4 * _tiltSign),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -236,10 +301,10 @@ class SwipeCardStackState extends State<SwipeCardStack>
               ),
             ),
           ),
-        ],
-      );
-    },
-  );
+        ),
+      ],
+    );
+  }
 }
 
 class _Stamp extends StatelessWidget {

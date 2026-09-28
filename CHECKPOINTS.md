@@ -1,5 +1,26 @@
 # Checkpoints
 
+## UI-1 - Apple-style physics for the swipe card (2026-09-28)
+
+Using the apple-design skill (WWDC "Designing Fluid Interfaces"), the look stays as approved and the
+feel changes:
+
+- Interruptible: catching the card while it springs back holds it where it was caught (the new
+  gesture starts from the on-screen position, no jump). X and Y are separate springs.
+- Momentum decides: a release projects where the flick is going (Apple's exponential-decay
+  projection, rate 0.99) before deciding, so a quick flick from near the centre commits, and a
+  flick back toward the centre cancels even past the line.
+- No seam between drag and animation: the card springs home from the release speed (damping 0.8,
+  response 0.35, a little bounce only because momentum preceded it) and flies off at the finger's
+  speed instead of a fixed 260 ms.
+- Tilt follows where it was held (lower half tilts the other way); dragging down meets soft
+  rubber-band resistance instead of moving freely.
+- One haptic tick when crossing the like/nope line, and the impact on the same frame the card
+  leaves.
+- Reduced motion (system "remove animations"): a short fade instead of flying and no bounce.
+- `lib/features/discovery/swipe_physics.dart` (pure, 8 tests) and 5 widget tests of the feel;
+  removing "stop on grab" fails the interrupt test.
+
 ## Dev - The 260 sample profiles on the local test server (2026-09-27)
 
 - The owner asked where the 250+ profiles went: they are the prototype's bundled synthetic people,
