@@ -155,7 +155,7 @@ class _Section extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 22),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(title, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -184,20 +184,27 @@ class _Section extends StatelessWidget {
                                 Expanded(child: Text(label)),
                               ],
                             )
-                          : Wrap(
-                              spacing: 12,
-                              runSpacing: 2,
-                              alignment: WrapAlignment.spaceBetween,
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  label,
-                                  style: const TextStyle(
-                                    color: VawraColors.muted,
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    label,
+                                    style: const TextStyle(
+                                      color: VawraColors.muted,
+                                    ),
                                   ),
                                 ),
-                                Text(
-                                  value == null || value.isEmpty ? '—' : value,
-                                  style: theme.textTheme.bodyLarge,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    value == null || value.isEmpty
+                                        ? '—'
+                                        : value,
+                                    style: theme.textTheme.bodyLarge,
+                                  ),
                                 ),
                               ],
                             ),

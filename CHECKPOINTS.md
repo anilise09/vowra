@@ -1,5 +1,25 @@
 # Checkpoints
 
+## Device - BE-8, BE-9 and the WebP build on the owner's Asus (2026-09-28)
+
+- Asus ASUS_I003DD over wireless adb, profile build against the local test server; install checked
+  by md5. Phone checked for calls and foreground app before every step.
+- Portraits: WebP cards look as sharp as before on the phone.
+- "Show me" on an existing account (Alex): set "I am: Man, Show me: Women" in the Profile editor,
+  saved; Discover dropped the man on top and showed women. The export confirmed both were saved.
+- New member (Sam, synthetic): all 9 onboarding steps, including "How do you identify?" (Continue
+  stays off until chosen) and "Who would you like to meet?" (Men; Everyone cleared itself). After
+  the age gate (cleared with the local `dev:assure` tool), the first 8 Discover cards were all men,
+  checked against the fixture. The details sheet shows "Gender: Man" for demo members.
+- Download my data: an old session asks for a code first; after it the page opens, Copy shows
+  "Copied", and Back returns to Settings.
+- Found on the phone and fixed: the export page's label/value rows drifted towards the centre and
+  the Account card did not span the page (a Wrap with spaceBetween). Now two fixed columns and
+  full-width cards; a new test checks the columns line up and fails on the old layout, plus a
+  visual baseline and a 1.8x text check. Flutter 192 passed (one existing skip).
+- Left as found: the phone is signed in as Alex again with "Show me: Everyone"; no files on the
+  phone. The phone's clipboard holds Alex's synthetic export from the Copy check.
+
 ## BE-9 - Download a copy of your data (2026-09-28)
 
 - Settings > Privacy has "Download a copy of your data" (server builds only), and so does the
