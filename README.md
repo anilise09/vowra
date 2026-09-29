@@ -8,8 +8,9 @@ Vawra is the current product name and visual identity. Public launch under that 
 
 A responsive, static Vawra product-site preview is in `website/`. It uses the approved
 transparent company lockup and current synthetic-prototype screenshots, with an
-interactive screen gallery and explicit pre-launch disclosures. It has not been
-published or visually verified in a browser on this machine.
+interactive screen gallery and explicit pre-launch disclosures. A prototype preview
+is published via GitHub Pages at https://anilise09.github.io/vowra/; it is not a
+public dating-service launch.
 
 UI-5 uses the approved transparent company lockup and aligns Discover's primary Pass and Like
 actions with their swipe meanings. The latest audit anchors Welcome's reading panel on tall

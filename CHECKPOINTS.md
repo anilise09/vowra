@@ -12,8 +12,12 @@
   pointer and keyboard tab switching, the mobile menu has expanded state, and CSS
   includes compact-phone, tablet and reduced-motion rules.
 - `website/check.ps1` passes (links, assets, screen mappings, disclosures and CSS
-  rules). Browser visual verification was not possible because this environment
-  blocked local-file browser navigation; check desktop/mobile rendering before publish.
+  rules). The live GitHub Pages preview was checked in Chrome at desktop and
+  390px phone width; the images load and a decorative horizontal overflow found
+  on the phone was corrected. Further device/browser review is still useful.
+- A clearly labeled prototype preview is published at
+  https://anilise09.github.io/vowra/ from the `gh-pages` branch. This is not
+  a public launch of the dating service.
 - Publishing remains blocked on trademark/domain clearance and production legal,
   privacy, security and age-assurance gates.
 
