@@ -169,7 +169,7 @@ git push origin $NEW:refs/heads/gh-pages
 - Moderation is built (BE-11) but moderators are made with a local dev command; a real staff
   sign-in (separate from member accounts, with two-person access for sensitive evidence) comes
   with hosting.
-- Load and abuse tests (many members, spam and scam patterns) and a security review pass.
+- A staging load run on real hosting (`npm run load` measures in process; see `docs/LOAD_TEST.md`).
 
 ## State left on the machine
 

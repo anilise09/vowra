@@ -1,5 +1,19 @@
 # Checkpoints
 
+## BE-17 - Load and abuse testing (2026-09-29)
+
+- Blocks never leak: a seeded random test (three sequences, 60 steps, six members) checks after
+  every step that each blocked pair cannot see or reach each other anywhere: Discover, Likes you,
+  chat lists, sending, reading, liking; unblocking never reopens a chat. Removing the block check
+  from Discover's eligibility rule fails it at once. Runs with the normal suite.
+- `npm run load`: 100 members, about 300 matches, 3000 mixed requests. Reads stay fast (median
+  4-17 ms); with 25 people at once, likes and messages queue for about 0.6 s, and one at a time they
+  take 7-8 ms, with the same throughput (about 115 a second) either way. The cause is the
+  development database running one transaction at a time, not the service code; production
+  PostgreSQL runs them in parallel. Written up in `docs/LOAD_TEST.md` with what still needs a
+  staging run on real hosting.
+- Backend 129 tests pass.
+
 ## BE-16 - Photos in chat: allowed per match, checked first, blurred until tapped (2026-09-29)
 
 - In a chat, "Allow photos from Maya" (off by default) lets that one person send you photos. The
