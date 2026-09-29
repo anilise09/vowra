@@ -26,6 +26,7 @@ import '../main.dart' show SafetySheet, WelcomeScreen;
 import '../theme/vawra_navigation_shell.dart';
 import '../theme/vawra_theme.dart';
 import '../data/area_locator.dart';
+import '../data/area_prefs.dart';
 import 'area_sheet.dart';
 import 'data_export_page.dart';
 import 'moderation_screens.dart';
@@ -42,8 +43,7 @@ String describeApiError(Object error) {
     'slow_down' => 'Slow down a little: up to 5 messages a minute.',
     'super_like_limit' => 'You\'ve used today\'s Super Likes. More tomorrow.',
     'like_limit' => 'You\'ve liked a lot of people today. More tomorrow.',
-    'report_limit' =>
-      'You\'ve sent many reports today. You can still block anyone at any time.',
+    'report_limit' => 'You\'ve sent many reports today. You can still block anyone at any time.',
     'conversation_closed' => 'This conversation has closed.',
     'account_paused' => 'Your profile is paused. Resume it to meet new people.',
     'age_assurance_required' => 'Your age needs to be confirmed first.',
@@ -785,8 +785,13 @@ class _ServerHomeState extends State<ServerHome> {
   /// Read receipts and typing; null until loaded.
   bool? shareReceipts;
 
-  /// When the approximate area was set; null when distance is off.
+  /// When the approximate area was set; null when none is on the server.
   late DateTime? areaSetAt = widget.me.areaUpdatedAt;
+
+  /// Whether the person wants distance (kept on the phone), and whether it
+  /// is hidden right now because they are at a private place.
+  late bool distanceWanted = areaSetAt != null;
+  bool hiddenHere = false;
 
   /// Checks since the last refresh; counting ticks keeps this testable.
   int _checksSinceRefresh = 0;
@@ -795,7 +800,7 @@ class _ServerHomeState extends State<ServerHome> {
   void initState() {
     super.initState();
     _refreshAll();
-    if (areaSetAt != null) _refreshArea();
+    _initArea();
     api
         .shareReadReceipts()
         .then((on) {
@@ -1077,22 +1082,54 @@ class _ServerHomeState extends State<ServerHome> {
   /// Keeps the area current without asking: only with a permission the
   /// person already gave, and quietly (the server allows a new area every 15
   /// minutes).
-  Future<void> _refreshArea() async {
+  Future<void> _initArea() async {
+    final prefs = await areaPrefsStore.load();
+    if (!mounted) return;
+    setState(() => distanceWanted = prefs.wanted ?? areaSetAt != null);
+    if (distanceWanted) await _refreshArea(prefs);
+  }
+
+  /// At a private place the area is removed instead of updated, so nothing
+  /// about that place reaches the server.
+  Future<void> _refreshArea(AreaPrefs prefs) async {
     final fix = await areaLocator.locate(ask: false);
     final cell = fix.cell;
     if (cell == null) return;
     try {
-      await api.setArea(cell);
+      if (prefs.isPrivate(cell)) {
+        if (areaSetAt != null) await api.clearArea();
+        if (mounted) {
+          setState(() {
+            areaSetAt = null;
+            hiddenHere = true;
+          });
+        }
+      } else {
+        await api.setArea(cell);
+        if (mounted) {
+          setState(() {
+            areaSetAt ??= DateTime.now();
+            hiddenHere = false;
+          });
+        }
+      }
     } catch (_) {}
   }
 
-  Future<bool> _chooseArea(BuildContext context) async {
-    final on = await AreaSheet.show(context, api: api, on: areaSetAt != null);
-    if (!mounted) return on;
-    final changed = on != (areaSetAt != null);
-    setState(() => areaSetAt = on ? (areaSetAt ?? DateTime.now()) : null);
-    if (changed) _refreshAll();
-    return on;
+  Future<(bool, bool)> _chooseArea(BuildContext context) async {
+    final before = areaSetAt != null;
+    final on = await AreaSheet.show(context, api: api, on: distanceWanted);
+    if (!mounted) return (on, hiddenHere);
+    setState(() {
+      distanceWanted = on;
+      if (!on) {
+        areaSetAt = null;
+        hiddenHere = false;
+      }
+    });
+    if (on) await _refreshArea(await areaPrefsStore.load());
+    if (before != (areaSetAt != null)) _refreshAll();
+    return (distanceWanted, hiddenHere);
   }
 
   Future<void> _setShareReceipts(bool on) async {
@@ -1235,7 +1272,8 @@ class _ServerHomeState extends State<ServerHome> {
           shareReadReceipts: shareReceipts ?? false,
           onShareReadReceiptsChanged: _setShareReceipts,
           onDownloadData: () => _downloadData(navigator),
-          areaOn: areaSetAt != null,
+          areaOn: distanceWanted,
+          areaHiddenHere: hiddenHere,
           onArea: () => _chooseArea(navigator.context),
           onModeration: widget.me.moderator
               ? () => navigator.push(

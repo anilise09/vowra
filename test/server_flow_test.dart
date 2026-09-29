@@ -1,5 +1,6 @@
 import 'package:ember_app/data/api/vawra_api.dart';
 import 'package:ember_app/data/area_locator.dart';
+import 'package:ember_app/data/area_prefs.dart';
 import 'package:ember_app/domain/location_grid.dart';
 import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
@@ -731,8 +732,26 @@ void main() {
   group('distance', () {
     final cell = snapToCell(49.89513, -97.13841);
     late _FakeArea area;
-    setUp(() => areaLocator = area = _FakeArea(AreaFix.found(cell)));
-    tearDown(() => areaLocator = const GeolocatorAreaLocator());
+    late MemoryAreaPrefsStore places;
+    setUp(() {
+      areaLocator = area = _FakeArea(AreaFix.found(cell));
+      areaPrefsStore = places = MemoryAreaPrefsStore();
+    });
+    tearDown(() {
+      areaLocator = const GeolocatorAreaLocator();
+      areaPrefsStore = const SecureAreaPrefsStore();
+    });
+
+    /// Nothing about a private place may ever reach the server.
+    void expectPlacesNeverSent(
+      FakeVawraServer server,
+      AreaCell place, {
+      int from = 0,
+    }) {
+      for (final request in server.requests.skip(from)) {
+        expect(request.body, isNot(contains('${place.lat}')));
+      }
+    }
 
     Map<String, dynamic> profile() => {
       'display_name': 'Alex',
@@ -770,7 +789,8 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('area-on')));
       await _settle(tester);
-      expect(area.asks, [true]);
+      // The prompt, then a quiet re-check with the permission just given.
+      expect(area.asks, [true, false]);
       expect(server.area, {'lat': cell.lat, 'lng': cell.lng});
       expect(find.text('Distance: on'), findsOneWidget);
 
@@ -845,6 +865,72 @@ void main() {
       await _settle(tester);
       expect(area.asks, [false]);
       expect(server.area, {'lat': cell.lat, 'lng': cell.lng});
+    });
+
+    testWidgets('at a private place distance is hidden, and nothing is sent', (
+      tester,
+    ) async {
+      places.prefs = AreaPrefs(wanted: true, zones: [cell]);
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile()
+        ..areaAt = DateTime.utc(2026, 9, 27);
+      await _signIn(tester, server);
+      await _settle(tester);
+      expect(area.asks, [false]);
+      expect(server.area, isNull);
+      expect(server.areaAt, isNull, reason: 'the old area was removed');
+      expectPlacesNeverSent(server, cell);
+
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('profile-tab')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('open-settings')));
+      await _settle(tester);
+      expect(find.text('Distance: on'), findsOneWidget);
+      expect(
+        find.textContaining('you\u2019re at a private place'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('away from private places distance works as usual', (
+      tester,
+    ) async {
+      final far = snapToCell(43.6532, -79.3832);
+      places.prefs = AreaPrefs(wanted: true, zones: [far]);
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      expect(server.area, {'lat': cell.lat, 'lng': cell.lng});
+      expectPlacesNeverSent(server, far);
+    });
+
+    testWidgets('add this place as private, then remove it', (tester) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile()
+        ..areaAt = DateTime.utc(2026, 9, 27);
+      await _signIn(tester, server);
+      await _settle(tester);
+      expect(server.area, isNotNull);
+      await openArea(tester);
+      final before = server.requests.length;
+      await tester.ensureVisible(find.byKey(const Key('area-zone-add')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('area-zone-add')));
+      await _settle(tester);
+      expect(places.prefs.zones, [cell]);
+      expect(server.area, isNull, reason: 'hidden at once');
+      expect(find.byKey(const Key('area-note')), findsOneWidget);
+      // Before it was private the area was sent as usual; never since.
+      expectPlacesNeverSent(server, cell, from: before);
+
+      await tester.tap(find.byKey(const Key('area-zone-remove-0')));
+      await _settle(tester);
+      expect(places.prefs.zones, isEmpty);
     });
 
     testWidgets('no quiet refresh when distance is off', (tester) async {

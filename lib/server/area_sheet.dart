@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../data/api/vawra_api.dart';
 import '../data/area_locator.dart';
+import '../data/area_prefs.dart';
+import '../domain/location_grid.dart';
 import '../theme/vawra_theme.dart';
 
-/// Turns distance on or off. On means the phone's approximate area, rounded
-/// on the phone to a cell about 2 km across; people only ever see a band.
+/// Turns distance on or off, and manages private places. On means the
+/// phone's approximate area, rounded on the phone to a cell about 2 km
+/// across; people only ever see a band. Near a private place nothing is
+/// sent at all.
 class AreaSheet extends StatefulWidget {
   const AreaSheet({super.key, required this.api, required this.on});
 
   final VawraApi api;
   final bool on;
 
-  /// Returns whether distance is on afterwards.
+  /// Returns whether distance is wanted afterwards.
   static Future<bool> show(
     BuildContext context, {
     required VawraApi api,
@@ -32,42 +36,66 @@ class AreaSheet extends StatefulWidget {
 
 class _AreaSheetState extends State<AreaSheet> {
   late bool on = widget.on;
+  AreaPrefs prefs = const AreaPrefs();
   bool busy = false;
   String? problem;
+  String? note;
   bool offerSettings = false;
 
-  Future<void> _useArea() async {
-    setState(() {
-      busy = true;
-      problem = null;
-      offerSettings = false;
+  @override
+  void initState() {
+    super.initState();
+    areaPrefsStore.load().then((p) {
+      if (mounted) setState(() => prefs = p);
     });
+  }
+
+  String _problemText(AreaProblem p) => switch (p) {
+    AreaProblem.denied =>
+      'Vawra didn’t get permission. Everything else still works; '
+          'distances stay hidden.',
+    AreaProblem.deniedForever =>
+      'Location is blocked for Vawra. You can allow “Approximate” '
+          'location in the phone’s settings.',
+    AreaProblem.serviceOff =>
+      'Location is off on this phone. Turn it on in the phone’s '
+          'settings, then try again.',
+    AreaProblem.unavailable =>
+      'Your phone couldn’t find your area just now. Try again in a '
+          'moment.',
+  };
+
+  Future<AreaCell?> _locate() async {
     final fix = await areaLocator.locate(ask: true);
-    final cell = fix.cell;
-    if (cell == null) {
-      if (!mounted) return;
+    if (fix.cell == null && mounted) {
       setState(() {
         busy = false;
         offerSettings = fix.problem == AreaProblem.deniedForever;
-        problem = switch (fix.problem!) {
-          AreaProblem.denied =>
-            'Vawra didn’t get permission. Everything else still works; '
-                'distances stay hidden.',
-          AreaProblem.deniedForever =>
-            'Location is blocked for Vawra. You can allow “Approximate” '
-                'location in the phone’s settings.',
-          AreaProblem.serviceOff =>
-            'Location is off on this phone. Turn it on in the phone’s '
-                'settings, then try again.',
-          AreaProblem.unavailable =>
-            'Your phone couldn’t find your area just now. Try again in a '
-                'moment.',
-        };
+        problem = _problemText(fix.problem!);
       });
-      return;
     }
+    return fix.cell;
+  }
+
+  void _start() => setState(() {
+    busy = true;
+    problem = null;
+    note = null;
+    offerSettings = false;
+  });
+
+  Future<void> _useArea() async {
+    _start();
+    final cell = await _locate();
+    if (cell == null) return;
     try {
-      await widget.api.setArea(cell);
+      // At a private place nothing is sent; distance is hidden until you leave.
+      if (prefs.isPrivate(cell)) {
+        await widget.api.clearArea();
+      } else {
+        await widget.api.setArea(cell);
+      }
+      await areaPrefsStore.save(prefs.copyWith(wanted: true));
       if (mounted) Navigator.pop(context, true);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -75,11 +103,11 @@ class _AreaSheetState extends State<AreaSheet> {
         busy = false;
         problem = switch (e.code) {
           'slow_down' =>
-            'Your area can change once every 15 minutes. Try '
-                'again a little later.',
+            'Your area can change once every 15 minutes. Try again a little '
+                'later.',
           'implausible_move' =>
-            'That is too far from your last area to be '
-                'right. Try again later.',
+            'That is too far from your last area to be right. Try again '
+                'later.',
           _ => 'Vawra couldn’t save your area. Try again.',
         };
       });
@@ -93,18 +121,44 @@ class _AreaSheetState extends State<AreaSheet> {
   }
 
   Future<void> _turnOff() async {
-    setState(() {
-      busy = true;
-      problem = null;
-    });
+    _start();
     try {
       await widget.api.clearArea();
+      await areaPrefsStore.save(prefs.copyWith(wanted: false));
       if (mounted) Navigator.pop(context, false);
     } catch (_) {
       if (!mounted) return;
       setState(() {
         busy = false;
         problem = 'Vawra couldn’t turn distance off. Try again.';
+      });
+    }
+  }
+
+  Future<void> _addPlace() async {
+    _start();
+    final cell = await _locate();
+    if (cell == null) return;
+    final updated = prefs.copyWith(zones: [...prefs.zones, cell]);
+    await areaPrefsStore.save(updated);
+    try {
+      await widget.api.clearArea();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      prefs = updated;
+      busy = false;
+      note = 'Added. Your distance is hidden while you’re here.';
+    });
+  }
+
+  Future<void> _removePlace(int index) async {
+    final updated = prefs.copyWith(zones: [...prefs.zones]..removeAt(index));
+    await areaPrefsStore.save(updated);
+    if (mounted) {
+      setState(() {
+        prefs = updated;
+        note = 'Removed. Distance shows there again from your next visit.';
       });
     }
   }
@@ -188,6 +242,38 @@ class _AreaSheetState extends State<AreaSheet> {
                 onPressed: busy ? null : _turnOff,
                 child: const Text('Turn distance off'),
               ),
+              const SizedBox(height: 22),
+              Text('Private places', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 6),
+              const Text(
+                'Your distance is hidden whenever you’re within about 3 km '
+                'of a private place, such as home. Private places are kept '
+                'only on this phone.',
+              ),
+              const SizedBox(height: 8),
+              for (final (i, _) in prefs.zones.indexed)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.home_outlined),
+                  title: Text('Private place ${i + 1}'),
+                  trailing: TextButton(
+                    key: Key('area-zone-remove-$i'),
+                    onPressed: busy ? null : () => _removePlace(i),
+                    child: const Text('Remove'),
+                  ),
+                ),
+              if (prefs.zones.length < AreaPrefs.maxZones)
+                OutlinedButton.icon(
+                  key: const Key('area-zone-add'),
+                  onPressed: busy ? null : _addPlace,
+                  icon: const Icon(Icons.add_home_outlined),
+                  label: const Text('Hide my distance at this place'),
+                ),
+              if (note case final text?)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(text, key: const Key('area-note')),
+                ),
             ],
           ],
         ),

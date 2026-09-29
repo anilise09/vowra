@@ -21,6 +21,7 @@ class SettingsPage extends StatefulWidget {
     this.onShareReadReceiptsChanged,
     this.onDownloadData,
     this.areaOn,
+    this.areaHiddenHere = false,
     this.onArea,
     this.onModeration,
   });
@@ -31,8 +32,11 @@ class SettingsPage extends StatefulWidget {
   /// Whether an approximate area is set; null hides the row (prototype).
   final bool? areaOn;
 
-  /// Opens the area choice and returns whether it is now on.
-  final Future<bool> Function()? onArea;
+  /// On, but hidden right now at a private place.
+  final bool areaHiddenHere;
+
+  /// Opens the area choice; returns whether it is on and hidden here.
+  final Future<(bool, bool)> Function()? onArea;
 
   /// A copy of what the server holds; null hides it (prototype).
   final VoidCallback? onDownloadData;
@@ -83,6 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late String? travelCity = widget.travelCity;
   late bool? shareReadReceipts = widget.shareReadReceipts;
   late bool? areaOn = widget.areaOn;
+  late bool areaHiddenHere = widget.areaHiddenHere;
 
   Future<void> _pickCity() async {
     final choice = await showModalBottomSheet<String>(
@@ -214,12 +219,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 key: const Key('settings-area'),
                 icon: Icons.near_me_outlined,
                 title: on ? 'Distance: on' : 'Distance: off',
-                subtitle: on
-                    ? 'From your approximate area, about 2 km across.'
-                    : 'Distances stay hidden. Your location is not used.',
+                subtitle: !on
+                    ? 'Distances stay hidden. Your location is not used.'
+                    : areaHiddenHere
+                    ? 'Hidden right now: you\u2019re at a private place.'
+                    : 'From your approximate area, about 2 km across.',
                 onTap: () async {
-                  final now = await widget.onArea!();
-                  if (mounted) setState(() => areaOn = now);
+                  final (now, hidden) = await widget.onArea!();
+                  if (mounted) {
+                    setState(() {
+                      areaOn = now;
+                      areaHiddenHere = hidden;
+                    });
+                  }
                 },
               ),
             if (widget.onTravelCityChanged != null)

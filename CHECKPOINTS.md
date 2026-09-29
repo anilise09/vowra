@@ -1,5 +1,18 @@
 # Checkpoints
 
+## BE-14 - Private places: distance hidden at home, and the server never knows where (2026-09-29)
+
+- Settings > Distance > Private places: "Hide my distance at this place" adds where you are (up to
+  three). Within about 3 km of a private place the app sends no area and removes the one on the
+  server, so nobody sees a distance to you there; Settings says "Hidden right now: you're at a
+  private place". Away from them distance works as before. Remove a place any time.
+- Private places, and whether you want distance at all, live only on the phone (encrypted secure
+  storage); the server never learns them. Tests check that no request after a place becomes
+  private carries it.
+- Tests: Flutter 216 (one existing skip): hidden at a private place with the old area removed,
+  normal away from them, add and remove, the private coordinates never in any request. Ignoring
+  private places on start fails a test. Phase 2 work that needs no provider is now done.
+
 ## BE-13 - Retention, backup and recovery, and a security review (2026-09-29)
 
 - Retention: an hourly job clears used sign-in codes, ended sign-ins, rotated tokens, unsent
