@@ -6,7 +6,9 @@
   <meta name="theme-color" content="#fff9f7">
   <meta name="description" content="Vawra is an 18+ dating app in development. A more thoughtful way to meet, belong, and be you.">
   <title>Vawra — Meet. Belong. Be you.</title>
-  <link rel="icon" href="assets/brand/mark.png" type="image/png">
+  <link rel="icon" href="assets/brand/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
 </head>
@@ -14,9 +16,9 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <nav class="nav shell" aria-label="Main navigation">
-      <a class="brand" href="#top" aria-label="Vawra home"><img src="assets/brand/lockup.png" alt="Vawra"></a>
+      <a class="brand" href="#top" aria-label="Vawra home"><img src="assets/brand/lockup.webp" alt="Vawra" width="520" height="173"></a>
       <div class="nav-links" id="nav-links">
-        <a href="#experience">The experience</a><a href="#features">Why Vawra</a><a href="#safety">Safety</a><a href="#faq">FAQs</a>
+        <a href="#experience">The experience</a><a href="#features">Why Vawra</a><a href="#new">What’s new</a><a href="#safety">Safety</a><a href="#faq">FAQs</a>
       </div>
       <a class="nav-cta" href="#preview">Explore the preview <span aria-hidden="true">↗</span></a>
       <button class="menu-toggle" type="button" aria-label="Open menu" aria-controls="nav-links" aria-expanded="false"><span></span><span></span></button>
@@ -35,7 +37,7 @@
       <div class="hero-art" aria-label="Preview of the Vawra Discover screen">
         <div class="hero-halo"></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
         <span class="floating-tag floating-tag-one">Meet <span>✦</span> Belong</span><span class="floating-tag floating-tag-two">Be you <span>♥</span></span>
-        <div class="phone hero-phone"><div class="phone-top"></div><img src="assets/screens/raw/discover.png" alt="Vawra Discover preview showing a clearly labeled synthetic prototype profile"></div>
+        <div class="phone hero-phone"><div class="phone-top"></div><img src="assets/screens/discover.webp" alt="Vawra Discover preview showing a clearly labeled synthetic prototype profile" width="720" height="1560"></div>
         <div class="hero-spark hero-spark-one" aria-hidden="true">✳</div><div class="hero-spark hero-spark-two" aria-hidden="true">✦</div>
       </div>
     </section>
@@ -48,15 +50,15 @@
     </section>
 
     <section class="showcase shell" id="preview" aria-labelledby="preview-title">
-      <div class="showcase-copy"><span class="kicker">A LOOK INSIDE</span><h2 id="preview-title">Explore the<br><em>feeling.</em></h2><p>These are screens from the current Vawra prototype. Every person shown is a synthetic test profile, not a real member.</p>
+      <div class="showcase-copy"><span class="kicker">A LOOK INSIDE</span><h2 id="preview-title">Explore the<br><em>feeling.</em></h2><p>These are screens from the Vawra app in testing. Every person shown is a synthetic test profile, not a real member.</p>
         <div class="preview-tabs" role="tablist" aria-label="App screen preview">
           <button class="preview-tab" type="button" role="tab" id="tab-discover" aria-controls="preview-panel" aria-selected="true" data-screen="discover">01 <span>Discover</span></button>
           <button class="preview-tab" type="button" role="tab" id="tab-explore" aria-controls="preview-panel" aria-selected="false" tabindex="-1" data-screen="explore">02 <span>Explore</span></button>
-          <button class="preview-tab" type="button" role="tab" id="tab-match" aria-controls="preview-panel" aria-selected="false" tabindex="-1" data-screen="match">03 <span>Connect</span></button>
+          <button class="preview-tab" type="button" role="tab" id="tab-match" aria-controls="preview-panel" aria-selected="false" tabindex="-1" data-screen="openers">03 <span>Connect</span></button>
           <button class="preview-tab" type="button" role="tab" id="tab-chat" aria-controls="preview-panel" aria-selected="false" tabindex="-1" data-screen="chat">04 <span>Chat</span></button>
         </div>
       </div>
-      <div class="showcase-stage" id="preview-panel" role="tabpanel" aria-labelledby="tab-discover"><div class="stage-glow"></div><div class="phone showcase-phone"><div class="phone-top"></div><img id="preview-image" src="assets/screens/raw/discover.png" alt="Discover screen with a synthetic prototype profile"></div><p class="screen-caption" id="screen-caption">Discover • find people who fit your pace</p></div>
+      <div class="showcase-stage" id="preview-panel" role="tabpanel" aria-labelledby="tab-discover"><div class="stage-glow"></div><div class="phone showcase-phone"><div class="phone-top"></div><img id="preview-image" src="assets/screens/discover.webp" alt="Discover screen with a synthetic prototype profile" width="720" height="1560"></div><p class="screen-caption" id="screen-caption">Discover • find people who fit your pace</p></div>
     </section>
 
     <section class="features section shell" id="features"><div class="section-heading"><span class="kicker">THOUGHTFULLY MADE</span><h2>Little details.<br><em>Better connections.</em></h2></div>
@@ -67,10 +69,32 @@
       </div>
     </section>
 
-    <section class="safety-section" id="safety"><div class="shell safety-layout"><div class="safety-visual"><div class="safety-ring safety-ring-one"></div><div class="safety-ring safety-ring-two"></div><div class="safety-heart" aria-hidden="true">♥</div></div><div class="safety-copy"><span class="kicker">YOUR SPACE, YOUR RULES</span><h2>Feel good about<br><em>being here.</em></h2><p>Good connections need room to grow—and clear boundaries. Vawra is building safety tools into the experience, not adding them as an afterthought.</p><ul><li><span>01</span> Block and report are always free.</li><li><span>02</span> No exact location shown on profiles.</li><li><span>03</span> Calls require a match and explicit acceptance.</li></ul><p class="safety-footnote">These are product design commitments. The service is not launched, and safety review remains in progress.</p></div></div></section>
+    <section class="section fresh shell" id="new" aria-labelledby="new-title">
+      <div class="section-heading"><span class="kicker">NEW IN THE APP</span><h2 id="new-title">Built in,<br><em>not bolted on.</em></h2></div>
+      <div class="fresh-grid">
+        <article class="fresh-card">
+          <div class="phone fresh-phone"><div class="phone-top"></div><img src="assets/screens/reasons.webp" alt="A Discover card for a synthetic test profile, with a line saying you both like Books, Music and Travel" width="720" height="1416" loading="lazy"></div>
+          <h3>See why you might click.</h3>
+          <p>Discover puts people who share your interests and goals first, and says what you have in common. It never ranks anyone by popularity.</p>
+        </article>
+        <article class="fresh-card">
+          <div class="phone fresh-phone"><div class="phone-top"></div><img src="assets/screens/show-me.webp" alt="Setup step four of nine: who would you like to meet, with Everyone, Women, Men and Non-binary people" width="720" height="1416" loading="lazy"></div>
+          <h3>Meet who you’re looking for.</h3>
+          <p>Say how you identify and who you’d like to meet. Two people only see each other when each fits the other’s choice, and your choice is never shown to anyone.</p>
+        </article>
+        <article class="fresh-card">
+          <div class="phone fresh-phone"><div class="phone-top"></div><img src="assets/screens/export.webp" alt="The Your data page listing a test account’s email, age check, profile, gender and show me setting" width="720" height="1416" loading="lazy"></div>
+          <h3>Your data, yours to take.</h3>
+          <p>Download a copy of everything Vawra keeps about you, from Settings. It holds your own messages, never anyone else’s.</p>
+        </article>
+      </div>
+      <p class="fresh-note">Screens from the app on an Android phone in testing. The person shown is a labelled test profile.</p>
+    </section>
+
+    <section class="safety-section" id="safety"><div class="shell safety-layout"><div class="safety-visual"><div class="safety-ring safety-ring-one"></div><div class="safety-ring safety-ring-two"></div><div class="safety-heart" aria-hidden="true">♥</div></div><div class="safety-copy"><span class="kicker">YOUR SPACE, YOUR RULES</span><h2>Feel good about<br><em>being here.</em></h2><p>Good connections need room to grow—and clear boundaries. Vawra is building safety tools into the experience, not adding them as an afterthought.</p><ul><li><span>01</span> Block and report are always free.</li><li><span>02</span> No exact location shown on profiles.</li><li><span>03</span> Video calls are planned to need a match and a yes from both people. They are not built yet.</li></ul><p class="safety-footnote">These are product design commitments. The service is not launched, and safety review remains in progress.</p></div></div></section>
 
     <section class="section faq shell" id="faq"><div><span class="kicker">GOOD TO KNOW</span><h2>Some straight<br><em>answers.</em></h2></div><div class="faq-list">
-      <details><summary>Can I sign up today?</summary><p>Not yet. Vawra is in development. The screens here show an offline prototype and synthetic sample profiles; there is no public dating service or waitlist on this site.</p></details>
+      <details><summary>Can I sign up today?</summary><p>Not yet. Vawra is in development. The screens here come from the app in testing, with synthetic sample profiles; there is no public dating service or waitlist on this site.</p></details>
       <details><summary>Are the people shown real members?</summary><p>No. Every profile shown on this website is a synthetic test profile. We do not use fake profiles or engagement in a live service.</p></details>
       <details><summary>Will messaging and safety tools cost extra?</summary><p>No. Matching, messaging, blocking, reporting, and core safety controls are intended to remain free.</p></details>
       <details><summary>Is Vawra available on iPhone?</summary><p>Vawra is being built with Flutter for Android and iPhone. iOS testing and release checks are still pending; this is not an App Store availability claim.</p></details>
@@ -78,6 +102,6 @@
 
     <section class="closing"><div class="shell closing-inner"><span class="kicker">MEET • BELONG • BE YOU</span><h2>Something good<br><em>starts here.</em></h2><p>Vawra is on its way. Until then, take a closer look at the experience we’re creating.</p><a class="button button-light" href="#preview">Explore the preview <span aria-hidden="true">↗</span></a><div class="closing-spark" aria-hidden="true">✳</div></div></section>
   </main>
-  <footer class="footer shell"><a class="footer-brand" href="#top"><img src="assets/brand/lockup.png" alt="Vawra"></a><div><a href="#experience">Experience</a><a href="#features">Features</a><a href="#safety">Safety</a><a href="#faq">FAQs</a></div><p>© <span id="year">2026</span> Vawra. 18+ concept in development. Not a live dating service.</p></footer>
+  <footer class="footer shell"><a class="footer-brand" href="#top"><img src="assets/brand/lockup.webp" alt="Vawra" width="520" height="173" loading="lazy"></a><div><a href="#experience">Experience</a><a href="#features">Features</a><a href="#safety">Safety</a><a href="#faq">FAQs</a></div><p>© <span id="year">2026</span> Vawra. 18+ concept in development. Not a live dating service.</p></footer>
 </body>
 </html>

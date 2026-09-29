@@ -1,6 +1,13 @@
 # Vawra website preview
 
-Static, responsive product website for the 18+ Vawra app. It uses screenshots from the **offline prototype**; all profiles shown are synthetic and are labeled in the app. The site does not collect contact information, run analytics, imply a public launch, or provide a sign-up form.
+Static, responsive product website for the 18+ Vawra app. It uses screens from the app in testing; all profiles shown are synthetic and are labeled in the app.
+
+Screens (`assets/screens/*.webp`, 720px wide):
+
+- `discover`, `explore`, `openers`, `chat`: rendered from the app's own code with real fonts by `flutter test tool/site_screens_test.dart --update-goldens` (output in `build/site_screens/`), then converted to WebP.
+- `reasons`, `show-me`, `export`: captured on the owner's Asus during the 2026-09-28 device test, with the phone's status bar and system buttons cropped off. The renderer shows block glyphs for button and chip text whose style names no font, so screens with those come from the phone.
+
+Fonts (Manrope, Playfair Display italic) are served from `assets/fonts/` under the SIL Open Font License; no request leaves the site. The site does not collect contact information, run analytics, imply a public launch, or provide a sign-up form.
 
 Live prototype preview: https://anilise09.github.io/vowra/ (published from `gh-pages`, not an app launch).
 
