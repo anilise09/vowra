@@ -1,0 +1,177 @@
+# Vawra handover
+
+Written 2026-09-28 by the Claude Code session that built BE-1 to BE-9, UI-1/UI-2, the device
+tests and Web-2. Read this first, then `AGENTS.md` (the non-negotiable rules) and the top of
+`CHECKPOINTS.md` (newest first).
+
+## What Vawra is, and where
+
+- An 18+ dating app: Flutter app (package `ember_app`) plus a TypeScript/Fastify server in
+  `backend/`. Repository `D:\Projects\dating-app` (a junction from
+  `C:\Users\anili\Projects\dating-app`), GitHub `anilise09/vowra`, branch `main`. The repository
+  is **public**.
+- A product-site preview in `website/` is **live and public** at https://anilise09.github.io/vowra/
+  (GitHub Pages from the `gh-pages` branch, whose tree is only `website/`). It says clearly that
+  Vawra is in development and that every person shown is a synthetic test profile.
+- Owner's status page (Claude artifact, private to the owner):
+  https://claude.ai/artifact/37ZnorBUe98RvPtXP7bDrG. Republish it when work lands.
+- Codex also works in this checkout, only when the owner asks. It committed another session's
+  untracked files once, so commit with a pathspec (`git commit -- <paths>`) and keep unfinished
+  files out of `website/` and other tracked folders.
+
+## State at handover (main at 0602d57 plus this handover)
+
+Works end to end against the local server:
+
+- Welcome and 18+ gate, sign-in with a one-time email code (PKCE; codes are written to
+  `backend/.data/outbox.log` because no email provider is chosen), refresh token kept in secure
+  storage.
+- 9-step onboarding including "How do you identify?" and "Who would you like to meet?" (BE-8).
+  Two-way matching on the server; "Show me" is never returned to anyone else; gender shows only
+  if the person turns it on.
+- Discover ranked by what people share, with "Why you might click" (BE-5), free undo of a pass,
+  3 free Super Likes a day, preferences, Explore hubs.
+- Matches, chat with openers (BE-7), unread counts, "Your turn", read receipts and typing only
+  when both opt in (BE-6), live nudges over `GET /v1/events` instead of polling (BE-4).
+- Block and report (always free), pause, account deletion with a 7-day grace period (BE-3b),
+  "Download a copy of your data" (BE-9: recent sign-in, 5 a day, own data only).
+- Apple-style swipe physics and layouts for every phone, foldable and tablet (UI-1/UI-2);
+  Codex's brand and Discover polish (UI-3 to UI-6) is the **approved current UI: keep it**.
+- 260 labelled sample profiles (130 women, 130 men, reviewed gender per portrait in
+  `lib/data/demo_genders.dart`), shipped as WebP; the app is 138 MB for three CPU types.
+
+Last device test: the owner's Asus, 2026-09-28 (see the "Device" checkpoint). Everything passed;
+one layout bug on the export page was found there and fixed.
+
+Test counts at handover: Flutter 192 passed, 1 existing skip; backend 62 passed; analysis and
+type-check clean; `website/check.ps1` passes.
+
+## Running it
+
+Flutter is not on PATH: `export PATH="/c/Users/anili/Tools/flutter/bin:$PATH"` (Git Bash).
+
+App checks (run all before every commit that touches the app):
+
+```
+flutter analyze
+flutter test                      # device matrix, goldens, server flow, everything
+```
+
+Goldens change only on purpose: inspect `test/failures/*` before `--update-goldens`, and review
+the new image.
+
+Server (`backend/`, Node + PGlite; no Postgres or Docker on this laptop, do not install them
+without asking the owner):
+
+```
+cd backend
+npx tsc --noEmit -p . && npx vitest run
+npm run build
+set -a; . .data/dev.env; set +a          # local development keys (git-ignored, never commit)
+export VAWRA_SERVER_ENABLED=1 VAWRA_DEV_OUTBOX=1 VAWRA_PORT=8797
+exec node dist/src/server.js
+```
+
+- Port 8797 (8787 belongs to QuietWall's website dev server).
+- PGlite allows one process: stop the server (kill the node PID listening on 8797) before
+  `npm run dev:seed-demo [-- --remove]` or `npm run dev:assure -- <email> <age>` (marks a local
+  test account adult, because no age-assurance provider exists yet).
+- `backend/.data/dev.env` holds the keys that seal the local database's emails. If it is lost,
+  make new 32-byte base64 keys and start a fresh `.data/pglite`.
+- Dev drivers in `tools/dev/`: `vawra_driver.mjs` (sign up and drive synthetic test members:
+  signup, like, like-all, say, patch, share, typing, read, get, show) and `adb_ui.py` (dump, tap,
+  type, shot on a phone). Test members: `alex.test@vawra.test` (the Asus is signed in as Alex),
+  `sam.test`, `priya.test`, `maya.test`, `elena.test`, `sofia.test`, `noor.test`, all synthetic.
+
+Phone build against the local server:
+
+```
+flutter build apk --profile --dart-define=VAWRA_API=http://127.0.0.1:8797
+adb -s <serial> install -r build/app/outputs/flutter-apk/app-profile.apk
+adb -s <serial> reverse tcp:8797 tcp:8797
+```
+
+- Delete `build/app/outputs/apk/profile/app-profile.apk` before a build after large asset
+  changes: the incremental packager once left 600 MB of dead space in the APK.
+- Wireless adb can report a failed install that succeeded: compare the md5 of the installed
+  `base.apk` with the build.
+- Asus ASUS_I003DD: wireless adb; the port changes, find it with `adb mdns services`.
+  Samsung SM-S928W: USB `R3CXB03G3MH`; installs need `--user 0`. QuietWall sessions also use both
+  phones (a QuietWall VPN start/stop drops wireless adb).
+
+Website: `powershell -ExecutionPolicy Bypass -File website/check.ps1`. App screens for the site
+come from `flutter test tool/site_screens_test.dart --update-goldens` (writes to
+`build/site_screens/`; see `website/README.md` for why three screens are phone captures).
+Republish after a change to `website/` on main:
+
+```
+git fetch origin gh-pages:refs/remotes/origin/gh-pages
+NEW=$(git commit-tree HEAD:website -p origin/gh-pages -m "Website: <what changed>")
+git push origin $NEW:refs/heads/gh-pages
+```
+
+## Owner rules and preferences
+
+- `AGENTS.md` first: synthetic fixtures only, never fake users, likes, matches, messages or
+  "Active" status; block, report, messaging and matching stay free; calls need a match and
+  acceptance; client claims are untrusted; age assurance is a launch gate.
+- Monetization is legally on hold: no payment or subscription code.
+- Never commit secrets. Never put the owner's personal details (passwords, email, immigration or
+  residency) in repo files, commits or published pages.
+- Phones: before any tap or screenshot, check there is no call
+  (`dumpsys telephony.registry` mCallState, `dumpsys telecom`) and what is in front
+  (`dumpsys window | grep mCurrentFocus`). If another app is in front, another session or the
+  owner may be using the phone: ask the owner. Never open banking, payment or trading apps. Pull
+  files to the laptop and delete them from the phone; delete at once any capture that caught a
+  call.
+- The owner judges by feel on the phone, not by test counts; prove a feature on a device
+  (on, off, on) before calling it done.
+- Only claim what is verified: the website and app never promise launch dates, store
+  availability, real members or unbuilt features (calls are "planned, not built").
+- Commit at each checkpoint with a `CHECKPOINTS.md` entry (newest first) and push. This repo uses
+  its own labels (BE-, UI-, Web-, Size, Device, Fix); QuietWall's CP numbers are not used here.
+
+## Gotchas that cost time
+
+- Bash heredocs eat backslashes: write edit scripts to a file first.
+- Dart does not allow a `case` pattern inside a conditional expression; compute a variable first.
+- Fastify rejects a JSON content type on an empty body: the client sends the header only with a
+  body (the fake server in `test/support/fake_vawra_server.dart` is strict about it too).
+- In widget tests, text styles with no font family (button and chip labels) render as blocks,
+  even with Roboto loaded; that is why some website screens come from the phone.
+- Do not run `npx prettier` in `backend/`: there is no config, and the defaults rewrite the
+  single-quote style. Keep lines near 100 characters by hand.
+- The server-connected app keeps a live link open, so `pumpAndSettle` can hang in tests; pump
+  for a fixed time instead (see `_settle` in `test/server_flow_test.dart`).
+
+## Waiting on the owner
+
+1. Seven untracked `assets/profiles/np_*.png` portraits (from 22 Sep, not referenced) are bundled
+   because `pubspec.yaml` includes the folder: about 18 MB. Keep them as sample people (review a
+   gender for each, add to `lib/main.dart` and `demo_genders.dart`, convert to WebP) or remove.
+   Also untracked and of unknown origin: `.agents/`, `skills-lock.json`,
+   `assets/branding/vawra_company_mark_trimmed.png`. Do not commit or delete them without asking.
+2. Mac access for iOS: Xcode on the MacBook Pro and Remote Login (SSH). Until then iOS is built
+   but not tested on Apple hardware.
+3. Providers, each needing the owner's account or money: email for sign-in codes, hosting with
+   PostgreSQL, photo storage with moderation, push notifications (Firebase and an Apple push key),
+   a calling provider. Age assurance also needs legal review.
+4. Whether the public repository and the live website preview stay public before the Vawra name
+   and domain are cleared.
+
+## Next work that needs nobody
+
+- Location as a distance band: opt-in, coarse, never exact (design in
+  `docs/DATA_LIFECYCLE_CONTRACT.md`, "Location and privacy zones"). Distance shows "hidden" today.
+- Moderation console and appeals for stored reports, with an audit trail.
+- Load and abuse tests (many members, spam and scam patterns) and a security review pass.
+- Small: the export's `429 rate_limited` message says "wait a few minutes" but the limit is per
+  day; give it its own wording.
+
+## State left on the machine
+
+- The local server may still be running on 8797 (started from this session). The demo database
+  holds the 260 demo members (re-seeded with WebP portraits and genders) and the test members
+  above.
+- The Asus has the latest profile build installed, signed in as Alex ("Show me: Everyone"); its
+  clipboard holds Alex's synthetic export from the copy check.

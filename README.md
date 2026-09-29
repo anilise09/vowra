@@ -2,6 +2,8 @@
 
 Vawra is an 18+ cross-platform dating app for Android and iPhone. Matching, messaging, blocking, reporting, and match-gated voice/video calling belong to the free core.
 
+Picking up the work? Start with `docs/HANDOVER.md`.
+
 Vawra is the current product name and visual identity. Public launch under that name still depends on trademark, domain, and store-name clearance.
 
 ## Status

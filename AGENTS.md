@@ -1,5 +1,7 @@
 # Project Ember engineering rules
 
+Current state, how to run everything, and what is next: `docs/HANDOVER.md`. Newest work: top of `CHECKPOINTS.md`.
+
 This 18+ dating product handles sensitive identity, location, conversation, image, and video data.
 
 ## Non-negotiable boundaries
