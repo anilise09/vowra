@@ -1,8 +1,8 @@
 const screens = {
-  discover: { file: 'discover.png', alt: 'Discover screen with a synthetic prototype profile', caption: 'Discover • find people who fit your pace' },
-  explore: { file: 'explore.png', alt: 'Explore screen from the Vawra prototype', caption: 'Explore • follow what sparks your interest' },
-  match: { file: 'match.png', alt: 'Match celebration screen from the Vawra prototype', caption: 'Connect • make a new connection' },
-  chat: { file: 'chat.png', alt: 'Chat screen from the Vawra prototype', caption: 'Chat • keep the conversation going' },
+  discover: { file: 'discover.webp', alt: 'Discover screen with a synthetic prototype profile', caption: 'Discover • find people who fit your pace' },
+  explore: { file: 'explore.webp', alt: 'Explore screen from the Vawra prototype', caption: 'Explore • follow what sparks your interest' },
+  openers: { file: 'openers.webp', alt: 'A new chat suggesting first lines from what you share with a synthetic test profile', caption: 'Connect • start with something you share' },
+  chat: { file: 'chat.webp', alt: 'Chat screen from the Vawra prototype', caption: 'Chat • keep the conversation going' },
 };
 
 const tabs = [...document.querySelectorAll('.preview-tab')];
@@ -18,7 +18,7 @@ function selectTab(tab, focus = false) {
     item.setAttribute('aria-selected', String(selected));
     item.tabIndex = selected ? 0 : -1;
   }
-  image.src = `assets/screens/raw/${screen.file}`;
+  image.src = `assets/screens/${screen.file}`;
   image.alt = screen.alt;
   caption.textContent = screen.caption;
   panel.setAttribute('aria-labelledby', tab.id);

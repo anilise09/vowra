@@ -1,5 +1,25 @@
 # Checkpoints
 
+## Web-2 - The website preview, fixed in place (2026-09-28)
+
+- Review of Codex's Web-1 site found: a broken "It's a match" screen on the live preview (button
+  text drawn as blocks; it was an unfinished render from Claude's screen harness that Web-1
+  committed), fonts named but never loaded, 6.3 MB of PNG images, none of BE-8/BE-9 shown, and
+  video calls described as if they existed. Codex's design is kept.
+- Screens are now 720px WebP (7 images, about 330 KB in all; the page's images went from 6.3 MB to
+  under 0.4 MB). "Connect" shows the openers chat instead of the match screen. A new "New in the
+  app" section shows why-you-might-click, "Who would you like to meet?" and "Your data", from the
+  Asus device test.
+- Manrope and Playfair Display italic are served from the site with their OFL licences; checked in
+  Chrome that both load, no image is broken and nothing scrolls sideways at 1366px and 390px.
+- The calls line now says calls are planned and not built. The preview caption no longer sits
+  unreadably over the phone. Favicon 7 KB (was the 1.2 MB mark).
+- `website/check.ps1` also checks image weight (200 KB cap), WebP screens, the font files and
+  licences, and that calls are not described as existing; removing a font or restoring the old
+  calls line fails it.
+- The screen harness is `tool/site_screens_test.dart` (outside the test suite) and writes to
+  `build/`, so unfinished renders can no longer land in `website/`.
+
 ## Web-1 - Vawra product-site preview (2026-09-28)
 
 - Built a standalone static website in `website/`, adapting the owner-shared QuietWall
