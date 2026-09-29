@@ -12,6 +12,7 @@
 //   node vawra_driver.mjs typing|read <email> <peerName>
 //   node vawra_driver.mjs get <email> <path>
 //   node vawra_driver.mjs show <email>
+//   node vawra_driver.mjs area <email> <lat> <lng> | off   (made-up test areas only)
 import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -102,6 +103,13 @@ if (cmd === 'signup') {
   if (!m) throw new Error(`no match with ${peer}`);
   await authed(email, 'POST', `/v1/matches/${m.match_id}/${cmd}`);
   console.log(`${cmd} sent`);
+} else if (cmd === 'area') {
+  if (rest[0] === 'off') {
+    await authed(email, 'DELETE', '/v1/me/location');
+    console.log('area off');
+  } else {
+    console.log(JSON.stringify(await authed(email, 'PUT', '/v1/me/location', { lat: Number(rest[0]), lng: Number(rest[1]) })));
+  }
 } else if (cmd === 'get') {
   console.log(JSON.stringify(await authed(email, 'GET', rest[0])));
 } else if (cmd === 'show') {
