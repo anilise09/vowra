@@ -4,6 +4,7 @@ import 'package:ember_app/data/area_prefs.dart';
 import 'package:ember_app/domain/location_grid.dart';
 import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
+import 'package:ember_app/server/photos_editor.dart';
 import 'package:ember_app/server/server_flow.dart' show describeExportError;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -418,6 +419,62 @@ void main() {
         'reason': 'scam',
         'message_id': risky,
       });
+    });
+
+    testWidgets('photos in chat: allowed per match, blurred until tapped', (
+      tester,
+    ) async {
+      final original = pickPhoto;
+      addTearDown(() => pickPhoto = original);
+      pickPhoto = () async =>
+          PickedPhoto(Uint8List.fromList(FakeVawraServer.pixel), 'image/png');
+      final server = FakeVawraServer();
+      final matchId = await matchedWithMaya(tester, server);
+      server.peerSays(matchId, '', photo: 'm9');
+      await _settle(tester);
+      await openChats(tester);
+      await tester.tap(find.byKey(const Key('conversation-Maya')));
+      await _settle(tester);
+
+      // Allow photos from Maya.
+      expect(server.photosAllowedByMe, isEmpty);
+      await tester.tap(find.byKey(const Key('photo-consent-switch')));
+      await _settle(tester);
+      expect(server.photosAllowedByMe, {matchId});
+
+      // Her photo arrives blurred; tapping shows it, then it can be reported.
+      final photoId = server.messages[matchId]!.last['id'] as String;
+      expect(find.text('Photo \u00b7 Tap to see'), findsOneWidget);
+      expect(find.byKey(Key('photo-report-$photoId')), findsNothing);
+      await tester.tap(find.byKey(Key('photo-message-$photoId')));
+      await _settle(tester);
+      expect(find.text('Photo \u00b7 Tap to see'), findsNothing);
+      expect(find.byKey(Key('photo-report-$photoId')), findsOneWidget);
+
+      // Sending: refused kindly until Maya allows photos from Alex.
+      await tester.tap(find.byKey(const Key('send-photo')));
+      await _settle(tester);
+      expect(find.textContaining('hasn\'t turned on photos'), findsOneWidget);
+      expect(server.chatPhotoUploads, isEmpty);
+    });
+
+    testWidgets('sending a photo once the other person allows them', (
+      tester,
+    ) async {
+      final original = pickPhoto;
+      addTearDown(() => pickPhoto = original);
+      pickPhoto = () async =>
+          PickedPhoto(Uint8List.fromList(FakeVawraServer.pixel), 'image/png');
+      final server = FakeVawraServer();
+      final matchId = await matchedWithMaya(tester, server);
+      server.photosAllowedByThem.add(matchId);
+      await openChats(tester);
+      await tester.tap(find.byKey(const Key('new-match-Maya')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('send-photo')));
+      await _settle(tester);
+      expect(server.chatPhotoUploads, [matchId]);
+      expect(find.textContaining('once approved'), findsOneWidget);
     });
 
     testWidgets('Seen and typing appear only when both share', (tester) async {

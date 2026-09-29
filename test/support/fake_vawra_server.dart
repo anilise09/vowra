@@ -121,6 +121,11 @@ class FakeVawraServer {
 
   /// Your own photos as the server lists them, and every upload received.
   final myPhotos = <Map<String, dynamic>>[];
+
+  /// Photo consent per match: yours, and theirs.
+  final photosAllowedByMe = <String>{};
+  final photosAllowedByThem = <String>{};
+  final chatPhotoUploads = <String>[];
   final uploads = <List<int>>[];
   final modPhotos = <Map<String, dynamic>>[];
 
@@ -261,12 +266,14 @@ class FakeVawraServer {
     String text, {
     bool nudge = true,
     List<String> hints = const [],
+    String? photo,
   }) {
     messages.putIfAbsent(matchId, () => []).add({
       'id': _id(),
       'mine': false,
       'text': text,
       if (hints.isNotEmpty) 'safety_hints': hints,
+      if (photo != null) 'photo': {'url': '/v1/media/$photo?p=view'},
       'sent_at': (_clock = _clock.add(
         const Duration(minutes: 1),
       )).toIso8601String(),
@@ -356,6 +363,7 @@ class FakeVawraServer {
     if (path.startsWith('/v1/uploads/') && method == 'PUT') {
       uploads.add(request.bodyBytes);
       final id = path.split('/').last;
+      if (id.startsWith('c')) return _json(200, {'state': 'pending_review'});
       myPhotos.add({
         'photo_id': id,
         'state': 'pending_review',
@@ -592,6 +600,8 @@ class FakeVawraServer {
                 ],
                 'peer_prompts': people[m.value]!['prompts'],
                 'peer_demo_portrait': people[m.value]!['demo_portrait'],
+                'photos_allowed_by_me': photosAllowedByMe.contains(m.key),
+                'photos_allowed_by_them': photosAllowedByThem.contains(m.key),
                 'unread': [...?messages[m.key]?.skip(myRead[m.key] ?? 0)]
                     .where((x) => x['mine'] == false)
                     .length,
@@ -609,6 +619,28 @@ class FakeVawraServer {
         typingSent++;
       }
       return http.Response('', 204);
+    }
+    final consent = RegExp(r'^/v1/matches/([^/]+)/photo-consent$')
+        .firstMatch(path);
+    if (consent != null) {
+      final id = consent.group(1)!;
+      body['allow'] == true
+          ? photosAllowedByMe.add(id)
+          : photosAllowedByMe.remove(id);
+      return http.Response('', 204);
+    }
+    final chatPhoto = RegExp(r'^/v1/matches/([^/]+)/photos$').firstMatch(path);
+    if (chatPhoto != null) {
+      final id = chatPhoto.group(1)!;
+      if (!photosAllowedByThem.contains(id)) {
+        return _error(409, 'photos_not_allowed');
+      }
+      chatPhotoUploads.add(id);
+      return _json(200, {
+        'photo_id': 'c${chatPhotoUploads.length}',
+        'upload_url': '/v1/uploads/c${chatPhotoUploads.length}?grant=g',
+        'expires_at': '2026-09-29T12:10:00.000Z',
+      });
     }
     final thread = RegExp(r'^/v1/matches/([^/]+)/messages$').firstMatch(path);
     if (thread != null) {

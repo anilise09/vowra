@@ -38,7 +38,7 @@ async function participantMatch(db: Db, me: string, rawId: string): Promise<Matc
 }
 
 /** Active match and no block either way, checked at the moment of use. */
-async function openConversation(db: Db, me: string, rawId: string): Promise<MatchRow> {
+export async function openConversation(db: Db, me: string, rawId: string): Promise<MatchRow> {
   const match = await participantMatch(db, me, rawId);
   const blocked = await db.query(
     `SELECT 1 FROM blocks WHERE (blocker = $1 AND blocked = $2) OR (blocker = $2 AND blocked = $1)`,
@@ -85,7 +85,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
               p.display_name AS peer_name, p.public_age AS peer_age,
               p.interests AS peer_interests, p.prompts AS peer_prompts,
               p.demo_portrait AS peer_demo_portrait,
-              last.body AS last_message, last.author_id = $1 AS last_message_mine,
+              CASE WHEN last.media_id IS NOT NULL THEN 'Photo' ELSE last.body END AS last_message, last.author_id = $1 AS last_message_mine,
               last.created_at AS last_message_at,
               (SELECT count(*)::int FROM messages u
                 WHERE u.match_id = m.id AND u.author_id <> $1
@@ -93,7 +93,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
                     (SELECT read_at FROM match_reads r WHERE r.match_id = m.id AND r.account_id = $1),
                     '-infinity'::timestamptz)) AS unread
        FROM matches m
-       LEFT JOIN LATERAL (SELECT body, author_id, created_at FROM messages
+       LEFT JOIN LATERAL (SELECT body, author_id, created_at, media_id FROM messages
                           WHERE match_id = m.id ORDER BY created_at DESC LIMIT 1) last ON true
        JOIN profiles p ON p.account_id =
             CASE WHEN m.account_low = $1 THEN m.account_high ELSE m.account_low END
@@ -106,10 +106,19 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
        ORDER BY COALESCE(last.created_at, m.created_at) DESC`,
       [me.id],
     );
+    const consent = await db.query<{ match_id: string; account_id: string }>(
+      `SELECT c.match_id, c.account_id FROM photo_consent c
+       JOIN matches m ON m.id = c.match_id WHERE m.account_low = $1 OR m.account_high = $1`,
+      [me.id],
+    );
+    const allowedByMe = new Set(consent.filter((c) => c.account_id === me.id).map((c) => c.match_id));
+    const allowedByThem = new Set(consent.filter((c) => c.account_id !== me.id).map((c) => c.match_id));
     return {
       // Shared interests and their prompts let the app suggest a first line.
       matches: matches.map(({ peer_interests, ...m }) => ({
         ...m,
+        photos_allowed_by_me: allowedByMe.has(m.match_id as string),
+        photos_allowed_by_them: allowedByThem.has(m.match_id as string),
         shared_interests: peer_interests.filter((i) => mine?.interests.includes(i)).sort(),
         last_message_mine: m.last_message_mine ?? null,
         last_message_at: m.last_message_at ? new Date(m.last_message_at).toISOString() : null,
@@ -136,8 +145,14 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
       (request.params as { matchId: string }).matchId,
     );
     const { before, limit } = pageQuery.parse(request.query);
-    const rows = await db.query<{ id: string; author_id: string; body: string; created_at: Date }>(
-      `SELECT id, author_id, body, created_at FROM messages
+    const rows = await db.query<{
+      id: string;
+      author_id: string;
+      body: string;
+      created_at: Date;
+      media_id: string | null;
+    }>(
+      `SELECT id, author_id, body, created_at, media_id FROM messages
        WHERE match_id = $1 AND ($2::timestamptz IS NULL OR created_at < $2)
        ORDER BY created_at DESC LIMIT $3`,
       [match.id, before ?? null, limit],
@@ -164,9 +179,31 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
             ? { seen: new Date(m.created_at).getTime() <= seenUntil }
             : {}),
           ...(hints.length > 0 ? { safety_hints: hints } : {}),
+          ...(m.media_id
+            ? { photo: { url: services.grants.url('view', m.media_id, me.id, clock.now()) } }
+            : {}),
         };
       }),
     };
+  });
+
+  /** Whether I accept photos from the other person in this match. */
+  app.put('/v1/matches/:matchId/photo-consent', async (request, reply) => {
+    const me = requireDatingAccess(request, { allowPaused: true });
+    const body = z.object({ allow: z.boolean() }).strict().safeParse(request.body);
+    if (!body.success) fail(400, 'invalid_request');
+    const match = await openConversation(db, me.id, (request.params as { matchId: string }).matchId);
+    if (body.data!.allow) {
+      await db.query(
+        `INSERT INTO photo_consent (match_id, account_id, created_at) VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [match.id, me.id, clock.now()],
+      );
+    } else {
+      await db.query('DELETE FROM photo_consent WHERE match_id = $1 AND account_id = $2', [match.id, me.id]);
+    }
+    services.nudges.publish(match.peer, { kind: 'match', match_id: match.id });
+    return noContent(reply);
   });
 
   /** Marks the conversation read up to now. */

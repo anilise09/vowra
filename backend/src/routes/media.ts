@@ -4,6 +4,7 @@ import { audit, fail, noContent, requireAccount, requireModerator, type Services
 import { hashToken, newToken } from '../crypto.js';
 import type { Db } from '../db.js';
 import { photoRules, processPhoto, rejectReasons, sniffMime } from '../media.js';
+import { openConversation } from './chat.js';
 import { isEligible } from './discovery.js';
 import { requireRecentSignIn } from './lifecycle.js';
 
@@ -36,6 +37,7 @@ export async function photosFor(
   if (owners.length === 0) return out;
   const rows = await services.db.query<{ id: string; owner: string }>(
     `SELECT id, owner FROM media WHERE owner = ANY($1::uuid[]) AND state = 'approved'
+       AND audience = 'profile'
      ORDER BY owner, position, created_at`,
     [owners],
   );
@@ -104,7 +106,7 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
       ]);
     } else {
       const [counts] = await db.query<{ kept: number; today: number }>(
-        `SELECT count(*) FILTER (WHERE state <> 'rejected')::int AS kept,
+        `SELECT count(*) FILTER (WHERE state <> 'rejected' AND audience = 'profile')::int AS kept,
                 count(*) FILTER (WHERE created_at > $2)::int AS today
          FROM media WHERE owner = $1`,
         [me.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)],
@@ -126,6 +128,38 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
       upload_url: `/v1/uploads/${id}?grant=${token}`,
       expires_at: expires.toISOString(),
     };
+  });
+
+  /** Asks to send a photo in a conversation; the receiver must allow photos. */
+  app.post('/v1/matches/:matchId/photos', async (request) => {
+    const me = requireAccount(request);
+    if (me.lifecycle === 'suspended') fail(409, 'account_suspended');
+    const body = uploadBody.safeParse(request.body);
+    if (!body.success) fail(400, 'invalid_request');
+    const req = body.data!;
+    const match = await openConversation(db, me.id, (request.params as { matchId: string }).matchId);
+    const consent = await db.query('SELECT 1 FROM photo_consent WHERE match_id = $1 AND account_id = $2', [
+      match.id,
+      match.peer,
+    ]);
+    if (consent.length === 0) fail(409, 'photos_not_allowed');
+    const now = clock.now();
+    const [today] = await db.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM media WHERE owner = $1 AND created_at > $2',
+      [me.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)],
+    );
+    if ((today?.n ?? 0) >= photoRules.uploadsPerDay) fail(429, 'upload_limit');
+    const token = newToken();
+    const expires = new Date(now.getTime() + photoRules.uploadGrantSeconds * 1000);
+    const id = crypto.randomUUID();
+    await db.query(
+      `INSERT INTO media (id, owner, audience, match_id, state, client_upload_id, mime_type, byte_length,
+                          sha256, grant_hash, grant_expires_at, created_at)
+       VALUES ($1, $2, 'conversation', $3, 'awaiting_upload', $4, $5, $6, $7, $8, $9, $10)`,
+      [id, me.id, match.id, req.client_upload_id, req.mime_type, req.byte_length, req.sha256,
+       hashToken(token), expires, now],
+    );
+    return { photo_id: id, upload_url: `/v1/uploads/${id}?grant=${token}`, expires_at: expires.toISOString() };
   });
 
   /**
@@ -199,7 +233,8 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
       created_at: Date;
     }>(
       `SELECT id, state, reject_reason, position, created_at FROM media
-       WHERE owner = $1 AND state <> 'awaiting_upload' ORDER BY position, created_at`,
+       WHERE owner = $1 AND state <> 'awaiting_upload' AND audience = 'profile'
+       ORDER BY position, created_at`,
       [me.id],
     );
     const now = clock.now();
@@ -259,13 +294,21 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
     ) {
       return fail(404, 'not_found');
     }
-    const [row] = await db.query<{ owner: string; state: string }>(
-      'SELECT owner, state FROM media WHERE id = $1',
+    const [row] = await db.query<{ owner: string; state: string; audience: string; match_id: string | null }>(
+      'SELECT owner, state, audience, match_id FROM media WHERE id = $1',
       [id.data],
     );
     if (!row) return fail(404, 'not_found');
     let allowed = false;
-    if (q.p === 'view') {
+    if (q.p === 'view' && row.audience === 'conversation') {
+      // Only the two people in the match, while the conversation is open.
+      try {
+        await openConversation(db, viewer.data, row.match_id!);
+        allowed = row.state === 'approved' || (viewer.data === row.owner && row.state !== 'awaiting_upload');
+      } catch {
+        allowed = false;
+      }
+    } else if (q.p === 'view') {
       allowed =
         viewer.data === row.owner
           ? row.state !== 'awaiting_upload'
@@ -288,8 +331,14 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
   /** Photos waiting for review, oldest first, never the moderator's own. */
   app.get('/v1/mod/photos', async (request) => {
     const mod = requireModerator(request);
-    const rows = await db.query<{ id: string; owner: string; display_name: string | null; created_at: Date }>(
-      `SELECT m.id, m.owner, p.display_name, m.created_at FROM media m
+    const rows = await db.query<{
+      id: string;
+      owner: string;
+      display_name: string | null;
+      created_at: Date;
+      audience: string;
+    }>(
+      `SELECT m.id, m.owner, p.display_name, m.created_at, m.audience FROM media m
        LEFT JOIN profiles p ON p.account_id = m.owner
        WHERE m.state = 'pending_review' AND m.owner <> $1
        ORDER BY m.created_at LIMIT 50`,
@@ -302,6 +351,7 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
         account_id: r.owner,
         display_name: r.display_name,
         created_at: iso(r.created_at),
+        context: r.audience === 'conversation' ? 'chat' : 'profile',
         url: services.grants.url('review', r.id, mod.id, now),
       })),
     };
@@ -316,20 +366,46 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
     const { outcome, reason } = body.data!;
     if (outcome === 'rejected' && !reason) fail(400, 'invalid_request');
     const now = clock.now();
-    const [row] = await db.query<{ owner: string; state: string }>(
-      'SELECT owner, state FROM media WHERE id = $1',
+    const [row] = await db.query<{ owner: string; state: string; audience: string; match_id: string | null }>(
+      'SELECT owner, state, audience, match_id FROM media WHERE id = $1',
       [id.data],
     );
     if (!row) fail(404, 'not_found');
     if (row!.owner === mod.id) fail(409, 'conflict_of_interest');
     if (row!.state !== 'pending_review') fail(409, 'already_decided');
-    await db.query(
-      `UPDATE media SET state = $2, reject_reason = $3, decided_at = $4, decided_by = $5 WHERE id = $1`,
-      [id.data, outcome, outcome === 'rejected' ? reason : null, now, mod.id],
-    );
+    let peer: string | null = null;
+    await db.transaction(async (tx) => {
+      await tx.query(
+        `UPDATE media SET state = $2, reject_reason = $3, decided_at = $4, decided_by = $5 WHERE id = $1`,
+        [id.data, outcome, outcome === 'rejected' ? reason : null, now, mod.id],
+      );
+      if (outcome === 'approved' && row!.audience === 'conversation') {
+        // Delivered only if the conversation is still open and photos still allowed.
+        const [open] = await tx.query<{ peer: string }>(
+          `SELECT CASE WHEN m.account_low = $2 THEN m.account_high ELSE m.account_low END AS peer
+           FROM matches m WHERE m.id = $1 AND m.status = 'active'`,
+          [row!.match_id, row!.owner],
+        );
+        const allowed = open
+          ? await tx.query('SELECT 1 FROM photo_consent WHERE match_id = $1 AND account_id = $2', [
+              row!.match_id,
+              open.peer,
+            ])
+          : [];
+        if (open && allowed.length > 0) {
+          await tx.query(
+            `INSERT INTO messages (id, match_id, author_id, body, created_at, media_id)
+             VALUES ($1, $2, $3, '', $4, $5)`,
+            [crypto.randomUUID(), row!.match_id, row!.owner, now, id.data],
+          );
+          peer = open.peer;
+        }
+      }
+      await audit(tx, mod.id, `mod_photo_${outcome}`, now);
+    });
     if (outcome === 'rejected') await services.media.delete(id.data!);
-    await audit(db, mod.id, `mod_photo_${outcome}`, now);
-    services.nudges.publish(row!.owner, { kind: 'match' });
+    services.nudges.publish(row!.owner, { kind: row!.match_id ? 'message' : 'match', match_id: row!.match_id ?? undefined });
+    if (peer) services.nudges.publish(peer, { kind: 'message', match_id: row!.match_id! });
     return { state: outcome };
   });
 }

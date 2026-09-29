@@ -1,5 +1,21 @@
 # Checkpoints
 
+## BE-16 - Photos in chat: allowed per match, checked first, blurred until tapped (2026-09-29)
+
+- In a chat, "Allow photos from Maya" (off by default) lets that one person send you photos. The
+  photo button explains kindly when the other person hasn't allowed yours.
+- A sent photo goes through the same one-time upload, checks, metadata removal and moderator review
+  as a profile photo ("Sent for a quick check. It appears in the chat once approved."). It arrives
+  only if the match is still open and photos are still allowed, blurred ("Photo · Tap to see")
+  until the receiver taps it, with "Report this photo" once seen. The chat list says "Photo".
+- Links re-check that the viewer is one of the two people in an open, unblocked match; unmatching
+  or blocking ends access. Chat photos never show as profile photos or count toward the six.
+- No sexually explicit media anywhere: moderators reject it in chats as in profiles.
+- Tests: backend 126 (consent required, delivery only after approval, not a profile photo, consent
+  withdrawn before review stops delivery, unmatch ends access, outsiders refused); delivering
+  without consent or leaking chat photos into profiles each fails a test. Flutter 219 (consent
+  switch, blurred then revealed with report, refusal when not allowed, sending when allowed).
+
 ## BE-15 - Scam warnings in chat (2026-09-29)
 
 - A message that asks for money, gift cards, crypto or payment apps, moves the chat to another app

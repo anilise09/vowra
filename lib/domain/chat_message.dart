@@ -8,6 +8,7 @@ class ChatMessage {
     required this.sentAt,
     this.seen,
     this.safetyHints = const [],
+    this.photoUrl,
   });
 
   final String id;
@@ -21,6 +22,9 @@ class ChatMessage {
   /// Warnings the server attached for you as the receiver: `money`,
   /// `off_platform` or `link`. The sender never sees them.
   final List<String> safetyHints;
+
+  /// A reviewed photo (a short-lived link); the text is empty then.
+  final String? photoUrl;
 }
 
 class MessagePolicy {

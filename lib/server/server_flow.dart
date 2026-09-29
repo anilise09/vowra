@@ -30,6 +30,7 @@ import '../data/area_prefs.dart';
 import 'area_sheet.dart';
 import 'data_export_page.dart';
 import 'moderation_screens.dart';
+import '../data/api/server_photo.dart';
 import 'photos_editor.dart';
 
 /// Plain-language text for a failed call. Server codes never reach the screen
@@ -1630,6 +1631,8 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
   List<ChatMessage> messages = const [];
   ConnectionStatus status = ConnectionStatus.active;
   bool callReady = false;
+  late bool photosAllowedByMe = widget.match.photosAllowedByMe;
+  late bool photosAllowedByThem = widget.match.photosAllowedByThem;
   SafetyReport? report;
   Timer? poll;
   StreamSubscription<Nudge>? _nudgeSub;
@@ -1705,6 +1708,41 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
     widget.api.markRead(widget.match.matchId).catchError((Object _) {});
   }
 
+  Future<void> _sendPhoto() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final picked = await pickPhoto();
+    if (picked == null) return;
+    try {
+      await widget.api.sendChatPhoto(
+        widget.match.matchId,
+        picked.bytes,
+        picked.mimeType,
+      );
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Sent for a quick check. It appears in the chat once approved.',
+          ),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (e.code == 'photos_not_allowed' && mounted) {
+        setState(() => photosAllowedByThem = false);
+      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.code == 'photos_not_allowed'
+                ? '${widget.match.peerName} hasn\'t turned on photos from you yet.'
+                : describeApiError(e),
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeApiError(e))));
+    }
+  }
+
   ChatMessage _message(ServerMessage m) => ChatMessage(
     id: m.id,
     author: m.mine ? MessageAuthor.currentUser : MessageAuthor.peer,
@@ -1712,6 +1750,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
     sentAt: m.sentAt,
     seen: m.seen,
     safetyHints: m.safetyHints,
+    photoUrl: m.photoUrl,
   );
 
   void _closed() {
@@ -1778,6 +1817,14 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
       onBack: () => Navigator.of(context).pop(),
       onSend: _send,
       onCallReadinessChanged: (value) => setState(() => callReady = value),
+      photosAllowedByMe: photosAllowedByMe,
+      photosAllowedByThem: photosAllowedByThem,
+      onPhotoConsentChanged: (allow) => _act(
+        () => widget.api.setPhotoConsent(widget.match.matchId, allow),
+        () => photosAllowedByMe = allow,
+      ),
+      onSendPhoto: _sendPhoto,
+      photoProvider: (url) => ServerPhoto(widget.api.absolute(url)),
       onReport: (r) => _act(
         () => widget.api.report(
           widget.match.peerAccountId,

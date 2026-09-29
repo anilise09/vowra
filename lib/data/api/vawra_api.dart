@@ -104,7 +104,13 @@ class ServerMatch {
     this.sharedInterests = const [],
     this.peerPrompts = const [],
     this.peerDemoPortrait,
+    this.photosAllowedByMe = false,
+    this.photosAllowedByThem = false,
   });
+
+  /// Photos in this chat need the receiver's yes, per match.
+  final bool photosAllowedByMe;
+  final bool photosAllowedByThem;
 
   final String matchId;
   final String peerAccountId;
@@ -137,6 +143,8 @@ class ServerMatch {
         .toList(),
     peerPrompts: parsePrompts(json['peer_prompts']),
     peerDemoPortrait: json['peer_demo_portrait'] as String?,
+    photosAllowedByMe: (json['photos_allowed_by_me'] as bool?) ?? false,
+    photosAllowedByThem: (json['photos_allowed_by_them'] as bool?) ?? false,
   );
 }
 
@@ -148,10 +156,12 @@ class ServerMessage {
     required this.sentAt,
     this.seen,
     this.safetyHints = const [],
+    this.photoUrl,
   });
 
   final String id;
   final bool mine;
+  final String? photoUrl;
   final String text;
   final DateTime sentAt;
   final bool? seen;
@@ -164,6 +174,7 @@ class ServerMessage {
     sentAt: DateTime.parse(json['sent_at'] as String),
     seen: json['seen'] as bool?,
     safetyHints: ((json['safety_hints'] as List?) ?? const []).cast<String>(),
+    photoUrl: (json['photo'] as Map<String, dynamic>?)?['url'] as String?,
   );
 }
 
@@ -690,6 +701,40 @@ class VawraApi {
               showGender: (profile['show_gender'] as bool?) ?? false,
             ),
     );
+  }
+
+  /// Whether you accept photos from the other person in this match.
+  Future<void> setPhotoConsent(String matchId, bool allow) => _send(
+    'PUT',
+    '/v1/matches/$matchId/photo-consent',
+    body: {'allow': allow},
+  );
+
+  /// Sends a photo in a conversation: it is checked by a moderator and
+  /// arrives as a message once approved.
+  Future<void> sendChatPhoto(
+    String matchId,
+    List<int> bytes,
+    String mimeType,
+  ) async {
+    final grant = await _send(
+      'POST',
+      '/v1/matches/$matchId/photos',
+      body: {
+        'client_upload_id': _randomToken(),
+        'mime_type': mimeType,
+        'byte_length': bytes.length,
+        'sha256': sha256.convert(bytes).toString(),
+      },
+    );
+    final response = await _client.put(
+      base.resolve(grant['upload_url'] as String),
+      headers: {'content-type': mimeType},
+      body: bytes,
+    );
+    if (response.statusCode != 200) {
+      throw ApiException(response.statusCode, 'upload_failed');
+    }
   }
 
   /// A server link (relative) as a full address for loading.

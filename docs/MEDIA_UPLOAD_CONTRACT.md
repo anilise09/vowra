@@ -1,7 +1,15 @@
 # Media upload and moderation contract
 
-Status: profile photos are implemented (BE-12, 2026-09-29) with local stand-ins; conversation media
-and video are not.
+Status: profile photos (BE-12) and photos in a conversation (BE-16) are implemented with local
+stand-ins; video is not. Sexually explicit media is not accepted anywhere: moderators reject it,
+in profiles and in chats alike, so the explicit-media opt-in described below is not offered.
+
+Conversation photos (BE-16): the receiver allows photos per match ("Allow photos from ..."), off by
+default; `POST /v1/matches/:id/photos` refuses without that (`409 photos_not_allowed`). Each photo
+goes through the same grant, checks and moderator review as a profile photo, and becomes a message
+only on approval, if the match is still open and photos are still allowed. The receiver sees it
+blurred until they tap it and can report it from there; links re-check that the viewer is one of
+the two people in an open, unblocked match. Chat photos never appear as profile photos.
 
 What exists: the gallery picker (no camera), `POST /v1/me/photos` for a single-use grant bound to the
 exact MIME type, byte length and SHA-256, `PUT /v1/uploads/:id` that checks all three plus the file

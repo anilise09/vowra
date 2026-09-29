@@ -64,6 +64,10 @@ Profile mutation contains no location. Added 2026-09-28 (BE-10): `PUT /v1/me/loc
 
 `POST /v1/me/photos` `{client_upload_id, mime_type (jpeg|png|webp), byte_length (<= 10 MB), sha256}` returns `{photo_id, upload_url, expires_at}`; the link works once, for 10 minutes. `PUT` the exact bytes there with the same content type. `GET /v1/me/photos` lists your photos with `state` (`pending_review`, `approved`, `rejected` with `reject_reason`); `PUT /v1/me/photos/order`, `DELETE /v1/me/photos/:id`. Discovery and likes-you add `photos: [{photo_id, url}]` (approved only, links for the viewer). `GET /v1/mod/photos` and `POST /v1/mod/photos/:id/decision` `{outcome: approved|rejected, reason?}` for moderators (recent sign-in, audited, never their own). Errors: `photo_limit`, `upload_limit`, `invalid_grant`, `size_mismatch`, `hash_mismatch`, `wrong_type`, `unreadable_image`. Details in `MEDIA_UPLOAD_CONTRACT.md`.
 
+## Photos in a conversation (added 2026-09-29, BE-16)
+
+`PUT /v1/matches/:id/photo-consent` `{allow}` sets whether you accept photos from the other person; `/v1/matches` adds `photos_allowed_by_me` and `photos_allowed_by_them`. `POST /v1/matches/:id/photos` (same body as profile photos) returns an upload grant when the other person allows photos, else `409 photos_not_allowed`. After moderator approval the photo is a message with `text: ""` and `photo: {url}`; the chat list shows "Photo". The moderator queue marks each photo `context: profile | chat`.
+
 ## Moderation (added 2026-09-29, BE-11)
 
 - `accounts.role` is `member` or `moderator`. Every `/v1/mod/*` route answers `404` to anyone who is not a moderator, so the console's existence is not revealed.

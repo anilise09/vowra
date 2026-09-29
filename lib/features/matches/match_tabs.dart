@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../../domain/chat_message.dart';
@@ -377,7 +379,22 @@ class ChatTab extends StatefulWidget {
     this.onComposing,
     this.openers = const [],
     this.live = false,
+    this.photosAllowedByMe,
+    this.photosAllowedByThem = false,
+    this.onPhotoConsentChanged,
+    this.onSendPhoto,
+    this.photoProvider,
   });
+
+  /// Photos in chat (server only): whether you accept them from this person,
+  /// and whether they accept yours. Null hides the switch.
+  final bool? photosAllowedByMe;
+  final bool photosAllowedByThem;
+  final ValueChanged<bool>? onPhotoConsentChanged;
+  final VoidCallback? onSendPhoto;
+
+  /// Loads a photo message's link.
+  final ImageProvider Function(String url)? photoProvider;
 
   /// Connected to the Vawra server: reports reach real moderators.
   final bool live;
@@ -419,6 +436,9 @@ class _ChatTabState extends State<ChatTab> {
   final composer = TextEditingController();
   final reactions = <String>{};
   var showPicker = false;
+
+  /// Photo messages the person chose to see; the rest stay blurred.
+  final revealed = <String>{};
 
   static const _emoji = [
     '😀',
@@ -784,6 +804,23 @@ class _ChatTabState extends State<ChatTab> {
                     onChanged: widget.onCallReadinessChanged,
                   ),
                 ),
+                if (widget.photosAllowedByMe case final allowed?) ...[
+                  const SizedBox(height: 8),
+                  Material(
+                    color: VawraColors.lavender,
+                    borderRadius: BorderRadius.circular(18),
+                    child: SwitchListTile(
+                      key: const Key('photo-consent-switch'),
+                      title: Text('Allow photos from ${match.peerName}'),
+                      subtitle: const Text(
+                        'Each photo is checked first and arrives blurred until '
+                        'you tap it.',
+                      ),
+                      value: allowed,
+                      onChanged: widget.onPhotoConsentChanged,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 if (widget.messages.isNotEmpty)
                   Center(
@@ -890,6 +927,24 @@ class _ChatTabState extends State<ChatTab> {
                       : Icons.emoji_emotions_outlined,
                 ),
               ),
+              if (widget.onSendPhoto case final sendPhoto?)
+                IconButton(
+                  key: const Key('send-photo'),
+                  tooltip: 'Send a photo',
+                  onPressed: !match.canMessage
+                      ? null
+                      : widget.photosAllowedByThem
+                      ? sendPhoto
+                      : () => ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${match.peerName} hasn\'t turned on photos '
+                              'from you yet.',
+                            ),
+                          ),
+                        ),
+                  icon: const Icon(Icons.photo_outlined),
+                ),
               Expanded(
                 child: TextField(
                   key: const Key('message-composer'),
@@ -1009,7 +1064,9 @@ class _ChatTabState extends State<ChatTab> {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                if (_emojiOnly(message.text))
+                if (message.photoUrl case final url?)
+                  _photoBubble(message, url, mine)
+                else if (_emojiOnly(message.text))
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(
@@ -1075,6 +1132,82 @@ class _ChatTabState extends State<ChatTab> {
           ],
         ),
       ),
+    );
+  }
+
+  /// A reviewed photo. From the other person it stays blurred until tapped,
+  /// and can be reported once seen.
+  Widget _photoBubble(ChatMessage message, String url, bool mine) {
+    final shown = mine || revealed.contains(message.id);
+    final provider = widget.photoProvider?.call(url);
+    return Column(
+      crossAxisAlignment: mine
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          key: Key('photo-message-${message.id}'),
+          onTap: shown ? null : () => setState(() => revealed.add(message.id)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: SizedBox(
+              width: 220,
+              height: 260,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (provider != null)
+                    ImageFiltered(
+                      imageFilter: shown
+                          ? ui.ImageFilter.blur()
+                          : ui.ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+                      child: Image(
+                        image: provider,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            const ColoredBox(color: VawraColors.lavender),
+                      ),
+                    )
+                  else
+                    const ColoredBox(color: VawraColors.lavender),
+                  if (!shown)
+                    const ColoredBox(
+                      color: Color(0x55000000),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.visibility_outlined,
+                              color: Colors.white,
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Photo \u00b7 Tap to see',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (!mine && shown)
+          TextButton(
+            key: Key('photo-report-${message.id}'),
+            onPressed: () async {
+              final report = await _chooseReport(context, about: message);
+              if (report != null) widget.onReport(report);
+            },
+            child: const Text('Report this photo'),
+          ),
+      ],
     );
   }
 
