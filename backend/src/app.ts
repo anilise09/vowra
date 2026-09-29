@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { hashToken } from './crypto.js';
 import { ApiError, type Account, type Services } from './context.js';
 import { authRoutes } from './routes/auth.js';
+import { callRoutes } from './routes/calls.js';
 import { chatRoutes } from './routes/chat.js';
 import { discoveryRoutes } from './routes/discovery.js';
 import { eventRoutes } from './routes/events.js';
@@ -105,6 +106,7 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
   locationRoutes(app, services);
   moderationRoutes(app, services);
   mediaRoutes(app, services);
+  callRoutes(app, services);
   eventRoutes(app, services);
   return app;
 }

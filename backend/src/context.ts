@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Db } from './db.js';
 import type { Sealer } from './crypto.js';
 import type { NudgeBus } from './nudges.js';
+import type { CallConfig, SignalBox } from './calls.js';
 import type { MediaGrants, MediaStore } from './media.js';
 
 export interface Clock {
@@ -22,6 +23,10 @@ export interface Services {
   /** Processed photos, and the signer for their short-lived links. */
   media: MediaStore;
   grants: MediaGrants;
+  /** Call setup messages, in memory for the life of each call. */
+  signals: SignalBox;
+  /** How phones reach each other in a call; null keeps calls switched off. */
+  callConfig: CallConfig | null;
   accessTtlSeconds: number;
   proofTtlSeconds: number;
   /** How recent a sign-in must be for deletion and similar account actions. */

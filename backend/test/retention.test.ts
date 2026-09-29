@@ -94,6 +94,27 @@ describe('retention', () => {
     expect(await count('reports')).toBe(1);
     expect(await count('reports', "state = 'pending_review'")).toBe(1);
   });
+
+  it('closes calls that lost both phones and forgets old call records', async () => {
+    const ana = await member(h, 'Ana');
+    const ben = await member(h, 'Ben');
+    await swipe(h, ana, ben);
+    const matchId = (await swipe(h, ben, ana)).json().match_id;
+    const now = h.clock.now().getTime();
+    const insert = (state: string, agoMs: number) =>
+      h.db.query(
+        `INSERT INTO calls (id, match_id, caller, callee, kind, state, created_at)
+         VALUES ($1, $2, $3, $4, 'audio', $5, $6)`,
+        [crypto.randomUUID(), matchId, ana.accountId, ben.accountId, state, new Date(now - agoMs)],
+      );
+    await insert('active', 60 * 1000); // a call going on now
+    await insert('active', (retention.staleCallHours + 1) * 60 * 60 * 1000);
+    await insert('ended', (retention.callRecordsDays + 1) * DAY);
+    const removed = await runRetention(h.db, h.clock);
+    expect(removed).toMatchObject({ staleCalls: 1, callRecords: 1 });
+    expect(await count('calls', "state = 'active'")).toBe(1);
+    expect(await count('calls', "end_reason = 'stale'")).toBe(1);
+  });
 });
 
 describe('backup and restore', () => {

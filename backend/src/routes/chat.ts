@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { endCalls } from '../calls.js';
 import { safetyHints } from '../safety_hints.js';
 import { z } from 'zod';
 import { fail, noContent, requireAccount, requireDatingAccess, type Services } from '../context.js';
@@ -113,12 +114,23 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
     );
     const allowedByMe = new Set(consent.filter((c) => c.account_id === me.id).map((c) => c.match_id));
     const allowedByThem = new Set(consent.filter((c) => c.account_id !== me.id).map((c) => c.match_id));
+    const ready = await db.query<{ match_id: string; account_id: string }>(
+      `SELECT c.match_id, c.account_id FROM call_readiness c
+       JOIN matches m ON m.id = c.match_id WHERE m.account_low = $1 OR m.account_high = $1`,
+      [me.id],
+    );
+    const readyByMe = new Set(ready.filter((c) => c.account_id === me.id).map((c) => c.match_id));
+    const readyByThem = new Set(ready.filter((c) => c.account_id !== me.id).map((c) => c.match_id));
     return {
+      // Calls need a relay (or the development switch); the app hides them otherwise.
+      calls_available: services.callConfig !== null,
       // Shared interests and their prompts let the app suggest a first line.
       matches: matches.map(({ peer_interests, ...m }) => ({
         ...m,
         photos_allowed_by_me: allowedByMe.has(m.match_id as string),
         photos_allowed_by_them: allowedByThem.has(m.match_id as string),
+        call_ready_by_me: readyByMe.has(m.match_id as string),
+        call_ready_by_them: readyByThem.has(m.match_id as string),
         shared_interests: peer_interests.filter((i) => mine?.interests.includes(i)).sort(),
         last_message_mine: m.last_message_mine ?? null,
         last_message_at: m.last_message_at ? new Date(m.last_message_at).toISOString() : null,
@@ -131,6 +143,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
     const match = await participantMatch(db, me.id, (request.params as { matchId: string }).matchId);
     if (match.status === 'active') {
       await db.query("UPDATE matches SET status = 'unmatched' WHERE id = $1", [match.id]);
+      await endCalls(db, services.nudges, services.signals, { matchId: match.id }, 'unmatched', clock.now());
       services.nudges.publish(me.id, { kind: 'match', match_id: match.id });
       services.nudges.publish(match.peer, { kind: 'match', match_id: match.id });
     }

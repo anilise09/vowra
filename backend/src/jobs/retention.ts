@@ -20,6 +20,10 @@ export const retention = {
   rejectedPhotosDays: 90,
   /** Security audit events (kind and time only). */
   auditEventsDays: 365,
+  /** Call records (who, kind, times, outcome; never content). */
+  callRecordsDays: 90,
+  /** A call still marked live after this long lost both phones; it is closed. */
+  staleCallHours: 6,
   /** Decided reports and appeals, with their notes. */
   decidedReportsDays: 730,
 };
@@ -59,6 +63,15 @@ export async function runRetention(db: Db, clock: Clock): Promise<Record<string,
       "DELETE FROM media WHERE state = 'rejected' AND created_at < $1 RETURNING 1",
       [before(retention.rejectedPhotosDays)],
     ),
+    staleCalls: await count(
+      `UPDATE calls SET state = CASE WHEN state = 'ringing' THEN 'missed' ELSE 'ended' END,
+              ended_at = $2, end_reason = 'stale'
+       WHERE state IN ('ringing','active') AND created_at < $1 RETURNING 1`,
+      [new Date(now - retention.staleCallHours * 60 * 60 * 1000), new Date(now)],
+    ),
+    callRecords: await count('DELETE FROM calls WHERE created_at < $1 RETURNING 1', [
+      before(retention.callRecordsDays),
+    ]),
     auditEvents: await count('DELETE FROM audit_events WHERE created_at < $1 RETURNING 1', [
       before(retention.auditEventsDays),
     ]),

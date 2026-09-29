@@ -1,5 +1,26 @@
 # Checkpoints
 
+## BE-18 - Calls: the server side (2026-09-29)
+
+- Each person says per match that they are open to a call; a call rings only when both have, the
+  conversation is open, neither person is already in a call and the caller has started fewer than
+  10 in the last hour. Ringing, answer, decline, cancel, hang-up; unanswered after 45 s is missed.
+- The phones' setup messages pass through the server in memory only, to the other person only,
+  and vanish when the call ends (400 per person per call). The live-update nudge says only which
+  call changed. Nothing about a call's content is stored: the record is who, kind, times and
+  outcome, kept 90 days; a call still live after 6 hours is closed by the hourly job.
+- Production calls are relay-only (TURN, with per-person two-hour credentials), so neither person
+  learns the other's IP address. Without a relay, calls are off and the app is told so; direct
+  calls exist only behind the development switch `VAWRA_CALLS_DEV_P2P=1`.
+- A block, unmatch, suspension, deletion request or taking back readiness ends a live call at
+  once; every call step also re-checks the conversation, so a missed hook still ends it. To the
+  other phone a block looks like any hang-up.
+- 15 new tests. Breaking each rule in turn (13 breaks: the four end-of-contact hooks, the re-check,
+  busy, readiness, own-messages filter, callee-only answer, hourly limit, flood limit, relay
+  requirement, strangers) fails a test every time; the suspension test first passed with its hook
+  removed, because the re-check covered it, and now reads the stored state directly.
+- Backend 144 tests pass.
+
 ## BE-17 - Load and abuse testing (2026-09-29)
 
 - Blocks never leak: a seeded random test (three sequences, 60 steps, six members) checks after

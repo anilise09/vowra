@@ -1,3 +1,4 @@
+import { callConfigFrom, SignalBox } from './calls.js';
 import { mkdirSync, appendFileSync } from 'node:fs';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
@@ -47,6 +48,8 @@ const app = buildApp(
     nudges: new MemoryNudgeBus(),
     media,
     grants: new MediaGrants(config.dataKey),
+    signals: new SignalBox(),
+    callConfig: callConfigFrom(process.env),
     accessTtlSeconds: config.accessTtlSeconds,
     proofTtlSeconds: config.proofTtlSeconds,
     reauthWindowSeconds: config.reauthWindowSeconds,

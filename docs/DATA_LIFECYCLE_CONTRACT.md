@@ -50,6 +50,8 @@ An hourly job (`backend/src/jobs/retention.ts`) removes what is no longer needed
 | A sign-in on a device unused for 90 days | ends | the device signs in again |
 | Photo uploads never sent | 1 day | an abandoned grant |
 | Rejected photo records (files deleted at once) | 90 days | answering a question about the rejection |
+| Call records (the two people, kind, times, outcome; never content) | 90 days | answering a report about a call |
+| Call setup messages | until the call ends, in memory only | connecting the call |
 | Security audit events (kind and time only) | 365 days | investigating abuse |
 | Decided reports and appeals, with notes | 730 days | repeat-abuse history |
 

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { endCalls } from '../calls.js';
 import { audit, fail, noContent, requireAccount, type Account, type Services } from '../context.js';
 import { cellKm } from '../location.js';
 import { openCell } from './location.js';
@@ -206,6 +207,7 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       await audit(tx, account.id, 'deletion_scheduled', now);
       return at;
     });
+    await endCalls(db, services.nudges, services.signals, { accountId: account.id }, 'leaving', now);
     return reply.code(202).send({ state: 'scheduled', effective_at: effective.toISOString() });
   });
 

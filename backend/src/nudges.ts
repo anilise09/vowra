@@ -4,8 +4,10 @@
  * text, names or photos, so nothing private travels through the push path.
  */
 export interface Nudge {
-  kind: 'message' | 'match' | 'like' | 'read' | 'typing';
+  kind: 'message' | 'match' | 'like' | 'read' | 'typing' | 'call';
   match_id?: string;
+  /** For 'call': which call changed; the app fetches its state and setup messages. */
+  call_id?: string;
 }
 
 export interface NudgeBus {

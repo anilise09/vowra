@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { endCalls } from '../calls.js';
 import { z } from 'zod';
 import { audit, fail, requireAccount, requireModerator, type Services } from '../context.js';
 import { requireRecentSignIn } from './lifecycle.js';
@@ -60,6 +61,7 @@ export function moderationRoutes(app: FastifyInstance, services: Services) {
     if (!id.success || !body.success) fail(400, 'invalid_request');
     const { outcome, note } = body.data!;
     const now = clock.now();
+    let suspended: string | null = null;
     const peers = await db.transaction(async (tx) => {
       const [report] = await tx.query<{
         reporter: string;
@@ -97,6 +99,7 @@ export function moderationRoutes(app: FastifyInstance, services: Services) {
           [report.target, now],
         );
         await audit(tx, report.target, 'suspended', now);
+        suspended = report.target;
       }
       // Every open report about this person is settled by the suspension.
       await tx.query(
@@ -115,6 +118,7 @@ export function moderationRoutes(app: FastifyInstance, services: Services) {
     });
     // Their matches' chat lists refresh; the conversation is closed.
     for (const peer of peers) services.nudges.publish(peer, { kind: 'match' });
+    if (suspended) await endCalls(db, services.nudges, services.signals, { accountId: suspended }, 'suspended', now);
     return { state: outcome === 'dismissed' ? 'dismissed' : 'actioned' };
   });
 

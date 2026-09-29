@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { endCalls } from '../calls.js';
 import { z } from 'zod';
 import { audit, fail, noContent, requireAccount, type Services } from '../context.js';
 import { abuseRules, reportReasons } from '../rules.js';
@@ -39,8 +40,10 @@ export function safetyRoutes(app: FastifyInstance, services: Services) {
       );
       await audit(tx, me.id, 'block', now);
     });
-    // Only the blocker's own devices: the blocked person is never told.
+    // Only the blocker's own devices: the blocked person is never told. A call
+    // between them ends; to the other phone it looks like any hang-up.
     services.nudges.publish(me.id, { kind: 'match' });
+    await endCalls(db, services.nudges, services.signals, { pair: [me.id, other] }, 'blocked', now);
     return noContent(reply);
   });
 
