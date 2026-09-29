@@ -6,6 +6,11 @@ Vawra is the current product name and visual identity. Public launch under that 
 
 ## Status
 
+A responsive, static Vawra product-site preview is in `website/`. It uses the approved
+transparent company lockup and current synthetic-prototype screenshots, with an
+interactive screen gallery and explicit pre-launch disclosures. It has not been
+published or visually verified in a browser on this machine.
+
 UI-5 uses the approved transparent company lockup and aligns Discover's primary Pass and Like
 actions with their swipe meanings. The latest audit anchors Welcome's reading panel on tall
 phones and passes 22 Android/iOS-style device-and-text-size runs plus the full Flutter suite.

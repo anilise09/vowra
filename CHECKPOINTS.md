@@ -1,5 +1,22 @@
 # Checkpoints
 
+## Web-1 - Vawra product-site preview (2026-09-28)
+
+- Built a standalone static website in `website/`, adapting the owner-shared QuietWall
+  artifact's product-site structure to Vawra: hero, real prototype screen preview,
+  experience/features, safety commitments, FAQs and responsive navigation.
+- Reused the approved transparent Vawra lockup and existing current app screenshots.
+  Every displayed person is a synthetic prototype fixture; the website says so and
+  does not imply a live service, available app-store release, waitlist or paid plan.
+- No tracking, forms, remote fonts or external runtime assets. The gallery supports
+  pointer and keyboard tab switching, the mobile menu has expanded state, and CSS
+  includes compact-phone, tablet and reduced-motion rules.
+- `website/check.ps1` passes (links, assets, screen mappings, disclosures and CSS
+  rules). Browser visual verification was not possible because this environment
+  blocked local-file browser navigation; check desktop/mobile rendering before publish.
+- Publishing remains blocked on trademark/domain clearance and production legal,
+  privacy, security and age-assurance gates.
+
 ## Device - BE-8, BE-9 and the WebP build on the owner's Asus (2026-09-28)
 
 - Asus ASUS_I003DD over wireless adb, profile build against the local test server; install checked
