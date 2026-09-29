@@ -65,6 +65,9 @@ one checkpoint each (details in `CHECKPOINTS.md`):
   `VAWRA_TURN_SECRET`) so neither person learns the other's IP address. Without a relay the app
   hides calls; `VAWRA_CALLS_DEV_P2P=1` allows direct calls for development only. Nothing is
   recorded. An incoming call rings only while the app is open, until push notifications exist.
+  First real calls (BE-19b): the Android 15 emulator against headless Chromium, video and voice
+  both ways; the browser side is a scratch script (headless Chromium with a fake camera, signed in
+  through `tools/dev/vawra_driver.mjs` sessions), not yet in the repository.
 
 Still needing the owner or a provider: a TURN relay for real calls, push notifications (incoming
 calls with the app closed), email, hosting, object storage and scanning, age assurance (legal),

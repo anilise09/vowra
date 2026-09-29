@@ -1,5 +1,26 @@
 # Checkpoints
 
+## BE-19b - First real calls: emulator and browser (2026-09-29)
+
+- A real call end to end without the owner's phones: Vawra on the Android 15 emulator (as the
+  test member Maya) and headless Chromium with a fake camera and microphone (as Alex) speaking
+  the same server routes, through the local server with development direct calls.
+- Found a crash no laptop test could: WebRTC aborts the app as a call connects unless the app
+  holds ACCESS_NETWORK_STATE (an install-time permission with no prompt; WebRTC uses it to follow
+  Wi-Fi and mobile handovers). Added, with a test that pins the exact permission list and fails
+  when any is removed (checked by removing it).
+- After the fix: Alex's video call rang on the emulator ("Incoming video call", Accept, Decline,
+  "Answer without video"), was accepted and connected; in 20 s the browser decoded 224 video
+  frames (406 KB) and 44 KB of audio from the emulator and sent 629 KB of video; the emulator
+  showed the browser's picture full screen and its own camera in the corner. When the browser
+  hung up, the emulator's call page closed by itself.
+- Maya's voice call from the chat's voice button rang in the browser, connected in about 3 s,
+  audio both ways, only Mute, Phone and End shown; Mute switched to Unmute; hanging up in the app
+  ended the call on both sides.
+- A soft dark fade now sits over the other person's video behind the name, clock and buttons,
+  so they stay readable on a bright picture.
+- Not yet on physical phones or through a TURN relay (none exists yet).
+
 ## BE-19 - Calls in the app: voice and video (2026-09-29)
 
 - The chat's "Open to a call" switch is saved on the server, and the other person's answer shows

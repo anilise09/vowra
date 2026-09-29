@@ -511,6 +511,7 @@ void main() {
       await _settle(tester);
       expect(callStatus(tester), startsWith('0:0'));
       expect(find.byKey(const Key('remote-video')), findsOneWidget);
+      expect(find.byKey(const Key('call-video-scrim')), findsOneWidget);
       expect(find.byKey(const Key('local-video')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('call-mute')));

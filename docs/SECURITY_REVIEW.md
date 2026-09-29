@@ -109,7 +109,9 @@ Checked:
   last two hours), so neither phone learns the other's IP address. Direct calls exist only behind
   `VAWRA_CALLS_DEV_P2P=1`.
 - The app asks for the camera and microphone only when a call starts or is answered, and the
-  merged Android manifest adds nothing beyond CAMERA, RECORD_AUDIO and MODIFY_AUDIO_SETTINGS.
+  merged Android manifest adds nothing beyond CAMERA, RECORD_AUDIO, MODIFY_AUDIO_SETTINGS and
+  ACCESS_NETWORK_STATE (an install-time permission WebRTC needs; without it the app aborted as a
+  call connected). `test/android_manifest_test.dart` pins the exact list.
   Leaving the call page in any way ends the call.
 
 Open:

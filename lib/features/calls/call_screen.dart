@@ -103,7 +103,30 @@ class _CallScreenState extends State<CallScreen> {
         body: Stack(
           fit: StackFit.expand,
           children: [
-            if (remote != null) Positioned.fill(child: remote),
+            if (remote != null) ...[
+              Positioned.fill(child: remote),
+              // Keeps the name, clock and buttons readable on a bright picture.
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    key: Key('call-video-scrim'),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x73000000),
+                          Color(0x00000000),
+                          Color(0x00000000),
+                          Color(0x99000000),
+                        ],
+                        stops: [0, 0.22, 0.55, 1],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             if (remote == null) const _Backdrop(),
             SafeArea(
               child: Column(
