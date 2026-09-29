@@ -1,5 +1,39 @@
 # Checkpoints
 
+## BE-19 - Calls in the app: voice and video (2026-09-29)
+
+- The chat's "Open to a call" switch is saved on the server, and the other person's answer shows
+  as it changes. Voice and video buttons wake only when both are open to a call; while the server
+  cannot relay calls they are hidden, switch included.
+- Calling: a full-screen call page with ringing, connecting, a running clock, "Reconnecting…",
+  and how it ended ("No answer", "Maya can't talk right now", "The connection was lost"). Mute,
+  camera off, flip camera, speaker; video calls start on the speaker, voice calls at the ear.
+  "Report" and "End call and block" work from inside the call. The page says the call is private
+  and never recorded; leaving the page in any way ends the call.
+- Incoming calls ring on screen while the app is open (Accept, Decline, "Answer without video");
+  with the app closed they need push notifications, which come with a provider.
+- The camera and microphone are asked for only when a call starts or is answered (Android CAMERA,
+  RECORD_AUDIO; iOS usage texts). Refusing ends the call with how to allow them. Calls run on
+  WebRTC (`flutter_webrtc`) behind a small `CallMedia` interface, relay-only when the server says
+  so.
+- Tests: eight widget tests with a stand-in camera and network (outgoing video, a ring nobody
+  answers, a dropped connection, incoming answered without video, decline and a caller who gives
+  up, refused camera, block and report inside a call, hidden without a relay). Two real bugs
+  found by them and fixed: a call left running if its page was torn down (sign-out), and a stale
+  "call in progress" marker that stopped the next call ringing.
+- Breaking each app rule in turn (10 breaks: ending the call when the page goes, relay-only,
+  hidden switch, closing the camera at the end, the ring timeout, voice at the ear, telling the
+  server about a decline, noticing a caller gave up, a lost connection, saving readiness) fails a
+  test every time.
+- The chat baseline image now pre-loads the portrait like the other baselines (it had passed by
+  timing luck) and shows the new voice button.
+- Flutter 227 passed, 1 existing skip; analysis clean. Debug and release Android builds pass;
+  the merged manifest adds only CAMERA, RECORD_AUDIO and MODIFY_AUDIO_SETTINGS. WebRTC adds
+  about 17 MB to the three-CPU release APK (138 to 155 MB), about 6 MB per phone from the store.
+- Live check against the local server: refused until both are ready, then ring, offer, answer,
+  setup message delivered, hang-up, ended.
+- Not yet tested on phones: a real call needs two phones and both are reserved by another session.
+
 ## BE-18 - Calls: the server side (2026-09-29)
 
 - Each person says per match that they are open to a call; a call rings only when both have, the

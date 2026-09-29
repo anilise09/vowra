@@ -2,6 +2,7 @@ import 'package:ember_app/data/api/vawra_api.dart';
 import 'package:ember_app/data/area_locator.dart';
 import 'package:ember_app/data/area_prefs.dart';
 import 'package:ember_app/domain/location_grid.dart';
+import 'package:ember_app/features/calls/call_flow.dart';
 import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
 import 'package:ember_app/server/photos_editor.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/app_flow.dart';
+import 'support/fake_call_media.dart';
 import 'support/fake_vawra_server.dart';
 
 Future<void> _openSignIn(WidgetTester tester, FakeVawraServer server) async {
@@ -419,6 +421,270 @@ void main() {
         'reason': 'scam',
         'message_id': risky,
       });
+    });
+
+    /// Alex and Maya are matched with Maya's chat open; [media] stands in for
+    /// the camera, microphone and connection.
+    Future<String> inChatWithMaya(
+      WidgetTester tester,
+      FakeVawraServer server,
+      FakeCallMedia media, {
+      bool mayaReady = true,
+    }) async {
+      final original = newCallMedia;
+      addTearDown(() => newCallMedia = original);
+      newCallMedia = () => media;
+      final matchId = await matchedWithMaya(tester, server);
+      if (mayaReady) server.callReadyByThem.add(matchId);
+      await openChats(tester);
+      await tester.tap(find.byKey(const Key('new-match-Maya')));
+      await _settle(tester);
+      return matchId;
+    }
+
+    IconButton callButton(WidgetTester tester, String key) =>
+        tester.widget<IconButton>(find.byKey(Key(key)));
+
+    /// Long enough for a call to react, shorter than the ended screen stays.
+    Future<void> brief(WidgetTester tester) async {
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    String callStatus(WidgetTester tester) =>
+        tester.widget<Text>(find.byKey(const Key('call-status'))).data!;
+
+    testWidgets('a video call: both opt in, it rings, connects and ends', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final media = FakeCallMedia();
+      final matchId = await inChatWithMaya(
+        tester,
+        server,
+        media,
+        mayaReady: false,
+      );
+
+      // Nobody can call until both people say yes.
+      expect(callButton(tester, 'request-video-call').onPressed, isNull);
+      await tester.tap(find.byKey(const Key('call-ready-switch')));
+      await _settle(tester);
+      expect(server.callReadyByMe, {matchId});
+      expect(callButton(tester, 'request-voice-call').onPressed, isNull);
+      server
+        ..callReadyByThem.add(matchId)
+        ..nudge('match', matchId: matchId);
+      await _settle(tester);
+      expect(callButton(tester, 'request-voice-call').onPressed, isNotNull);
+
+      await tester.tap(find.byKey(const Key('request-video-call')));
+      await _settle(tester);
+      expect(find.byKey(const Key('call-screen')), findsOneWidget);
+      expect(callStatus(tester), 'Calling…');
+      // The camera opens only now, and only through the relay.
+      expect(media.log, ['open video', 'offer']);
+      expect(media.ice!.relayOnly, isTrue);
+      expect(server.sentSignals['call1'], [
+        {'type': 'offer', 'data': 'offer-sdp'},
+      ]);
+      media.candidate('c1');
+      await _settle(tester);
+      expect(server.sentSignals['call1']!.last, {
+        'type': 'candidate',
+        'data': 'c1',
+      });
+
+      // Maya answers.
+      server.calls['call1']!['state'] = 'active';
+      server
+        ..peerSignal('call1', 'answer', 'answer-sdp')
+        ..peerSignal('call1', 'candidate', 'm1');
+      await _settle(tester);
+      expect(
+        media.log,
+        containsAllInOrder(['accept answer-sdp', 'candidate m1']),
+      );
+      expect(callStatus(tester), 'Connecting…');
+      media.connect();
+      await _settle(tester);
+      expect(callStatus(tester), startsWith('0:0'));
+      expect(find.byKey(const Key('remote-video')), findsOneWidget);
+      expect(find.byKey(const Key('local-video')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('call-mute')));
+      await tester.tap(find.byKey(const Key('call-camera')));
+      await _settle(tester);
+      expect(media.muted, isTrue);
+      expect(media.cameraOn, isFalse);
+      expect(find.byKey(const Key('local-video')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('call-hang-up')));
+      await _settle(tester);
+      expect(server.calls['call1']!['state'], 'ended');
+      expect(media.closed, isTrue);
+      await _settle(tester);
+      expect(find.byKey(const Key('call-screen')), findsNothing);
+    });
+
+    testWidgets('a ring nobody answers, and a connection that drops', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      var media = FakeCallMedia();
+      await inChatWithMaya(tester, server, media);
+      newCallMedia = () => media;
+      await tester.tap(find.byKey(const Key('call-ready-switch')));
+      await _settle(tester);
+
+      await tester.tap(find.byKey(const Key('request-voice-call')));
+      await _settle(tester);
+      expect(media.openedVideo, isFalse);
+      expect(media.speaker, isFalse); // a voice call starts at the ear
+      await tester.pump(const Duration(seconds: 40));
+      expect(callStatus(tester), 'Calling…');
+      await tester.pump(const Duration(seconds: 4));
+      await brief(tester);
+      expect(callStatus(tester), 'No answer');
+      expect(server.calls['call1']!['state'], 'cancelled');
+      await _settle(tester);
+
+      media = FakeCallMedia();
+      await tester.tap(find.byKey(const Key('request-video-call')));
+      await _settle(tester);
+      server.calls['call2']!['state'] = 'active';
+      server.peerSignal('call2', 'answer', 'answer-sdp');
+      await _settle(tester);
+      media.connect();
+      await brief(tester);
+      media.drop();
+      await brief(tester);
+      expect(callStatus(tester), 'Reconnecting…');
+      media.fail();
+      await brief(tester);
+      expect(callStatus(tester), 'The connection was lost');
+      expect(server.calls['call2']!['state'], 'ended');
+      expect(media.closed, isTrue);
+      await _settle(tester);
+    });
+
+    testWidgets('an incoming call rings on screen; answered without video', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final media = FakeCallMedia();
+      final matchId = await inChatWithMaya(tester, server, media);
+      final callId = server.peerRings(matchId);
+      await _settle(tester);
+      expect(find.byKey(const Key('call-screen')), findsOneWidget);
+      expect(callStatus(tester), 'Incoming video call');
+      // Nothing is opened while it only rings.
+      expect(media.log, isEmpty);
+
+      await tester.tap(find.byKey(const Key('call-accept-audio')));
+      await _settle(tester);
+      expect(server.calls[callId]!['state'], 'active');
+      expect(media.openedVideo, isFalse);
+      server.peerSignal(callId, 'offer', 'offer-sdp');
+      await _settle(tester);
+      expect(media.log, contains('answer to offer-sdp'));
+      expect(server.sentSignals[callId], [
+        {'type': 'answer', 'data': 'answer-sdp'},
+      ]);
+
+      server.peerCallState(callId, 'ended');
+      await brief(tester);
+      expect(media.closed, isTrue);
+      expect(find.text('Call ended'), findsOneWidget);
+      await _settle(tester);
+      expect(find.byKey(const Key('call-screen')), findsNothing);
+    });
+
+    testWidgets('declining, and a caller who gives up', (tester) async {
+      final server = FakeVawraServer();
+      final media = FakeCallMedia();
+      final matchId = await inChatWithMaya(tester, server, media);
+      var callId = server.peerRings(matchId, video: false);
+      await _settle(tester);
+      expect(callStatus(tester), 'Incoming voice call');
+      expect(find.byKey(const Key('call-accept-audio')), findsNothing);
+      await tester.tap(find.byKey(const Key('call-decline')));
+      await _settle(tester);
+      expect(server.calls[callId]!['state'], 'declined');
+      await _settle(tester);
+      expect(find.byKey(const Key('call-screen')), findsNothing);
+
+      callId = server.peerRings(matchId);
+      await _settle(tester);
+      expect(callStatus(tester), 'Incoming video call');
+      server.peerCallState(callId, 'cancelled');
+      await brief(tester);
+      expect(find.text('Missed call'), findsOneWidget);
+      expect(media.log, isEmpty);
+    });
+
+    testWidgets('a refused camera ends the call with a way forward', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final matchId = await inChatWithMaya(
+        tester,
+        server,
+        FakeCallMedia(denyPermission: true),
+      );
+      await tester.tap(find.byKey(const Key('call-ready-switch')));
+      await _settle(tester);
+      expect(server.callReadyByMe, {matchId});
+      await tester.tap(find.byKey(const Key('request-video-call')));
+      await brief(tester);
+      expect(callStatus(tester), contains('needs the camera and microphone'));
+      expect(server.calls['call1']!['state'], 'cancelled');
+    });
+
+    testWidgets('block from inside a call ends it and closes the chat', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final media = FakeCallMedia();
+      final matchId = await inChatWithMaya(tester, server, media);
+      final callId = server.peerRings(matchId);
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('call-accept')));
+      await _settle(tester);
+      expect(media.openedVideo, isTrue);
+      await tester.tap(find.byKey(const Key('call-safety-menu')));
+      await _settle(tester);
+      await tester.tap(find.text('End call and block'));
+      await _settle(tester);
+      expect(server.calls[callId]!['state'], 'ended');
+      expect(server.blocked, isNotEmpty);
+      expect(media.closed, isTrue);
+    });
+
+    testWidgets('report from inside a call', (tester) async {
+      final server = FakeVawraServer();
+      final matchId = await inChatWithMaya(tester, server, FakeCallMedia());
+      server.peerRings(matchId);
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('call-safety-menu')));
+      await _settle(tester);
+      await tester.tap(find.text('Report'));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('call-report-harassment')));
+      await _settle(tester);
+      expect(server.reports.last['reason'], 'harassment');
+      expect(find.byKey(const Key('call-reported')), findsOneWidget);
+    });
+
+    testWidgets('calls stay hidden while the server cannot relay them', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()..callsAvailable = false;
+      await inChatWithMaya(tester, server, FakeCallMedia());
+      expect(find.byKey(const Key('request-video-call')), findsNothing);
+      expect(find.byKey(const Key('request-voice-call')), findsNothing);
+      expect(find.byKey(const Key('call-ready-switch')), findsNothing);
     });
 
     testWidgets('photos in chat: allowed per match, blurred until tapped', (

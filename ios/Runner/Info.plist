@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Vawra uses the camera only during a video call you start or answer.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Vawra uses the microphone only during a call you start or answer.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose photos for your Vawra profile. Only the photos you pick are uploaded, and location and camera details are removed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

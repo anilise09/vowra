@@ -96,6 +96,29 @@ Open:
 - Production needs HTTPS in front of the server (the host's TLS terminator) and HSTS. Certificate
   pinning in the app is a later decision; it complicates key rotation.
 
+## Calls (added BE-18 and BE-19)
+
+Checked:
+- A call needs an open conversation and both people's yes for that match. It ends at once on a
+  block, unmatch, suspension, deletion request or taking back readiness. Every call request also
+  re-checks the conversation, so a missed hook still ends the call.
+- Setup messages go only to the other person, stay in server memory only, are dropped when the
+  call ends, and are limited in size (20,000 characters) and number (400 per person per call).
+  The live-update nudge carries only the call's id. Nothing about a call's content is stored.
+- Production is relay-only (`iceTransportPolicy: relay` with per-person TURN credentials that
+  last two hours), so neither phone learns the other's IP address. Direct calls exist only behind
+  `VAWRA_CALLS_DEV_P2P=1`.
+- The app asks for the camera and microphone only when a call starts or is answered, and the
+  merged Android manifest adds nothing beyond CAMERA, RECORD_AUDIO and MODIFY_AUDIO_SETTINGS.
+  Leaving the call page in any way ends the call.
+
+Open:
+- TURN credentials cannot be revoked before they expire; a blocked person keeps a working relay
+  login for up to two hours, though no call reaches the blocker. Shorter credentials or a relay
+  with revocation can close this.
+- WebRTC encrypts media between the phones (DTLS-SRTP); the relay cannot read it. The app does
+  not yet show a safety number to compare, which only matters against a malicious server.
+
 ## Dependencies
 
 Checked: `npm audit --omit=dev` reports 0 vulnerabilities (2026-09-29). Flutter dependencies are

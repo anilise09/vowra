@@ -32,6 +32,8 @@ import 'data_export_page.dart';
 import 'moderation_screens.dart';
 import '../data/api/server_photo.dart';
 import 'photos_editor.dart';
+import '../features/calls/call_controller.dart';
+import '../features/calls/call_flow.dart';
 
 /// Plain-language text for a failed call. Server codes never reach the screen
 /// raw, and nothing reveals whether an email has an account.
@@ -714,12 +716,14 @@ MatchConnection _connection(
   ServerMatch match, {
   ConnectionStatus status = ConnectionStatus.active,
   bool callReady = false,
+  bool peerCallReady = false,
 }) => MatchConnection(
   matchId: match.matchId,
   peerName: match.peerName,
   peerProfileAssetPath: '$serverPersonPrefix${match.peerAccountId}',
   status: status,
   currentUserCallReady: callReady,
+  peerCallReady: peerCallReady,
 );
 
 /// Vawra with a real account: Discover, Matches, Chats and Profile.
@@ -848,8 +852,58 @@ class _ServerHomeState extends State<ServerHome> {
 
   void _onNudge(Nudge nudge) {
     if (!_nudges.isClosed) _nudges.add(nudge);
+    if (nudge.kind == 'call') {
+      _maybeRing(nudge.callId);
+      return;
+    }
     // Typing is only for an open chat; everything else can change the list.
     if (nudge.kind != 'typing') _refreshMatches();
+  }
+
+  /// Calls already looked at, so the setup messages that follow a ring do
+  /// not each fetch the call again.
+  final _seenCalls = <String>{};
+
+  /// Rings on screen when someone calls while the app is open. Calls that
+  /// arrive while it is closed need push notifications, which come later.
+  Future<void> _maybeRing(String? callId) async {
+    if (callId == null || !foreground.value || ActiveCall.busy) {
+      return;
+    }
+    if (!_seenCalls.add(callId)) return;
+    try {
+      final call = await api.call(callId);
+      if (!mounted ||
+          call.isCaller ||
+          call.state != 'ringing' ||
+          ActiveCall.busy) {
+        return;
+      }
+      final match = matches.where((m) => m.matchId == call.matchId).firstOrNull;
+      await showCallScreen(
+        context,
+        controller: CallController.incoming(
+          api: api,
+          media: newCallMedia(),
+          call: call,
+          peerName: match?.peerName ?? 'Your match',
+        ),
+        nudges: _nudges.stream,
+        onReport: match == null
+            ? null
+            : (reason) => api
+                  .report(match.peerAccountId, reason.backendKey)
+                  .catchError((Object _) {}),
+        onBlock: match == null
+            ? null
+            : () => api
+                  .block(match.peerAccountId)
+                  .then((_) => _refreshMatches())
+                  .catchError((Object _) {}),
+      );
+    } catch (_) {
+      // The call ended or the network dropped; nothing to show.
+    }
   }
 
   /// A missed nudge costs at most a minute; without the stream this falls
@@ -1630,7 +1684,8 @@ class ServerThreadPage extends StatefulWidget {
 class _ServerThreadPageState extends State<ServerThreadPage> {
   List<ChatMessage> messages = const [];
   ConnectionStatus status = ConnectionStatus.active;
-  bool callReady = false;
+  late bool callReady = widget.match.callReadyByMe;
+  late bool peerCallReady = widget.match.callReadyByThem;
   late bool photosAllowedByMe = widget.match.photosAllowedByMe;
   late bool photosAllowedByThem = widget.match.photosAllowedByThem;
   SafetyReport? report;
@@ -1652,6 +1707,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
         _showTyping();
       } else if (nudge.isCatchUp || forThis) {
         if (nudge.kind == 'message') _hideTyping();
+        if (nudge.isCatchUp || nudge.kind == 'match') _loadCallReadiness();
         _load();
       }
     });
@@ -1743,6 +1799,53 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
     }
   }
 
+  /// Whether the other person is open to a call, which they can change any time.
+  Future<void> _loadCallReadiness() async {
+    try {
+      final match = (await widget.api.matches())
+          .where((m) => m.matchId == widget.match.matchId)
+          .firstOrNull;
+      if (match != null && mounted) {
+        setState(() => peerCallReady = match.callReadyByThem);
+      }
+    } catch (_) {
+      // The next nudge or check tries again.
+    }
+  }
+
+  Future<void> _setCallReady(bool ready) async {
+    final before = callReady;
+    setState(() => callReady = ready);
+    try {
+      await widget.api.setCallReady(widget.match.matchId, ready);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => callReady = before);
+      _toast(context, describeApiError(e));
+    }
+  }
+
+  Future<void> _call({required bool video}) => showCallScreen(
+    context,
+    controller: CallController.outgoing(
+      api: widget.api,
+      media: newCallMedia(),
+      matchId: widget.match.matchId,
+      peerName: widget.match.peerName,
+      video: video,
+    ),
+    nudges: widget.nudges,
+    onReport: (reason) => widget.api
+        .report(widget.match.peerAccountId, reason.backendKey)
+        .catchError((Object _) {}),
+    onBlock: _block,
+  );
+
+  void _block() => _act(() => widget.api.block(widget.match.peerAccountId), () {
+    poll?.cancel();
+    status = ConnectionStatus.blocked;
+  });
+
   ChatMessage _message(ServerMessage m) => ChatMessage(
     id: m.id,
     author: m.mine ? MessageAuthor.currentUser : MessageAuthor.peer,
@@ -1804,7 +1907,10 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
         widget.match,
         status: status,
         callReady: callReady,
+        peerCallReady: peerCallReady,
       ),
+      showCalls: widget.match.callsAvailable,
+      onStartCall: (video) => _call(video: video),
       messages: messages,
       report: report,
       startInThread: true,
@@ -1816,7 +1922,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
       ),
       onBack: () => Navigator.of(context).pop(),
       onSend: _send,
-      onCallReadinessChanged: (value) => setState(() => callReady = value),
+      onCallReadinessChanged: _setCallReady,
       photosAllowedByMe: photosAllowedByMe,
       photosAllowedByThem: photosAllowedByThem,
       onPhotoConsentChanged: (allow) => _act(
@@ -1837,11 +1943,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
         poll?.cancel();
         status = ConnectionStatus.unmatched;
       }),
-      onBlock: () =>
-          _act(() => widget.api.block(widget.match.peerAccountId), () {
-            poll?.cancel();
-            status = ConnectionStatus.blocked;
-          }),
+      onBlock: _block,
       onOpenSafety: () => DateSafelyGuide.show(context),
     ),
   );

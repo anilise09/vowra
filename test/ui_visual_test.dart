@@ -1,3 +1,4 @@
+import 'package:ember_app/features/matches/match_tabs.dart';
 import 'package:ember_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -219,6 +220,15 @@ void main() {
     await tester.pumpAndSettle();
     await closeSafetyGuideIfShown(tester);
     await openConversation(tester);
+    // Loaded first, as in the other baselines, so the header portrait never
+    // depends on timing.
+    await tester.runAsync(() async {
+      await precacheImage(
+        const AssetImage('assets/profiles/maya.webp'),
+        tester.element(find.byType(ChatTab)),
+      );
+    });
+    await tester.pumpAndSettle();
 
     await expectLater(
       find.byType(MaterialApp),

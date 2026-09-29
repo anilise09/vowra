@@ -7,11 +7,15 @@ import 'vawra_api.dart';
 /// "Something changed" for this account. It carries no content: the app
 /// fetches what changed through the normal authenticated routes.
 class Nudge {
-  const Nudge(this.kind, {this.matchId});
+  const Nudge(this.kind, {this.matchId, this.callId});
 
-  /// message, match or like. [catchUp] asks every screen to refresh.
+  /// message, match, like, read, typing or call. [catchUp] asks every
+  /// screen to refresh.
   final String kind;
   final String? matchId;
+
+  /// For a call nudge: which call changed.
+  final String? callId;
 
   static const catchUp = Nudge('catch_up');
 
@@ -19,13 +23,16 @@ class Nudge {
 
   @override
   bool operator ==(Object other) =>
-      other is Nudge && other.kind == kind && other.matchId == matchId;
+      other is Nudge &&
+      other.kind == kind &&
+      other.matchId == matchId &&
+      other.callId == callId;
 
   @override
-  int get hashCode => Object.hash(kind, matchId);
+  int get hashCode => Object.hash(kind, matchId, callId);
 
   @override
-  String toString() => 'Nudge($kind, $matchId)';
+  String toString() => 'Nudge($kind, $matchId, $callId)';
 }
 
 /// Reads a Server-Sent Events byte stream, chunk by chunk.
@@ -234,6 +241,7 @@ class NudgeLink {
                 Nudge(
                   json['kind'] as String,
                   matchId: json['match_id'] as String?,
+                  callId: json['call_id'] as String?,
                 ),
               );
             } catch (_) {

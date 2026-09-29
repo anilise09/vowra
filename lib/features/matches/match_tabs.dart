@@ -384,7 +384,16 @@ class ChatTab extends StatefulWidget {
     this.onPhotoConsentChanged,
     this.onSendPhoto,
     this.photoProvider,
+    this.onStartCall,
+    this.showCalls = true,
   });
+
+  /// Starts a real call (server only); `true` for video. Without it the call
+  /// buttons explain that the prototype opens nothing.
+  final void Function(bool video)? onStartCall;
+
+  /// False hides calls entirely, e.g. while the server cannot relay them.
+  final bool showCalls;
 
   /// Photos in chat (server only): whether you accept them from this person,
   /// and whether they accept yours. Null hides the switch.
@@ -727,20 +736,28 @@ class _ChatTabState extends State<ChatTab> {
                   ],
                 ),
               ),
-              IconButton.filled(
-                key: const Key('request-video-call'),
-                tooltip: 'Video call',
-                onPressed: match.canRequestCall
-                    ? () => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Prototype only: no camera, microphone, or network connection was opened.',
-                          ),
-                        ),
-                      )
-                    : null,
-                icon: const Icon(Icons.videocam_outlined),
-              ),
+              if (widget.showCalls) ...[
+                IconButton(
+                  key: const Key('request-voice-call'),
+                  tooltip: match.canRequestCall
+                      ? 'Voice call'
+                      : 'Voice call: you both turn on "Open to a call" first',
+                  onPressed: match.canRequestCall
+                      ? () => _startCall(context, video: false)
+                      : null,
+                  icon: const Icon(Icons.call_outlined),
+                ),
+                IconButton.filled(
+                  key: const Key('request-video-call'),
+                  tooltip: match.canRequestCall
+                      ? 'Video call'
+                      : 'Video call: you both turn on "Open to a call" first',
+                  onPressed: match.canRequestCall
+                      ? () => _startCall(context, video: true)
+                      : null,
+                  icon: const Icon(Icons.videocam_outlined),
+                ),
+              ],
               PopupMenuButton<String>(
                 tooltip: 'Conversation safety actions',
                 onSelected: (value) => _confirmAction(context, value),
@@ -789,21 +806,22 @@ class _ChatTabState extends State<ChatTab> {
                       ),
                     ),
                   ),
-                Material(
-                  color: VawraColors.blush,
-                  borderRadius: BorderRadius.circular(18),
-                  child: SwitchListTile(
-                    key: const Key('call-ready-switch'),
-                    title: const Text('Open to a call'),
-                    subtitle: Text(
-                      match.peerCallReady
-                          ? '${match.peerName} is also open to a call. Both must opt in.'
-                          : 'Both people opt in first. ${match.peerName} has not yet.',
+                if (widget.showCalls)
+                  Material(
+                    color: VawraColors.blush,
+                    borderRadius: BorderRadius.circular(18),
+                    child: SwitchListTile(
+                      key: const Key('call-ready-switch'),
+                      title: const Text('Open to a call'),
+                      subtitle: Text(
+                        match.peerCallReady
+                            ? '${match.peerName} is also open to a call. Both must opt in.'
+                            : 'Both people opt in first. ${match.peerName} has not yet.',
+                      ),
+                      value: match.currentUserCallReady,
+                      onChanged: widget.onCallReadinessChanged,
                     ),
-                    value: match.currentUserCallReady,
-                    onChanged: widget.onCallReadinessChanged,
                   ),
-                ),
                 if (widget.photosAllowedByMe case final allowed?) ...[
                   const SizedBox(height: 8),
                   Material(
@@ -1294,6 +1312,18 @@ class _ChatTabState extends State<ChatTab> {
 
   /// [about] preselects a message (and [reason]), as the warning under a
   /// message does.
+  void _startCall(BuildContext context, {required bool video}) {
+    final start = widget.onStartCall;
+    if (start != null) return start(video);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Prototype only: no camera, microphone, or network connection was opened.',
+        ),
+      ),
+    );
+  }
+
   Future<SafetyReport?> _chooseReport(
     BuildContext context, {
     ChatMessage? about,

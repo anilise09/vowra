@@ -117,6 +117,8 @@ if (cmd === 'signup') {
   console.log('signed in');
 } else if (cmd === 'post') {
   console.log(JSON.stringify(await authed(email, 'POST', rest[0], rest[1] ? JSON.parse(rest[1]) : undefined)));
+} else if (cmd === 'put') {
+  console.log(JSON.stringify(await authed(email, 'PUT', rest[0], rest[1] ? JSON.parse(rest[1]) : undefined)));
 } else if (cmd === 'get') {
   console.log(JSON.stringify(await authed(email, 'GET', rest[0])));
 } else if (cmd === 'show') {

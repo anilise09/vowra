@@ -51,8 +51,12 @@ class FakeVawraServer {
   }
 
   /// Pushes a nudge to every open stream, like the real server.
-  void nudge(String kind, {String? matchId}) {
-    final data = jsonEncode({'kind': kind, 'match_id': ?matchId});
+  void nudge(String kind, {String? matchId, String? callId}) {
+    final data = jsonEncode({
+      'kind': kind,
+      'match_id': ?matchId,
+      'call_id': ?callId,
+    });
     for (final stream in [..._streams]) {
       stream.add(utf8.encode('event: nudge\ndata: $data\n\n'));
     }
@@ -126,6 +130,61 @@ class FakeVawraServer {
   final photosAllowedByMe = <String>{};
   final photosAllowedByThem = <String>{};
   final chatPhotoUploads = <String>[];
+
+  /// Calls: whether the server can relay them, who is open to one, and each
+  /// call's state. [sentSignals] is what the app sent; [peerSignalsFor] what
+  /// the other phone sent.
+  bool callsAvailable = true;
+  final callReadyByMe = <String>{};
+  final callReadyByThem = <String>{};
+  final calls = <String, Map<String, dynamic>>{};
+  final sentSignals = <String, List<Map<String, String>>>{};
+  final peerSignalsFor = <String, List<Map<String, dynamic>>>{};
+  int _signalSeq = 0;
+
+  Map<String, dynamic> _callView(String id) => {
+    ...calls[id]!,
+    'call_id': id,
+    'ice': {
+      'policy': 'relay',
+      'servers': [
+        {
+          'urls': ['turn:turn.example.test:3478'],
+          'username': 'u',
+          'credential': 'c',
+        },
+      ],
+    },
+  };
+
+  /// The other person rings this phone.
+  String peerRings(String matchId, {bool video = true}) {
+    final id = 'call${calls.length + 1}';
+    calls[id] = {
+      'match_id': matchId,
+      'kind': video ? 'video' : 'audio',
+      'state': 'ringing',
+      'role': 'callee',
+    };
+    nudge('call', matchId: matchId, callId: id);
+    return id;
+  }
+
+  /// A setup message from the other phone.
+  void peerSignal(String callId, String type, String data) {
+    peerSignalsFor.putIfAbsent(callId, () => []).add({
+      'seq': ++_signalSeq,
+      'type': type,
+      'data': data,
+    });
+    nudge('call', callId: callId);
+  }
+
+  void peerCallState(String callId, String state) {
+    calls[callId]!['state'] = state;
+    nudge('call', callId: callId);
+  }
+
   final uploads = <List<int>>[];
   final modPhotos = <Map<String, dynamic>>[];
 
@@ -583,6 +642,7 @@ class FakeVawraServer {
     }
     if (path == '/v1/matches' && method == 'GET') {
       return _json(200, {
+        'calls_available': callsAvailable,
         'matches': [
           for (final m in matches.entries)
             if (!blocked.contains(m.value))
@@ -602,6 +662,8 @@ class FakeVawraServer {
                 'peer_demo_portrait': people[m.value]!['demo_portrait'],
                 'photos_allowed_by_me': photosAllowedByMe.contains(m.key),
                 'photos_allowed_by_them': photosAllowedByThem.contains(m.key),
+                'call_ready_by_me': callReadyByMe.contains(m.key),
+                'call_ready_by_them': callReadyByThem.contains(m.key),
                 'unread': [...?messages[m.key]?.skip(myRead[m.key] ?? 0)]
                     .where((x) => x['mine'] == false)
                     .length,
@@ -619,6 +681,72 @@ class FakeVawraServer {
         typingSent++;
       }
       return http.Response('', 204);
+    }
+    final callReady = RegExp(r'^/v1/matches/([^/]+)/call-ready$')
+        .firstMatch(path);
+    if (callReady != null) {
+      final id = callReady.group(1)!;
+      body['ready'] == true ? callReadyByMe.add(id) : callReadyByMe.remove(id);
+      return http.Response('', 204);
+    }
+    final startCall = RegExp(r'^/v1/matches/([^/]+)/calls$').firstMatch(path);
+    if (startCall != null) {
+      final matchId = startCall.group(1)!;
+      if (!callsAvailable) return _error(503, 'calls_unavailable');
+      if (!callReadyByMe.contains(matchId) ||
+          !callReadyByThem.contains(matchId)) {
+        return _error(409, 'not_ready');
+      }
+      final id = 'call${calls.length + 1}';
+      calls[id] = {
+        'match_id': matchId,
+        'kind': body['kind'],
+        'state': 'ringing',
+        'role': 'caller',
+      };
+      return _json(200, _callView(id));
+    }
+    final callRoute = RegExp(
+      r'^/v1/calls/([^/]+)(?:/(answer|decline|end|signals))?$',
+    ).firstMatch(path);
+    if (callRoute != null) {
+      final id = callRoute.group(1)!;
+      final call = calls[id];
+      if (call == null) return _error(404, 'not_found');
+      final live = call['state'] == 'ringing' || call['state'] == 'active';
+      switch ((method, callRoute.group(2))) {
+        case ('GET', null):
+          return _json(200, _callView(id));
+        case ('POST', 'answer'):
+          if (call['state'] != 'ringing') return _error(409, 'not_ringing');
+          call['state'] = 'active';
+          return _json(200, _callView(id));
+        case ('POST', 'decline'):
+          call['state'] = 'declined';
+          return http.Response('', 204);
+        case ('POST', 'end'):
+          if (live) {
+            call['state'] = call['state'] == 'ringing' ? 'cancelled' : 'ended';
+          }
+          return http.Response('', 204);
+        case ('POST', 'signals'):
+          if (!live) return _error(409, 'call_over');
+          sentSignals.putIfAbsent(id, () => []).add({
+            'type': body['type'] as String,
+            'data': body['data'] as String,
+          });
+          return _json(202, {'ok': true});
+        case ('GET', 'signals'):
+          final after = int.parse(request.url.queryParameters['after'] ?? '0');
+          return _json(200, {
+            'state': call['state'],
+            'signals': [
+              if (live)
+                for (final s in peerSignalsFor[id] ?? const [])
+                  if ((s['seq'] as int) > after) s,
+            ],
+          });
+      }
     }
     final consent = RegExp(r'^/v1/matches/([^/]+)/photo-consent$')
         .firstMatch(path);

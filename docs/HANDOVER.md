@@ -46,6 +46,31 @@ one layout bug on the export page was found there and fixed.
 Test counts at handover: Flutter 192 passed, 1 existing skip; backend 62 passed; analysis and
 type-check clean; `website/check.ps1` passes.
 
+## Since the handover: phases 2, 3 and 4 (2026-09-29)
+
+The owner asked for roadmap phases 2 (accounts and profiles), 3 (matching and chat) and 4 (voice
+and video beta). Everything that needs no outside account, money or legal decision is built,
+one checkpoint each (details in `CHECKPOINTS.md`):
+
+- BE-10 distance from an approximate 2 km area; BE-14 private places (distance hidden there,
+  the places never leave the phone).
+- BE-11 moderation (reports, suspension, appeals); BE-12 profile photos checked by a person first;
+  BE-16 photos in chat, allowed per match, checked, blurred until tapped.
+- BE-13 retention schedule, backup and restore drill, `docs/SECURITY_REVIEW.md`,
+  `docs/RECOVERY.md`; BE-15 scam warnings in chat; BE-17 block-leakage and load tests
+  (`docs/LOAD_TEST.md`).
+- BE-18 calls on the server, BE-19 calls in the app: both people opt in per match, voice or video,
+  ringing, answer without video, mute, camera, flip, speaker, report and "End call and block"
+  inside the call. Calls are relay-only in production (TURN: `VAWRA_TURN_URLS`,
+  `VAWRA_TURN_SECRET`) so neither person learns the other's IP address. Without a relay the app
+  hides calls; `VAWRA_CALLS_DEV_P2P=1` allows direct calls for development only. Nothing is
+  recorded. An incoming call rings only while the app is open, until push notifications exist.
+
+Still needing the owner or a provider: a TURN relay for real calls, push notifications (incoming
+calls with the app closed), email, hosting, object storage and scanning, age assurance (legal),
+monetisation (legal hold), Mac access, and a real two-phone call test (both phones are currently
+reserved by another session).
+
 ## Running it
 
 Flutter is not on PATH: `export PATH="/c/Users/anili/Tools/flutter/bin:$PATH"` (Git Bash).
@@ -158,7 +183,8 @@ git push origin $NEW:refs/heads/gh-pages
 3. Providers, each needing the owner's account or money: email for sign-in codes, hosting with
    PostgreSQL, an object store plus malware scanning and automated photo classification (photos
    work today with a local disk store and human review), push notifications (Firebase and an
-   Apple push key), a calling provider. Age assurance also needs legal review.
+   Apple push key), a TURN relay for calls (a managed one, or coturn on the host). Age
+   assurance also needs legal review.
 4. Whether the public repository and the live website preview stay public before the Vawra name
    and domain are cleared.
 

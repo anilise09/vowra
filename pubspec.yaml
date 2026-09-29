@@ -39,6 +39,7 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   geolocator: ^14.1.1
   image_picker: ^1.2.3
+  flutter_webrtc: ^1.6.2+hotfix.3
 
 dev_dependencies:
   flutter_test:

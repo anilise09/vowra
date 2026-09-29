@@ -106,7 +106,16 @@ class ServerMatch {
     this.peerDemoPortrait,
     this.photosAllowedByMe = false,
     this.photosAllowedByThem = false,
+    this.callReadyByMe = false,
+    this.callReadyByThem = false,
+    this.callsAvailable = false,
   });
+
+  /// A call needs both people's yes, per match, and a server that can relay
+  /// calls ([callsAvailable]).
+  final bool callReadyByMe;
+  final bool callReadyByThem;
+  final bool callsAvailable;
 
   /// Photos in this chat need the receiver's yes, per match.
   final bool photosAllowedByMe;
@@ -130,7 +139,10 @@ class ServerMatch {
   /// The other person wrote last: it is your turn to reply.
   bool get yourTurn => lastMessage != null && lastMessageMine == false;
 
-  factory ServerMatch.fromJson(Map<String, dynamic> json) => ServerMatch(
+  factory ServerMatch.fromJson(
+    Map<String, dynamic> json, {
+    bool callsAvailable = false,
+  }) => ServerMatch(
     matchId: json['match_id'] as String,
     peerAccountId: json['peer_account_id'] as String,
     peerName: json['peer_name'] as String,
@@ -145,7 +157,69 @@ class ServerMatch {
     peerDemoPortrait: json['peer_demo_portrait'] as String?,
     photosAllowedByMe: (json['photos_allowed_by_me'] as bool?) ?? false,
     photosAllowedByThem: (json['photos_allowed_by_them'] as bool?) ?? false,
+    callReadyByMe: (json['call_ready_by_me'] as bool?) ?? false,
+    callReadyByThem: (json['call_ready_by_them'] as bool?) ?? false,
+    callsAvailable: callsAvailable,
   );
+}
+
+/// How the phones in a call may reach each other: [relayOnly] sends all
+/// media through the relay so neither person learns the other's address.
+class IceSetup {
+  const IceSetup({required this.relayOnly, required this.servers});
+
+  final bool relayOnly;
+  final List<Map<String, dynamic>> servers;
+
+  static IceSetup? fromJson(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    return IceSetup(
+      relayOnly: json['policy'] == 'relay',
+      servers: ((json['servers'] as List?) ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .toList(),
+    );
+  }
+}
+
+/// One call, as the server sees it.
+class ServerCall {
+  const ServerCall({
+    required this.callId,
+    required this.matchId,
+    required this.video,
+    required this.state,
+    required this.isCaller,
+    this.ice,
+  });
+
+  final String callId;
+  final String matchId;
+  final bool video;
+
+  /// ringing, active, ended, declined, missed or cancelled.
+  final String state;
+  final bool isCaller;
+  final IceSetup? ice;
+
+  bool get live => state == 'ringing' || state == 'active';
+
+  factory ServerCall.fromJson(Map<String, dynamic> json) => ServerCall(
+    callId: json['call_id'] as String,
+    matchId: json['match_id'] as String,
+    video: json['kind'] == 'video',
+    state: json['state'] as String,
+    isCaller: json['role'] == 'caller',
+    ice: IceSetup.fromJson(json['ice']),
+  );
+}
+
+/// A setup message from the other phone (offer, answer or candidate).
+class CallSignal {
+  const CallSignal(this.seq, this.type, this.data);
+  final int seq;
+  final String type;
+  final String data;
 }
 
 class ServerMessage {
@@ -737,6 +811,57 @@ class VawraApi {
     }
   }
 
+  /// Whether you are open to a call in this conversation.
+  Future<void> setCallReady(String matchId, bool ready) =>
+      _send('PUT', '/v1/matches/$matchId/call-ready', body: {'ready': ready});
+
+  Future<ServerCall> startCall(String matchId, {required bool video}) async =>
+      ServerCall.fromJson(
+        await _send(
+          'POST',
+          '/v1/matches/$matchId/calls',
+          body: {'kind': video ? 'video' : 'audio'},
+        ),
+      );
+
+  Future<ServerCall> call(String callId) async =>
+      ServerCall.fromJson(await _send('GET', '/v1/calls/$callId'));
+
+  Future<ServerCall> answerCall(String callId) async =>
+      ServerCall.fromJson(await _send('POST', '/v1/calls/$callId/answer'));
+
+  Future<void> declineCall(String callId) =>
+      _send('POST', '/v1/calls/$callId/decline');
+
+  Future<void> endCall(String callId) => _send('POST', '/v1/calls/$callId/end');
+
+  Future<void> sendSignal(String callId, String type, String data) => _send(
+    'POST',
+    '/v1/calls/$callId/signals',
+    body: {'type': type, 'data': data},
+  );
+
+  /// The other phone's setup messages after [after], and the call's state.
+  Future<({String state, List<CallSignal> signals})> signals(
+    String callId, {
+    int after = 0,
+  }) async {
+    final json = await _send('GET', '/v1/calls/$callId/signals?after=$after');
+    return (
+      state: json['state'] as String,
+      signals: (json['signals'] as List)
+          .cast<Map<String, dynamic>>()
+          .map(
+            (s) => CallSignal(
+              s['seq'] as int,
+              s['type'] as String,
+              s['data'] as String,
+            ),
+          )
+          .toList(),
+    );
+  }
+
   /// A server link (relative) as a full address for loading.
   String absolute(String url) => base.resolve(url).toString();
 
@@ -891,10 +1016,18 @@ class VawraApi {
     return json['matched'] == true ? json['match_id'] as String : null;
   }
 
-  Future<List<ServerMatch>> matches() async =>
-      ((await _send('GET', '/v1/matches'))['matches'] as List)
-          .map((m) => ServerMatch.fromJson(m as Map<String, dynamic>))
-          .toList();
+  Future<List<ServerMatch>> matches() async {
+    final json = await _send('GET', '/v1/matches');
+    final callsAvailable = json['calls_available'] == true;
+    return (json['matches'] as List)
+        .map(
+          (m) => ServerMatch.fromJson(
+            m as Map<String, dynamic>,
+            callsAvailable: callsAvailable,
+          ),
+        )
+        .toList();
+  }
 
   Future<List<ServerMessage>> messages(String matchId) async =>
       ((await _send('GET', '/v1/matches/$matchId/messages'))['messages']
