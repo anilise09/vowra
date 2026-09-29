@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
 import { pkceChallenge, Sealer } from '../src/crypto.js';
 import { migrate, openPglite, type Db } from '../src/db.js';
+import { type CallConfig, SignalBox } from '../src/calls.js';
 import { MemoryNudgeBus } from '../src/nudges.js';
 import { MediaGrants, MemoryMediaStore } from '../src/media.js';
 
@@ -17,7 +18,16 @@ export interface Harness {
   close(): Promise<void>;
 }
 
-export async function startHarness(): Promise<Harness> {
+/** A relay-only call setup, as production has, with a throwaway TURN secret. */
+export const testCallConfig: CallConfig = {
+  policy: 'relay',
+  stun: [],
+  turn: { urls: ['turn:turn.example.test:3478?transport=udp'], secret: Buffer.from('test-turn-secret') },
+};
+
+export async function startHarness(
+  options: { callConfig?: CallConfig | null } = {},
+): Promise<Harness> {
   const db = await openPglite();
   await migrate(db);
   let now = new Date('2026-09-27T12:00:00Z').getTime();
@@ -30,6 +40,8 @@ export async function startHarness(): Promise<Harness> {
     nudges,
     media,
     grants: new MediaGrants(randomBytes(32)),
+    signals: new SignalBox(),
+    callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
     db,
     sealer,
     clock,
