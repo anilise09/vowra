@@ -80,8 +80,9 @@ exec node dist/src/server.js
 - `backend/.data/dev.env` holds the keys that seal the local database's emails. If it is lost,
   make new 32-byte base64 keys and start a fresh `.data/pglite`.
 - Dev drivers in `tools/dev/`: `vawra_driver.mjs` (sign up and drive synthetic test members:
-  signup, like, like-all, say, patch, share, typing, read, get, show) and `adb_ui.py` (dump, tap,
-  type, shot on a phone). Test members: `alex.test@vawra.test` (the Asus is signed in as Alex),
+  signup, signin, like, like-all, say, patch, share, typing, read, area, get, post, show) and `adb_ui.py` (dump, tap,
+  type, shot on a phone). Test members: `alex.test@vawra.test` (the Asus is signed in as Alex;
+  Alex is a local moderator, so Settings shows Moderation),
   `sam.test`, `priya.test`, `maya.test`, `elena.test`, `sofia.test`, `noor.test`, all synthetic.
 
 Phone build against the local server:

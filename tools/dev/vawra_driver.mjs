@@ -11,6 +11,8 @@
 //   node vawra_driver.mjs share <email> on|off        (read receipts)
 //   node vawra_driver.mjs typing|read <email> <peerName>
 //   node vawra_driver.mjs get <email> <path>
+//   node vawra_driver.mjs post <email> <path> ['<JSON body>']
+//   node vawra_driver.mjs signin <email>        (a fresh sign-in, for actions that need one)
 //   node vawra_driver.mjs show <email>
 //   node vawra_driver.mjs area <email> <lat> <lng> | off   (made-up test areas only)
 import { createHash, randomBytes } from 'node:crypto';
@@ -110,6 +112,11 @@ if (cmd === 'signup') {
   } else {
     console.log(JSON.stringify(await authed(email, 'PUT', '/v1/me/location', { lat: Number(rest[0]), lng: Number(rest[1]) })));
   }
+} else if (cmd === 'signin') {
+  await signIn(email);
+  console.log('signed in');
+} else if (cmd === 'post') {
+  console.log(JSON.stringify(await authed(email, 'POST', rest[0], rest[1] ? JSON.parse(rest[1]) : undefined)));
 } else if (cmd === 'get') {
   console.log(JSON.stringify(await authed(email, 'GET', rest[0])));
 } else if (cmd === 'show') {
