@@ -1711,6 +1711,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
     text: m.text,
     sentAt: m.sentAt,
     seen: m.seen,
+    safetyHints: m.safetyHints,
   );
 
   void _closed() {
@@ -1759,6 +1760,7 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: ChatTab(
+      live: true,
       connection: _connection(
         widget.match,
         status: status,

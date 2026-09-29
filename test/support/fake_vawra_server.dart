@@ -256,11 +256,17 @@ class FakeVawraServer {
       people.values.firstWhere((p) => p['display_name'] == name)['account_id']
           as String;
 
-  void peerSays(String matchId, String text, {bool nudge = true}) {
+  void peerSays(
+    String matchId,
+    String text, {
+    bool nudge = true,
+    List<String> hints = const [],
+  }) {
     messages.putIfAbsent(matchId, () => []).add({
       'id': _id(),
       'mine': false,
       'text': text,
+      if (hints.isNotEmpty) 'safety_hints': hints,
       'sent_at': (_clock = _clock.add(
         const Duration(minutes: 1),
       )).toIso8601String(),

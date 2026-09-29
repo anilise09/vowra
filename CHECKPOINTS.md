@@ -1,5 +1,21 @@
 # Checkpoints
 
+## BE-15 - Scam warnings in chat (2026-09-29)
+
+- A message that asks for money, gift cards, crypto or payment apps, moves the chat to another app
+  or to a phone number or email, or carries a link now shows a gentle warning under it, for the
+  person receiving it only ("Asked for money? Never send money, gift cards or crypto to someone
+  you haven't met."), with a Report button that preselects "Scam" and this message. Nothing is
+  blocked and the sender is not told.
+- Screening is on the server (`backend/src/safety_hints.ts`) and aims at requests, not mentions: "I
+  sent my mum money for her birthday" is not flagged.
+- Also fixed: in server builds the chat report said "Prototype only ... not sent to a review team",
+  which stopped being true with BE-11. It now says the report goes privately to Vawra's moderators,
+  who see only the message included, and the button reads "Send report".
+- Tests: backend 120 (14 risky examples flagged, 6 innocent ones not, warnings only to the
+  receiver); Flutter 217 (warning under the risky message only, one-tap report with the message
+  and "Scam", live wording).
+
 ## BE-14 - Private places: distance hidden at home, and the server never knows where (2026-09-29)
 
 - Settings > Distance > Private places: "Hide my distance at this place" adds where you are (up to

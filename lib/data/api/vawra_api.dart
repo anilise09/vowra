@@ -147,6 +147,7 @@ class ServerMessage {
     required this.text,
     required this.sentAt,
     this.seen,
+    this.safetyHints = const [],
   });
 
   final String id;
@@ -154,6 +155,7 @@ class ServerMessage {
   final String text;
   final DateTime sentAt;
   final bool? seen;
+  final List<String> safetyHints;
 
   factory ServerMessage.fromJson(Map<String, dynamic> json) => ServerMessage(
     id: json['id'] as String,
@@ -161,6 +163,7 @@ class ServerMessage {
     text: json['text'] as String,
     sentAt: DateTime.parse(json['sent_at'] as String),
     seen: json['seen'] as bool?,
+    safetyHints: ((json['safety_hints'] as List?) ?? const []).cast<String>(),
   );
 }
 

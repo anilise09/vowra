@@ -388,6 +388,38 @@ void main() {
       expect(find.byKey(const Key('your-turn-Maya')), findsOneWidget);
     });
 
+    testWidgets('a risky message carries a warning with a one-tap report', (
+      tester,
+    ) async {
+      final server = FakeVawraServer();
+      final matchId = await matchedWithMaya(tester, server);
+      server
+        ..peerSays(matchId, 'Hi Alex!')
+        ..peerSays(matchId, 'Can you send me a gift card?', hints: ['money']);
+      await _settle(tester);
+      await openChats(tester);
+      await tester.tap(find.byKey(const Key('conversation-Maya')));
+      await _settle(tester);
+      final risky = server.messages[matchId]!.last['id'] as String;
+      final calm = server.messages[matchId]!.first['id'] as String;
+      expect(find.byKey(Key('safety-hint-$risky')), findsOneWidget);
+      expect(find.byKey(Key('safety-hint-$calm')), findsNothing);
+      expect(find.textContaining('Never send money'), findsOneWidget);
+
+      await tester.tap(find.byKey(Key('hint-report-$risky')));
+      await _settle(tester);
+      expect(find.text('Include this message'), findsOneWidget);
+      expect(find.textContaining('moderators'), findsWidgets);
+      expect(find.textContaining('Prototype only'), findsNothing);
+      await tester.tap(find.byKey(const Key('submit-report')));
+      await _settle(tester);
+      expect(server.reports.single, {
+        'account_id': server.idOf('Maya'),
+        'reason': 'scam',
+        'message_id': risky,
+      });
+    });
+
     testWidgets('Seen and typing appear only when both share', (tester) async {
       final server = FakeVawraServer();
       final matchId = await matchedWithMaya(tester, server);

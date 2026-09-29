@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { safetyHints } from '../safety_hints.js';
 import { z } from 'zod';
 import { fail, noContent, requireAccount, requireDatingAccess, type Services } from '../context.js';
 import type { Db } from '../db.js';
@@ -152,6 +153,8 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
     return {
       messages: rows.reverse().map((m) => {
         const mine = m.author_id === me.id;
+        // Warnings go only to the person receiving the message.
+        const hints = mine ? [] : safetyHints(m.body);
         return {
           id: m.id,
           mine,
@@ -160,6 +163,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
           ...(mine && seenUntil !== null
             ? { seen: new Date(m.created_at).getTime() <= seenUntil }
             : {}),
+          ...(hints.length > 0 ? { safety_hints: hints } : {}),
         };
       }),
     };

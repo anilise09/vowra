@@ -376,7 +376,11 @@ class ChatTab extends StatefulWidget {
     this.peerTyping = false,
     this.onComposing,
     this.openers = const [],
+    this.live = false,
   });
+
+  /// Connected to the Vawra server: reports reach real moderators.
+  final bool live;
 
   final MatchConnection? connection;
   final List<ChatMessage> messages;
@@ -759,7 +763,9 @@ class _ChatTabState extends State<ChatTab> {
                         'Report recorded: ${widget.report!.reason.label}',
                       ),
                       subtitle: Text(
-                        '${widget.report!.moderationState.label}. Saved in this device session only. No review team is connected.',
+                        widget.live
+                            ? 'Sent privately to Vawra\'s moderators. They see only the message you included.'
+                            : '${widget.report!.moderationState.label}. Saved in this device session only. No review team is connected.',
                       ),
                     ),
                   ),
@@ -1065,8 +1071,58 @@ class _ChatTabState extends State<ChatTab> {
                 style: const TextStyle(fontSize: 11, color: VawraColors.muted),
               ),
             ),
+            if (!mine && message.safetyHints.isNotEmpty) _hint(message),
           ],
         ),
+      ),
+    );
+  }
+
+  /// A gentle warning under a message: what to watch for, and a one-tap
+  /// report. Nothing is blocked; the person decides.
+  Widget _hint(ChatMessage message) {
+    final hints = message.safetyHints;
+    final text = hints.contains('money')
+        ? 'Asked for money? Never send money, gift cards or crypto to someone '
+              'you haven\'t met.'
+        : hints.contains('off_platform')
+        ? 'Moving to another app? Take your time: here, block and report keep '
+              'working.'
+        : 'Links can lead to scams. Only open ones you trust.';
+    return Container(
+      key: Key('safety-hint-${message.id}'),
+      constraints: const BoxConstraints(maxWidth: 300),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4E0),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2, right: 8),
+            child: Icon(
+              Icons.shield_outlined,
+              size: 18,
+              color: VawraColors.plum,
+            ),
+          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+          TextButton(
+            key: Key('hint-report-${message.id}'),
+            onPressed: () async {
+              final report = await _chooseReport(
+                context,
+                about: message,
+                initialReason: ReportReason.scam,
+              );
+              if (report != null) widget.onReport(report);
+            },
+            child: const Text('Report'),
+          ),
+        ],
       ),
     );
   }
@@ -1103,14 +1159,22 @@ class _ChatTabState extends State<ChatTab> {
     return '${local.day} ${months[local.month - 1]} ${local.year}';
   }
 
-  Future<SafetyReport?> _chooseReport(BuildContext context) {
+  /// [about] preselects a message (and [reason]), as the warning under a
+  /// message does.
+  Future<SafetyReport?> _chooseReport(
+    BuildContext context, {
+    ChatMessage? about,
+    ReportReason? initialReason,
+  }) {
     final activeConnection = widget.connection;
     if (activeConnection == null) return Future.value();
-    ReportReason? reason;
-    final latestPeerMessage = widget.messages
-        .where((message) => message.author == MessageAuthor.peer)
-        .lastOrNull;
-    var includeMessageReference = false;
+    ReportReason? reason = initialReason;
+    final latestPeerMessage =
+        about ??
+        widget.messages
+            .where((message) => message.author == MessageAuthor.peer)
+            .lastOrNull;
+    var includeMessageReference = about != null;
     return showDialog<SafetyReport>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -1127,6 +1191,7 @@ class _ChatTabState extends State<ChatTab> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<ReportReason>(
                   key: const Key('report-reason'),
+                  initialValue: reason,
                   decoration: const InputDecoration(labelText: 'Reason'),
                   items: ReportReason.values
                       .map(
@@ -1147,8 +1212,10 @@ class _ChatTabState extends State<ChatTab> {
                     onChanged: (value) => setDialogState(
                       () => includeMessageReference = value ?? false,
                     ),
-                    title: const Text(
-                      'Include latest received message reference',
+                    title: Text(
+                      about != null
+                          ? 'Include this message'
+                          : 'Include latest received message reference',
                     ),
                     subtitle: const Text(
                       'Optional. No conversation text is copied into this report.',
@@ -1156,8 +1223,10 @@ class _ChatTabState extends State<ChatTab> {
                   ),
                 ],
                 const SizedBox(height: 8),
-                const Text(
-                  'Prototype only: this starts as local pending review and is not sent to a review team.',
+                Text(
+                  widget.live
+                      ? 'Sent privately to Vawra\'s moderators. They see only the message you include, never your whole chat.'
+                      : 'Prototype only: this starts as local pending review and is not sent to a review team.',
                 ),
               ],
             ),
@@ -1182,7 +1251,7 @@ class _ChatTabState extends State<ChatTab> {
                             : null,
                       ),
                     ),
-              child: const Text('Record report'),
+              child: Text(widget.live ? 'Send report' : 'Record report'),
             ),
           ],
         ),

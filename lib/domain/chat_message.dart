@@ -7,6 +7,7 @@ class ChatMessage {
     required this.text,
     required this.sentAt,
     this.seen,
+    this.safetyHints = const [],
   });
 
   final String id;
@@ -16,6 +17,10 @@ class ChatMessage {
 
   /// For your own messages when you both share read receipts; else null.
   final bool? seen;
+
+  /// Warnings the server attached for you as the receiver: `money`,
+  /// `off_platform` or `link`. The sender never sees them.
+  final List<String> safetyHints;
 }
 
 class MessagePolicy {
