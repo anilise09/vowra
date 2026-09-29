@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../data/api/server_photo.dart';
 import '../data/api/vawra_api.dart';
 import '../domain/safety_report.dart';
 import '../main.dart' show WelcomeScreen;
 import '../theme/vawra_theme.dart';
+import 'photos_editor.dart' show rejectReasonLabels;
 import 'server_flow.dart'
     show
         DeletionScheduledScreen,
@@ -276,6 +278,7 @@ class ModerationPage extends StatefulWidget {
 class _ModerationPageState extends State<ModerationPage> {
   List<ModReport>? reports;
   List<ModAppeal>? appeals;
+  List<ModPhoto>? photos;
   String? loadError;
 
   @override
@@ -288,10 +291,12 @@ class _ModerationPageState extends State<ModerationPage> {
     try {
       final r = await widget.api.moderationReports();
       final a = await widget.api.moderationAppeals();
+      final p = await widget.api.moderationPhotos();
       if (!mounted) return;
       setState(() {
         reports = r;
         appeals = a;
+        photos = p;
         loadError = null;
       });
     } catch (e) {
@@ -315,6 +320,12 @@ class _ModerationPageState extends State<ModerationPage> {
           _DecisionDialog(title: title, body: body, confirm: confirm),
     );
     if (text == null || !mounted) return;
+    await _run(() => action(text));
+  }
+
+  /// Runs a decision, asking for a code first if the sign-in is old, then
+  /// comes back here with the lists reloaded.
+  Future<void> _run(Future<void> Function() action) async {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
     Route<dynamic>? here;
@@ -327,7 +338,7 @@ class _ModerationPageState extends State<ModerationPage> {
         navigator,
         widget.api,
         reason: 'make a moderation decision',
-        action: () => action(text),
+        action: action,
         then: (nav) async => nav.popUntil((route) => route == here),
       );
     } catch (e) {
@@ -336,9 +347,31 @@ class _ModerationPageState extends State<ModerationPage> {
     await _load();
   }
 
+  Future<void> _rejectPhoto(ModPhoto p) async {
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Why is it not approved?'),
+        children: [
+          for (final entry in rejectReasonLabels.entries)
+            if (entry.key != 'unreadable')
+              SimpleDialogOption(
+                key: Key('mod-reason-${entry.key}'),
+                onPressed: () => Navigator.pop(dialogContext, entry.key),
+                child: Text(
+                  '${entry.value[0].toUpperCase()}${entry.value.substring(1)}',
+                ),
+              ),
+        ],
+      ),
+    );
+    if (reason == null || !mounted) return;
+    await _run(() => widget.api.decidePhoto(p.id, 'rejected', reason: reason));
+  }
+
   @override
   Widget build(BuildContext context) => DefaultTabController(
-    length: 2,
+    length: 3,
     child: Scaffold(
       appBar: AppBar(
         title: const Text('Moderation'),
@@ -354,6 +387,7 @@ class _ModerationPageState extends State<ModerationPage> {
           tabs: [
             Tab(text: 'Reports (${reports?.length ?? '…'})'),
             Tab(text: 'Appeals (${appeals?.length ?? '…'})'),
+            Tab(text: 'Photos (${photos?.length ?? '…'})'),
           ],
         ),
       ),
@@ -368,6 +402,7 @@ class _ModerationPageState extends State<ModerationPage> {
               children: [
                 _list(reports, empty: 'No reports waiting.', item: _reportCard),
                 _list(appeals, empty: 'No appeals waiting.', item: _appealCard),
+                _list(photos, empty: 'No photos waiting.', item: _photoCard),
               ],
             ),
     ),
@@ -472,6 +507,58 @@ class _ModerationPageState extends State<ModerationPage> {
       ),
     );
   }
+
+  Widget _photoCard(ModPhoto p) => Card(
+    margin: const EdgeInsets.only(bottom: 14),
+    clipBehavior: Clip.antiAlias,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AspectRatio(
+          aspectRatio: 4 / 5,
+          child: Image(
+            key: Key('mod-photo-${p.id}'),
+            image: ServerPhoto(widget.api.absolute(p.url)),
+            fit: BoxFit.cover,
+            semanticLabel: 'Photo from ${p.name} waiting for review',
+            errorBuilder: (_, _, _) =>
+                const ColoredBox(color: VawraColors.lavender),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(p.name, style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Uploaded ${formatDay(p.createdAt)}',
+                style: const TextStyle(color: VawraColors.muted),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                alignment: WrapAlignment.end,
+                children: [
+                  OutlinedButton(
+                    key: Key('mod-photo-reject-${p.id}'),
+                    onPressed: () => _rejectPhoto(p),
+                    child: const Text('Not approved'),
+                  ),
+                  FilledButton(
+                    key: Key('mod-photo-approve-${p.id}'),
+                    onPressed: () =>
+                        _run(() => widget.api.decidePhoto(p.id, 'approved')),
+                    child: const Text('Approve'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _appealCard(ModAppeal a) {
     final theme = Theme.of(context);

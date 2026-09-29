@@ -29,6 +29,7 @@ import '../data/area_locator.dart';
 import 'area_sheet.dart';
 import 'data_export_page.dart';
 import 'moderation_screens.dart';
+import 'photos_editor.dart';
 
 /// Plain-language text for a failed call. Server codes never reach the screen
 /// raw, and nothing reveals whether an email has an account.
@@ -678,11 +679,13 @@ class _AgeCheckScreenState extends State<AgeCheckScreen> {
   }
 }
 
-DemoProfile _card(ServerPerson person) {
-  registerDemoPortrait(
-    '$serverPersonPrefix${person.accountId}',
-    person.demoPortrait,
-  );
+DemoProfile _card(ServerPerson person, VawraApi api) {
+  final key = '$serverPersonPrefix${person.accountId}';
+  registerDemoPortrait(key, person.demoPortrait);
+  // Approved photos win over a demo portrait; none means the placeholder.
+  registerServerPhotos(key, [
+    for (final url in person.photos) api.absolute(url),
+  ]);
   return _detailed(person);
 }
 
@@ -1132,7 +1135,13 @@ class _ServerHomeState extends State<ServerHome> {
       );
     }
     final deck = DiscoveryDeck(
-      profiles: people.map(_card).toList(),
+      profiles: [for (final p in people) _card(p, api)],
+      extraPhotos: {
+        for (final p in people)
+          '$serverPersonPrefix${p.accountId}': morePhotos(
+            '$serverPersonPrefix${p.accountId}',
+          ),
+      },
       preferences: preferences,
       blockedProfileAssets: interactions.blockedProfileAssets(),
       likedProfiles: interactions.likedProfiles(),
@@ -1263,6 +1272,7 @@ class _ServerHomeState extends State<ServerHome> {
           child: ProfileEditor(
             initialProfile: profile,
             prototypeMode: false,
+            photosCard: ServerPhotosCard(api: api),
             onSaved: (updated) async {
               final messenger = ScaffoldMessenger.of(context);
               try {
@@ -1303,7 +1313,7 @@ class _ServerHomeState extends State<ServerHome> {
           if (latest != null) _openThread(latest);
         },
         likesYou: [
-          for (final p in likes.map(_card))
+          for (final p in [for (final l in likes) _card(l, api)])
             if (!answered.contains(p.assetPath)) p,
         ],
         onRespond: _swipe,

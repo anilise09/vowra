@@ -80,6 +80,11 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       'SELECT message, state, created_at, decided_at FROM appeals WHERE account_id = $1 ORDER BY created_at',
       [me],
     );
+    const photoRows = await db.query<{ state: string; created_at: Date; decided_at: Date | null }>(
+      `SELECT state, created_at, decided_at FROM media
+       WHERE owner = $1 AND state <> 'awaiting_upload' ORDER BY position, created_at`,
+      [me],
+    );
     const swipes = await db.query<{ kind: string; created_at: Date }>(
       'SELECT kind, created_at FROM swipes WHERE from_account = $1 ORDER BY created_at',
       [me],
@@ -147,6 +152,11 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       approximate_area: cell
         ? { ...cell, cell_km: cellKm, updated_at: iso(area!.location_updated_at) }
         : null,
+      photos: photoRows.map((p) => ({
+        state: p.state,
+        uploaded_at: iso(p.created_at),
+        decided_at: iso(p.decided_at),
+      })),
       swipes: swipes.map((s) => ({ kind: s.kind, at: iso(s.created_at) })),
       matches: matches.map((m) => ({
         with: m.peer_name,

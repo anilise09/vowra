@@ -60,6 +60,10 @@ Profile mutation contains no location. Added 2026-09-28 (BE-10): `PUT /v1/me/loc
 - Entitlements come only from verified store/provider records. They cannot grant messaging, reporting, blocking, or other safety access.
 - Moderation access is least-privilege and audited; ordinary analytics never receive message bodies, identity evidence, precise location, or call content.
 
+## Profile photos (added 2026-09-29, BE-12)
+
+`POST /v1/me/photos` `{client_upload_id, mime_type (jpeg|png|webp), byte_length (<= 10 MB), sha256}` returns `{photo_id, upload_url, expires_at}`; the link works once, for 10 minutes. `PUT` the exact bytes there with the same content type. `GET /v1/me/photos` lists your photos with `state` (`pending_review`, `approved`, `rejected` with `reject_reason`); `PUT /v1/me/photos/order`, `DELETE /v1/me/photos/:id`. Discovery and likes-you add `photos: [{photo_id, url}]` (approved only, links for the viewer). `GET /v1/mod/photos` and `POST /v1/mod/photos/:id/decision` `{outcome: approved|rejected, reason?}` for moderators (recent sign-in, audited, never their own). Errors: `photo_limit`, `upload_limit`, `invalid_grant`, `size_mismatch`, `hash_mismatch`, `wrong_type`, `unreadable_image`. Details in `MEDIA_UPLOAD_CONTRACT.md`.
+
 ## Moderation (added 2026-09-29, BE-11)
 
 - `accounts.role` is `member` or `moderator`. Every `/v1/mod/*` route answers `404` to anyone who is not a moderator, so the console's existence is not revealed.

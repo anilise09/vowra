@@ -156,8 +156,9 @@ git push origin $NEW:refs/heads/gh-pages
 2. Mac access for iOS: Xcode on the MacBook Pro and Remote Login (SSH). Until then iOS is built
    but not tested on Apple hardware.
 3. Providers, each needing the owner's account or money: email for sign-in codes, hosting with
-   PostgreSQL, photo storage with moderation, push notifications (Firebase and an Apple push key),
-   a calling provider. Age assurance also needs legal review.
+   PostgreSQL, an object store plus malware scanning and automated photo classification (photos
+   work today with a local disk store and human review), push notifications (Firebase and an
+   Apple push key), a calling provider. Age assurance also needs legal review.
 4. Whether the public repository and the live website preview stay public before the Vawra name
    and domain are cleared.
 

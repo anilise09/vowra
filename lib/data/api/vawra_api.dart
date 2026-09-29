@@ -5,6 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'server_photo.dart';
+
 import '../../domain/account_profile_contract.dart';
 import '../../domain/gender.dart';
 import '../../domain/lifestyle.dart';
@@ -43,6 +45,7 @@ class ServerPerson {
     this.demoPortrait,
     this.gender,
     this.distanceBand,
+    this.photos = const [],
   });
 
   final String accountId;
@@ -65,6 +68,9 @@ class ServerPerson {
   /// A coarse band such as "5–10 km away", when both of you share an area.
   final String? distanceBand;
 
+  /// Approved photos as short-lived links (relative to the server).
+  final List<String> photos;
+
   factory ServerPerson.fromJson(Map<String, dynamic> json) => ServerPerson(
     accountId: json['account_id'] as String,
     name: json['display_name'] as String,
@@ -79,6 +85,10 @@ class ServerPerson {
     demoPortrait: json['demo_portrait'] as String?,
     gender: Gender.fromKey(json['gender']),
     distanceBand: json['distance_band'] as String?,
+    photos: [
+      for (final p in (json['photos'] as List?) ?? const [])
+        (p as Map<String, dynamic>)['url'] as String,
+    ],
   );
 }
 
@@ -302,6 +312,52 @@ class ModAppeal {
   final ReportReason? reason;
 }
 
+/// One of your own photos and where it is in review.
+class MyPhoto {
+  const MyPhoto({
+    required this.id,
+    required this.state,
+    this.rejectReason,
+    this.url,
+  });
+
+  factory MyPhoto.fromJson(Map<String, dynamic> json) => MyPhoto(
+    id: json['photo_id'] as String,
+    state: json['state'] as String,
+    rejectReason: json['reject_reason'] as String?,
+    url: json['url'] as String?,
+  );
+
+  final String id;
+
+  /// pending_review, approved or rejected.
+  final String state;
+  final String? rejectReason;
+  final String? url;
+}
+
+/// A photo waiting for a moderator.
+class ModPhoto {
+  const ModPhoto({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+    required this.url,
+  });
+
+  factory ModPhoto.fromJson(Map<String, dynamic> json) => ModPhoto(
+    id: json['photo_id'] as String,
+    name: (json['display_name'] as String?) ?? 'No profile',
+    createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
+    url: json['url'] as String,
+  );
+
+  final String id;
+  final String name;
+  final DateTime createdAt;
+  final String url;
+}
+
 extension ReportReasonKey on ReportReason {
   /// The server's name for each reason (backend/src/rules.ts reportReasons).
   String get backendKey => switch (this) {
@@ -407,7 +463,9 @@ class VawraApi {
     SessionStore? store,
   }) : _client = client ?? http.Client(),
        _random = random ?? Random.secure(),
-       _store = store ?? MemorySessionStore();
+       _store = store ?? MemorySessionStore() {
+    serverPhotoClient = _client;
+  }
 
   final Uri base;
   final http.Client _client;
@@ -630,6 +688,67 @@ class VawraApi {
             ),
     );
   }
+
+  /// A server link (relative) as a full address for loading.
+  String absolute(String url) => base.resolve(url).toString();
+
+  Future<List<MyPhoto>> myPhotos() async {
+    final json = await _send('GET', '/v1/me/photos');
+    return [
+      for (final p in json['photos'] as List)
+        MyPhoto.fromJson(p as Map<String, dynamic>),
+    ];
+  }
+
+  /// Uploads one profile photo: asks for a grant with the exact size, type
+  /// and SHA-256, then sends the bytes to that one-time link.
+  Future<void> uploadPhoto(List<int> bytes, String mimeType) async {
+    final grant = await _send(
+      'POST',
+      '/v1/me/photos',
+      body: {
+        'client_upload_id': _randomToken(),
+        'mime_type': mimeType,
+        'byte_length': bytes.length,
+        'sha256': sha256.convert(bytes).toString(),
+      },
+    );
+    final response = await _client.put(
+      base.resolve(grant['upload_url'] as String),
+      headers: {'content-type': mimeType},
+      body: bytes,
+    );
+    if (response.statusCode != 200) {
+      var code = 'upload_failed';
+      try {
+        code =
+            (jsonDecode(response.body) as Map<String, dynamic>)['error']
+                as String;
+      } catch (_) {}
+      throw ApiException(response.statusCode, code);
+    }
+  }
+
+  Future<void> deletePhoto(String id) => _send('DELETE', '/v1/me/photos/$id');
+
+  Future<void> orderPhotos(List<String> ids) =>
+      _send('PUT', '/v1/me/photos/order', body: {'photo_ids': ids});
+
+  Future<List<ModPhoto>> moderationPhotos() async {
+    final json = await _send('GET', '/v1/mod/photos');
+    return [
+      for (final p in json['photos'] as List)
+        ModPhoto.fromJson(p as Map<String, dynamic>),
+    ];
+  }
+
+  /// [outcome] is `approved` or `rejected` (with a [reason]).
+  Future<void> decidePhoto(String id, String outcome, {String? reason}) =>
+      _send(
+        'POST',
+        '/v1/mod/photos/$id/decision',
+        body: {'outcome': outcome, 'reason': ?reason},
+      );
 
   /// A suspended person asks for another look; one open appeal at a time.
   Future<void> appeal(String message) =>

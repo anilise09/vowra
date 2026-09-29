@@ -1,5 +1,29 @@
 # Checkpoints
 
+## BE-12 - Profile photos, checked by a person before anyone sees them (2026-09-29)
+
+- Profile > Photos: pick up to 6 from the phone's gallery (the system picker; no new Android
+  permission). Each shows "Waiting for review" until a moderator approves it; a rejected photo says
+  why in plain words. Tap a photo to make it the main one or delete it.
+- The server accepts an upload only through a one-time, 10-minute link bound to the exact type,
+  size and SHA-256; it checks the file signature, decodes with a 40-megapixel cap, and re-encodes to
+  WebP with all metadata removed (GPS, camera, dates). The original is never stored.
+- Moderators get a Photos tab: Approve, or Not approved with a reason. Rejected files are deleted.
+- Viewing uses 15-minute signed links bound to the photo, the viewer and the purpose; the server
+  re-checks access on every read, so a block, suspension or deletion ends it even for old links.
+  Cards, Likes you and the details sheet show approved photos; account deletion removes the files.
+- Local stand-ins for now: a disk store instead of an object store, and human review instead of
+  malware scanning and automated classification (recorded in `MEDIA_UPLOAD_CONTRACT.md`).
+- Found on the way: the widget-test fake server decoded every request body as text, which corrupts
+  binary uploads; it now keeps raw bytes.
+- Tests: backend 91 (metadata really gone, single-use grants, size/hash/type/signature, truncated
+  files, a 48-megapixel PNG, forged and expired links, access after block and suspension, the
+  6-photo limit, moderator rules, ordering, deletion). Keeping metadata, skipping the access
+  re-check, or lifting the pixel cap each fails a test (a reused grant is blocked twice, by the
+  grant and by the state). App 213 (one existing skip): upload and review badge, cancelling the
+  picker, main/delete, photos on cards (removing them fails a test), moderator approve and reject.
+  The APK still asks for only INTERNET and coarse location. Not yet on a phone.
+
 ## BE-11 - Moderation: review reports, suspend, appeal (2026-09-29)
 
 - Reports were stored but nobody could act on them. Moderators (a role on the account) now get a

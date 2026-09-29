@@ -6,6 +6,7 @@ import { swipeRules } from '../rules.js';
 import { compatibility, type CompatibilityProfile } from '../compatibility.js';
 import { type Cell, distanceBand, distanceKm } from '../location.js';
 import { openCell } from './location.js';
+import { photosFor } from './media.js';
 
 /** How many eligible people are ranked for one page of Discover. */
 const candidatePool = 300;
@@ -103,11 +104,16 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     );
     const mineCell = await myCell(me.id);
     // Ranked by visible compatibility only; ties keep the oldest account first.
-    const people = candidates
+    const ranked = candidates
       .map((person, order) => ({ person, order, fit: compatibility(mine!, person) }))
       .sort((x, y) => y.fit.score - x.fit.score || x.order - y.order)
-      .slice(0, limit)
-      .map(({ person, fit }) => ({ ...withBand(mineCell, person), reasons: fit.reasons }));
+      .slice(0, limit);
+    const photos = await photosFor(services, me.id, ranked.map((r) => r.person.account_id));
+    const people = ranked.map(({ person, fit }) => ({
+      ...withBand(mineCell, person),
+      reasons: fit.reasons,
+      photos: photos.get(person.account_id) ?? [],
+    }));
     return { people };
   });
 
@@ -186,7 +192,11 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
   /** People who liked me and whom I have not answered. Free in Vawra. */
   app.get('/v1/likes-you', async (request) => {
     const me = requireDatingAccess(request);
-    const rows = await db.query<{ location_sealed: string | null; show_distance_band: boolean }>(
+    const rows = await db.query<{
+      account_id: string;
+      location_sealed: string | null;
+      show_distance_band: boolean;
+    }>(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent, p.bio,
               p.interests, p.lifestyle, p.prompts, p.demo_portrait,
               CASE WHEN p.show_gender THEN p.gender END AS gender,
@@ -200,6 +210,12 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
       [me.id],
     );
     const mineCell = await myCell(me.id);
-    return { people: rows.map((person) => withBand(mineCell, person)) };
+    const photos = await photosFor(services, me.id, rows.map((r) => r.account_id));
+    return {
+      people: rows.map((person) => ({
+        ...withBand(mineCell, person),
+        photos: photos.get(person.account_id) ?? [],
+      })),
+    };
   });
 }

@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Db } from './db.js';
 import type { Sealer } from './crypto.js';
 import type { NudgeBus } from './nudges.js';
+import type { MediaGrants, MediaStore } from './media.js';
 
 export interface Clock {
   now(): Date;
@@ -18,6 +19,9 @@ export interface Services {
   clock: Clock;
   delivery: Delivery;
   nudges: NudgeBus;
+  /** Processed photos, and the signer for their short-lived links. */
+  media: MediaStore;
+  grants: MediaGrants;
   accessTtlSeconds: number;
   proofTtlSeconds: number;
   /** How recent a sign-in must be for deletion and similar account actions. */

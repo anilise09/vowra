@@ -6,6 +6,7 @@ import { migrate, openPglite, openPostgres } from './db.js';
 import type { Delivery } from './context.js';
 import { runDueDeletions } from './jobs/deletions.js';
 import { MemoryNudgeBus } from './nudges.js';
+import { DiskMediaStore, MediaGrants } from './media.js';
 
 const config = loadConfig();
 if (!config.enabled) {
@@ -33,6 +34,9 @@ const db = config.databaseUrl
   : await openPglite(config.dataDir);
 await migrate(db);
 
+// Local disk until a reviewed object store is chosen.
+const media = new DiskMediaStore(config.mediaDir);
+
 const app = buildApp(
   {
     db,
@@ -40,6 +44,8 @@ const app = buildApp(
     clock: { now: () => new Date() },
     delivery,
     nudges: new MemoryNudgeBus(),
+    media,
+    grants: new MediaGrants(config.dataKey),
     accessTtlSeconds: config.accessTtlSeconds,
     proofTtlSeconds: config.proofTtlSeconds,
     reauthWindowSeconds: config.reauthWindowSeconds,
@@ -52,7 +58,7 @@ await app.listen({ host: config.host, port: config.port });
 // Scheduled deletions run at start and then hourly.
 const clock = { now: () => new Date() };
 const sweep = () =>
-  runDueDeletions(db, clock)
+  runDueDeletions(db, clock, media)
     .then((n) => n > 0 && app.log.info({ deleted: n }, 'scheduled deletions completed'))
     .catch((err: Error) => app.log.error({ err: { message: err.message } }, 'deletion job failed'));
 await sweep();

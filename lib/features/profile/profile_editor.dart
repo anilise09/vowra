@@ -16,7 +16,11 @@ class ProfileEditor extends StatefulWidget {
     required this.initialProfile,
     required this.onSaved,
     this.prototypeMode = true,
+    this.photosCard,
   });
+
+  /// The photos section; the prototype's explanation card by default.
+  final Widget? photosCard;
 
   final UserProfile? initialProfile;
   final ValueChanged<UserProfile> onSaved;
@@ -160,7 +164,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
             hasPrompt: prompts.isNotEmpty,
           ),
           const SizedBox(height: 12),
-          const PhotosCard(),
+          widget.photosCard ?? const PhotosCard(),
           const SizedBox(height: 22),
           TextFormField(
             key: const Key('profile-name'),

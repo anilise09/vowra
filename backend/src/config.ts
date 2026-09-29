@@ -4,6 +4,8 @@ export interface Config {
   port: number;
   databaseUrl?: string;
   dataDir?: string;
+  /** Processed photos, until a reviewed object store is chosen. */
+  mediaDir: string;
   dataKey: Buffer;
   lookupKey: Buffer;
   accessTtlSeconds: number;
@@ -29,6 +31,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port: Number(env.VAWRA_PORT ?? 8797),
     databaseUrl: env.DATABASE_URL,
     dataDir: env.VAWRA_DATA_DIR ?? '.data/pglite',
+    mediaDir: env.VAWRA_MEDIA_DIR ?? '.data/media',
     dataKey: key('VAWRA_DATA_KEY'),
     lookupKey: key('VAWRA_LOOKUP_KEY'),
     accessTtlSeconds: Number(env.VAWRA_ACCESS_TTL ?? 900),

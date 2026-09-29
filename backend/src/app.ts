@@ -7,6 +7,7 @@ import { discoveryRoutes } from './routes/discovery.js';
 import { eventRoutes } from './routes/events.js';
 import { lifecycleRoutes } from './routes/lifecycle.js';
 import { locationRoutes } from './routes/location.js';
+import { mediaRoutes } from './routes/media.js';
 import { moderationRoutes } from './routes/moderation.js';
 import { profileRoutes } from './routes/profile.js';
 import { safetyRoutes } from './routes/safety.js';
@@ -97,6 +98,7 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
   lifecycleRoutes(app, services);
   locationRoutes(app, services);
   moderationRoutes(app, services);
+  mediaRoutes(app, services);
   eventRoutes(app, services);
   return app;
 }

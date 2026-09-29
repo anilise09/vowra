@@ -10,11 +10,12 @@ import 'package:http/testing.dart';
 class FakeVawraServer {
   FakeVawraServer() {
     client = MockClient.streaming((request, bodyStream) async {
-      final body = await bodyStream.bytesToString();
+      // Raw bytes: photo uploads are binary, not text.
+      final bytes = await bodyStream.toBytes();
       if (request.url.path == '/v1/events') return _events(request);
       final copy = http.Request(request.method, request.url)
         ..headers.addAll(request.headers);
-      if (body.isNotEmpty) copy.body = body;
+      if (bytes.isNotEmpty) copy.bodyBytes = bytes;
       final response = await _handle(copy);
       return http.StreamedResponse(
         Stream.value(response.bodyBytes),
@@ -118,6 +119,85 @@ class FakeVawraServer {
   final modAppeals = <Map<String, dynamic>>[];
   final decisions = <String>[];
 
+  /// Your own photos as the server lists them, and every upload received.
+  final myPhotos = <Map<String, dynamic>>[];
+  final uploads = <List<int>>[];
+  final modPhotos = <Map<String, dynamic>>[];
+
+  /// A 1x1 PNG served for any photo link.
+  static const pixel = [
+    137,
+    80,
+    78,
+    71,
+    13,
+    10,
+    26,
+    10,
+    0,
+    0,
+    0,
+    13,
+    73,
+    72,
+    68,
+    82,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    8,
+    6,
+    0,
+    0,
+    0,
+    31,
+    21,
+    196,
+    137,
+    0,
+    0,
+    0,
+    13,
+    73,
+    68,
+    65,
+    84,
+    120,
+    156,
+    99,
+    248,
+    207,
+    192,
+    240,
+    31,
+    0,
+    5,
+    0,
+    1,
+    255,
+    137,
+    153,
+    61,
+    29,
+    0,
+    0,
+    0,
+    0,
+    73,
+    69,
+    78,
+    68,
+    174,
+    66,
+    96,
+    130,
+  ];
+
   /// The server's deletion date while a deletion is scheduled.
   DateTime? deletionAt;
   bool _revoked = false;
@@ -150,9 +230,13 @@ class FakeVawraServer {
     List<Map<String, String>> reasons = const [],
     String? demoPortrait,
     String? distanceBand,
+    List<String> photos = const [],
   }) {
     final id = _id();
     people[id] = {
+      'photos': [
+        for (final p in photos) {'photo_id': p, 'url': '/v1/media/$p?p=view'},
+      ],
       'distance_band': distanceBand,
       'demo_portrait': demoPortrait,
       'reasons': reasons,
@@ -201,7 +285,8 @@ class FakeVawraServer {
       return _error(400, 'invalid_request');
     }
     final path = request.url.path;
-    final body = request.body.isEmpty
+    final isJson = (request.headers['content-type'] ?? '').contains('json');
+    final body = request.bodyBytes.isEmpty || !isJson
         ? <String, dynamic>{}
         : jsonDecode(request.body) as Map<String, dynamic>;
     final method = request.method;
@@ -254,6 +339,25 @@ class FakeVawraServer {
         'refresh_token': 'refresh-token-00000000000',
       });
     }
+    // Photo links and upload grants carry their own authority.
+    if (path.startsWith('/v1/media/')) {
+      return http.Response.bytes(
+        pixel,
+        200,
+        headers: {'content-type': 'image/png'},
+      );
+    }
+    if (path.startsWith('/v1/uploads/') && method == 'PUT') {
+      uploads.add(request.bodyBytes);
+      final id = path.split('/').last;
+      myPhotos.add({
+        'photo_id': id,
+        'state': 'pending_review',
+        'reject_reason': null,
+        'url': '/v1/media/$id?p=view',
+      });
+      return _json(200, {'state': 'pending_review'});
+    }
     if (_revoked ||
         request.headers['authorization'] !=
             'Bearer access-token-000000000000') {
@@ -292,6 +396,30 @@ class FakeVawraServer {
         'moderator': moderator,
       });
     }
+    if (path == '/v1/me/photos') {
+      if (method == 'GET') {
+        return _json(200, {'photos': myPhotos, 'max_photos': 6});
+      }
+      final id = 'p${myPhotos.length + uploads.length + 1}';
+      return _json(200, {
+        'photo_id': id,
+        'upload_url': '/v1/uploads/$id?grant=g',
+        'expires_at': '2026-09-29T12:10:00.000Z',
+      });
+    }
+    if (path == '/v1/me/photos/order') {
+      final ids = (body['photo_ids'] as List).cast<String>();
+      myPhotos.sort(
+        (a, b) =>
+            ids.indexOf(a['photo_id'] as String) -
+            ids.indexOf(b['photo_id'] as String),
+      );
+      return http.Response('', 204);
+    }
+    if (path.startsWith('/v1/me/photos/') && method == 'DELETE') {
+      myPhotos.removeWhere((p) => p['photo_id'] == path.split('/').last);
+      return http.Response('', 204);
+    }
     if (path == '/v1/me/appeal') {
       if (appealState == 'open') return _error(409, 'appeal_open');
       appeals.add(body['message'] as String);
@@ -305,14 +433,17 @@ class FakeVawraServer {
       if (!moderator) return _error(404, 'not_found');
       if (path == '/v1/mod/reports') return _json(200, {'reports': modReports});
       if (path == '/v1/mod/appeals') return _json(200, {'appeals': modAppeals});
-      final decision = RegExp(r'^/v1/mod/(reports|appeals)/([^/]+)/decision$')
-          .firstMatch(path);
+      if (path == '/v1/mod/photos') return _json(200, {'photos': modPhotos});
+      final decision = RegExp(
+        r'^/v1/mod/(reports|appeals|photos)/([^/]+)/decision$',
+      ).firstMatch(path);
       if (decision != null) {
         if (!recentSignIn) return _error(403, 'reauthentication_required');
         final id = decision.group(2)!;
         decisions.add('${decision.group(1)}:$id:${body['outcome']}');
         modReports.removeWhere((r) => r['report_id'] == id);
         modAppeals.removeWhere((a) => a['appeal_id'] == id);
+        modPhotos.removeWhere((p) => p['photo_id'] == id);
         return _json(200, {'state': body['outcome']});
       }
     }

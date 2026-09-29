@@ -1,7 +1,21 @@
 # Media upload and moderation contract
 
-Status: design contract only. No camera/gallery integration, object-store account, upload worker,
-malware scanner, moderation provider, real media, or network client exists.
+Status: profile photos are implemented (BE-12, 2026-09-29) with local stand-ins; conversation media
+and video are not.
+
+What exists: the gallery picker (no camera), `POST /v1/me/photos` for a single-use grant bound to the
+exact MIME type, byte length and SHA-256, `PUT /v1/uploads/:id` that checks all three plus the file
+signature, then decodes safely (40 MP cap against decompression bombs, animation off) and re-encodes
+to WebP at most 1600 px with every piece of metadata removed; the original is never stored. Photos
+wait in `pending_review` until a moderator approves or rejects them (with a safe reason category) in
+the Moderation page; rejected files are deleted. Reads use `GET /v1/media/:id` with a 15-minute HMAC
+link bound to the photo, the viewer and the purpose (`view` or `review`), and the server re-checks
+access on every read, so a block, suspension, deletion or rejection ends access even for an old
+link. Six photos at most, 30 uploads a day. Account deletion removes the files.
+
+Stand-ins, until reviewed providers are chosen: a local disk store (`backend/.data/media`) instead of
+an object store, served by the app server instead of direct-to-storage grants; human review by
+Vawra moderators instead of malware scanning, automated classification and perceptual hashing.
 
 ## Principles
 
