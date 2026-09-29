@@ -1,6 +1,9 @@
 import 'package:ember_app/data/api/vawra_api.dart';
+import 'package:ember_app/data/area_locator.dart';
+import 'package:ember_app/domain/location_grid.dart';
 import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
+import 'package:ember_app/server/server_flow.dart' show describeExportError;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,6 +68,23 @@ Future<void> _completeOnboarding(WidgetTester tester) async {
 }
 
 /// ServerHome polls on a timer, so settle with bounded pumps.
+/// Stands in for the phone's location: records whether it was allowed to ask.
+class _FakeArea implements AreaLocator {
+  _FakeArea(this.fix);
+
+  AreaFix fix;
+  final asks = <bool>[];
+
+  @override
+  Future<AreaFix> locate({required bool ask}) async {
+    asks.add(ask);
+    return fix;
+  }
+
+  @override
+  Future<void> openSettings() async {}
+}
+
 Future<void> _settle(WidgetTester tester) async {
   for (var i = 0; i < 20; i++) {
     await tester.pump(const Duration(milliseconds: 100));
@@ -706,6 +726,147 @@ void main() {
     expect(find.text('my sourdough starter'), findsOneWidget);
     // An empty bio has no empty "About" section.
     expect(find.text('About Maya'), findsNothing);
+  });
+
+  group('distance', () {
+    final cell = snapToCell(49.89513, -97.13841);
+    late _FakeArea area;
+    setUp(() => areaLocator = area = _FakeArea(AreaFix.found(cell)));
+    tearDown(() => areaLocator = const GeolocatorAreaLocator());
+
+    Map<String, dynamic> profile() => {
+      'display_name': 'Alex',
+      'relationship_intent': 'casual',
+      'bio': '',
+      'interests': <String>['Books'],
+      'show_distance_band': true,
+      'call_ready_by_default': false,
+      'public_age': 28,
+    };
+
+    Future<void> openArea(WidgetTester tester) async {
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('profile-tab')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('open-settings')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('settings-area')));
+      await _settle(tester);
+    }
+
+    testWidgets('turning it on sends only the rounded cell, after asking', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      expect(area.asks, isEmpty, reason: 'nothing happens until asked');
+      await openArea(tester);
+      expect(
+        find.text('Your exact location never leaves your phone.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('area-on')));
+      await _settle(tester);
+      expect(area.asks, [true]);
+      expect(server.area, {'lat': cell.lat, 'lng': cell.lng});
+      expect(find.text('Distance: on'), findsOneWidget);
+
+      // Off again: removed on the server at once.
+      await tester.tap(find.byKey(const Key('settings-area')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('area-off')));
+      await _settle(tester);
+      expect(server.area, isNull);
+      expect(find.text('Distance: off'), findsOneWidget);
+    });
+
+    testWidgets('permission refused: nothing is sent and it says why', (
+      tester,
+    ) async {
+      area.fix = const AreaFix.failed(AreaProblem.denied);
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      await openArea(tester);
+      await tester.tap(find.byKey(const Key('area-on')));
+      await _settle(tester);
+      expect(server.area, isNull);
+      expect(find.textContaining('didn\u2019t get permission'), findsOneWidget);
+      expect(find.byKey(const Key('area-open-settings')), findsNothing);
+
+      area.fix = const AreaFix.failed(AreaProblem.deniedForever);
+      await tester.tap(find.byKey(const Key('area-on')));
+      await _settle(tester);
+      expect(find.byKey(const Key('area-open-settings')), findsOneWidget);
+    });
+
+    testWidgets('the server\u2019s 15-minute limit is explained', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile()
+        ..areaError = 'slow_down';
+      await _signIn(tester, server);
+      await _settle(tester);
+      await openArea(tester);
+      await tester.tap(find.byKey(const Key('area-on')));
+      await _settle(tester);
+      expect(find.textContaining('once every 15 minutes'), findsOneWidget);
+    });
+
+    testWidgets('cards show the server\u2019s band, or say it is hidden', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..addPerson('Maya', distanceBand: '5\u201310 km away')
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      await dismissSwipeTutorial(tester);
+      expect(find.text('5\u201310 km away'), findsWidgets);
+      expect(find.text('Distance hidden'), findsNothing);
+    });
+
+    testWidgets('on start the area is refreshed quietly, never with a prompt', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile()
+        ..areaAt = DateTime.utc(2026, 9, 27);
+      await _signIn(tester, server);
+      await _settle(tester);
+      expect(area.asks, [false]);
+      expect(server.area, {'lat': cell.lat, 'lng': cell.lng});
+    });
+
+    testWidgets('no quiet refresh when distance is off', (tester) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..profile = profile();
+      await _signIn(tester, server);
+      await _settle(tester);
+      expect(area.asks, isEmpty);
+      expect(server.area, isNull);
+    });
+  });
+
+  test('the export limit says it is daily, not "a few minutes"', () {
+    expect(
+      describeExportError(ApiException(429, 'rate_limited')),
+      'You can download your data 5 times a day. Try again tomorrow.',
+    );
+    expect(
+      describeExportError(ApiException(403, 'account_paused')),
+      isNot(contains('5 times a day')),
+    );
   });
 
   group('download my data', () {

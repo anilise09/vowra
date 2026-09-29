@@ -1,5 +1,34 @@
 # Checkpoints
 
+## BE-10 - Distance from an approximate area, never an exact spot (2026-09-29)
+
+- Cards used to say "Distance hidden" for everyone. Settings > Discover now has "Distance": turned
+  on, the phone rounds its location to a square about 2 km across and only that is sent; people
+  see a band ("Under 5 km away", "5–10 km away" ... "Over 100 km away"), never an area or an exact
+  distance. It is off until the person turns it on, and turning it off removes it at once.
+- Android asks for coarse location only; the location plugin's background-service permission is
+  removed from the merged manifest. The release manifest also gains INTERNET, which it lacked
+  (only debug and profile builds had it, so a release build could not reach the server).
+- Server: migration 007, `PUT`/`DELETE /v1/me/location`, the same grid re-applied on the server,
+  the cell sealed at rest, bands in Discover and Likes you only when both have an area and the
+  viewed person shows distance, one new area per 15 minutes, no teleporting, the cell in the
+  person's own export. A bug found on the way: cell centres at the date line fell outside
+  -180..180 and would have been refused; now wrapped, with a test.
+- The quiet refresh on app start only uses a permission already given and never prompts.
+- `npm run dev:seed-demo -- --near <test email>` gives demo members made-up areas 1-150 km from
+  that test member's area (remove and re-seed first), so every band can be seen in testing.
+- Also: the export page lists Distance on/off, and the export's daily limit now says "5 times a
+  day" instead of the sign-in wording.
+- Tests: backend 73 (grid, bands, sealing, the other person's setting, likes-you, limits, clearing,
+  export, input); removing the server's rounding or ignoring the other person's setting each fails
+  a test. App: Dart grid matches the server's output exactly; distance on/off, refused permission,
+  the 15-minute message, bands on cards, quiet refresh never prompting (making it prompt fails a
+  test). Flutter 201 passed (one existing skip). Not yet tested on a phone.
+- The built APK asks for exactly INTERNET and ACCESS_COARSE_LOCATION (checked with aapt).
+- Build and test reliability: `kotlin.incremental=false` in `android/gradle.properties` (Kotlin's
+  cache failed with plugins on C: and the build on D:), and the backend runs 4 test files at a time
+  (10 at once starved each other; a 3 s test timed out at 30 s).
+
 ## Web-2 - The website preview, fixed in place (2026-09-28)
 
 - Review of Codex's Web-1 site found: a broken "It's a match" screen on the live preview (button

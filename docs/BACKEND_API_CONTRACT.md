@@ -48,7 +48,7 @@ Photo or optional ID verification can establish limited claims such as likeness 
 
 ## Location
 
-Profile mutation contains no location. A later dedicated location endpoint may accept a short-lived encrypted update after explicit permission. Exact coordinates remain encrypted at rest, are never returned to another client, and are converted server-side to coarse distance bands with privacy zones and anti-triangulation controls.
+Profile mutation contains no location. Added 2026-09-28 (BE-10): `PUT /v1/me/location` takes `{lat, lng}` (a cell centre from the app's 2 km grid; the server rounds again and seals it) and returns `{updated_at, cell_km}`, never the coordinates; `DELETE /v1/me/location` removes it. `GET /v1/me/profile` adds `location_updated_at` (null when off). Discovery and likes-you add `distance_band` (a string such as `"5–10 km away"`, or null). Limits: one new area per 15 minutes (`429 slow_down`), no moves over 1000 km/h (`422 implausible_move`). Details in `DATA_LIFECYCLE_CONTRACT.md`. A later dedicated location endpoint may accept a short-lived encrypted update after explicit permission. Exact coordinates remain encrypted at rest, are never returned to another client, and are converted server-side to coarse distance bands with privacy zones and anti-triangulation controls.
 
 ## Authorization invariants for later contracts
 

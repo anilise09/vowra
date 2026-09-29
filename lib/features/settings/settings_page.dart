@@ -20,7 +20,15 @@ class SettingsPage extends StatefulWidget {
     this.shareReadReceipts,
     this.onShareReadReceiptsChanged,
     this.onDownloadData,
+    this.areaOn,
+    this.onArea,
   });
+
+  /// Whether an approximate area is set; null hides the row (prototype).
+  final bool? areaOn;
+
+  /// Opens the area choice and returns whether it is now on.
+  final Future<bool> Function()? onArea;
 
   /// A copy of what the server holds; null hides it (prototype).
   final VoidCallback? onDownloadData;
@@ -70,6 +78,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late final notifications = {...widget.notifications};
   late String? travelCity = widget.travelCity;
   late bool? shareReadReceipts = widget.shareReadReceipts;
+  late bool? areaOn = widget.areaOn;
 
   Future<void> _pickCity() async {
     final choice = await showModalBottomSheet<String>(
@@ -196,6 +205,19 @@ class _SettingsPageState extends State<SettingsPage> {
               value: !paused,
               onChanged: (value) => _setPaused(!value),
             ),
+            if (areaOn case final on?)
+              _Row(
+                key: const Key('settings-area'),
+                icon: Icons.near_me_outlined,
+                title: on ? 'Distance: on' : 'Distance: off',
+                subtitle: on
+                    ? 'From your approximate area, about 2 km across.'
+                    : 'Distances stay hidden. Your location is not used.',
+                onTap: () async {
+                  final now = await widget.onArea!();
+                  if (mounted) setState(() => areaOn = now);
+                },
+              ),
             if (widget.onTravelCityChanged != null)
               _Row(
                 key: const Key('settings-travel'),
@@ -380,10 +402,12 @@ class _Row extends StatelessWidget {
     required this.title,
     required this.onTap,
     this.destructive = false,
+    this.subtitle,
   });
 
   final IconData icon;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
   final bool destructive;
 
@@ -396,6 +420,7 @@ class _Row extends StatelessWidget {
         title,
         style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
+      subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: onTap,
     );

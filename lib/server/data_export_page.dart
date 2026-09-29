@@ -88,6 +88,12 @@ class DataExportPage extends StatelessWidget {
             ('Status', _lifecycles[account['lifecycle']]),
             if (_day(account['deletion_effective_at']) case final d?)
               ('Deleted on', d),
+            (
+              'Distance',
+              data['approximate_area'] == null
+                  ? 'Off'
+                  : 'On, from an area about 2 km across',
+            ),
           ]),
           if (profile != null)
             _Section('Profile', [

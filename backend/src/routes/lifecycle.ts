@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { audit, fail, noContent, requireAccount, type Account, type Services } from '../context.js';
+import { cellKm } from '../location.js';
+import { openCell } from './location.js';
 
 /**
  * Deletion and data export need a sign-in within the reauthentication
@@ -59,6 +61,11 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
        FROM profiles WHERE account_id = $1`,
       [me],
     );
+    const [area] = await db.query<{ location_sealed: string | null; location_updated_at: Date | null }>(
+      'SELECT location_sealed, location_updated_at FROM profiles WHERE account_id = $1',
+      [me],
+    );
+    const cell = openCell(services, area?.location_sealed ?? null);
     const swipes = await db.query<{ kind: string; created_at: Date }>(
       'SELECT kind, created_at FROM swipes WHERE from_account = $1 ORDER BY created_at',
       [me],
@@ -113,6 +120,9 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       },
       profile: profile
         ? { ...profile, updated_at: iso(profile.updated_at as Date) }
+        : null,
+      approximate_area: cell
+        ? { ...cell, cell_km: cellKm, updated_at: iso(area!.location_updated_at) }
         : null,
       swipes: swipes.map((s) => ({ kind: s.kind, at: iso(s.created_at) })),
       matches: matches.map((m) => ({

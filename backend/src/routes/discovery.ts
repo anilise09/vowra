@@ -4,6 +4,8 @@ import { fail, requireDatingAccess, type Services } from '../context.js';
 import type { Db } from '../db.js';
 import { swipeRules } from '../rules.js';
 import { compatibility, type CompatibilityProfile } from '../compatibility.js';
+import { type Cell, distanceBand, distanceKm } from '../location.js';
+import { openCell } from './location.js';
 
 /** How many eligible people are ranked for one page of Discover. */
 const candidatePool = 300;
@@ -49,6 +51,30 @@ async function requireProfile(db: Db, me: string) {
 export function discoveryRoutes(app: FastifyInstance, services: Services) {
   const { db, clock } = services;
 
+  const myCell = async (me: string) => {
+    const [row] = await db.query<{ location_sealed: string | null }>(
+      'SELECT location_sealed FROM profiles WHERE account_id = $1',
+      [me],
+    );
+    return openCell(services, row?.location_sealed ?? null);
+  };
+
+  /**
+   * Replaces the sealed area with a coarse band. A band needs both areas and
+   * the other person's "show a coarse distance band" setting.
+   */
+  const withBand = <T extends { location_sealed?: string | null; show_distance_band?: boolean }>(
+    mine: Cell | null,
+    person: T,
+  ) => {
+    const { location_sealed, show_distance_band, ...rest } = person;
+    const theirs = show_distance_band ? openCell(services, location_sealed ?? null) : null;
+    return {
+      ...rest,
+      distance_band: mine && theirs ? distanceBand(distanceKm(mine, theirs)) : null,
+    };
+  };
+
   app.get('/v1/discovery', async (request) => {
     const me = requireDatingAccess(request);
     await requireProfile(db, me.id);
@@ -57,10 +83,17 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
       'SELECT relationship_intent, interests, lifestyle FROM profiles WHERE account_id = $1',
       [me.id],
     );
-    const candidates = await db.query<CompatibilityProfile & { account_id: string }>(
+    const candidates = await db.query<
+      CompatibilityProfile & {
+        account_id: string;
+        location_sealed: string | null;
+        show_distance_band: boolean;
+      }
+    >(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent,
               p.bio, p.interests, p.lifestyle, p.prompts, p.demo_portrait,
-              CASE WHEN p.show_gender THEN p.gender END AS gender
+              CASE WHEN p.show_gender THEN p.gender END AS gender,
+              p.location_sealed, p.show_distance_band
        FROM accounts a JOIN profiles p ON p.account_id = a.id
        WHERE ${mutuallyEligible('$1::uuid', 'a.id')}
          AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.from_account = $1 AND s.to_account = a.id)
@@ -68,17 +101,13 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
        LIMIT $2`,
       [me.id, candidatePool],
     );
+    const mineCell = await myCell(me.id);
     // Ranked by visible compatibility only; ties keep the oldest account first.
     const people = candidates
       .map((person, order) => ({ person, order, fit: compatibility(mine!, person) }))
       .sort((x, y) => y.fit.score - x.fit.score || x.order - y.order)
       .slice(0, limit)
-      .map(({ person, fit }) => ({
-        ...person,
-        reasons: fit.reasons,
-        // Distance stays null until the reviewed location service exists.
-        distance_band: null,
-      }));
+      .map(({ person, fit }) => ({ ...withBand(mineCell, person), reasons: fit.reasons }));
     return { people };
   });
 
@@ -157,10 +186,11 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
   /** People who liked me and whom I have not answered. Free in Vawra. */
   app.get('/v1/likes-you', async (request) => {
     const me = requireDatingAccess(request);
-    const people = await db.query(
+    const rows = await db.query<{ location_sealed: string | null; show_distance_band: boolean }>(
       `SELECT a.id AS account_id, p.display_name, p.public_age, p.relationship_intent, p.bio,
               p.interests, p.lifestyle, p.prompts, p.demo_portrait,
               CASE WHEN p.show_gender THEN p.gender END AS gender,
+              p.location_sealed, p.show_distance_band,
               s.kind = 'super_like' AS super_like
        FROM swipes s JOIN accounts a ON a.id = s.from_account JOIN profiles p ON p.account_id = a.id
        WHERE s.to_account = $1 AND s.kind IN ('like','super_like')
@@ -169,6 +199,7 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
        ORDER BY s.created_at DESC`,
       [me.id],
     );
-    return { people };
+    const mineCell = await myCell(me.id);
+    return { people: rows.map((person) => withBand(mineCell, person)) };
   });
 }

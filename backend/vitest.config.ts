@@ -7,5 +7,8 @@ export default defineConfig({
     testTimeout: 30_000,
     // Each test starts its own in-memory PostgreSQL; slow on a busy machine.
     hookTimeout: 60_000,
+    // Ten test files each starting a database at once starved each other on this laptop
+    // (a 3 s test timed out at 30 s); four at a time is faster overall and reliable.
+    maxWorkers: 4,
   },
 });

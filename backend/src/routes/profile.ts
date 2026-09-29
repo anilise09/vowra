@@ -72,8 +72,12 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
 
   app.get('/v1/me/profile', async (request) => {
     const account = requireAccount(request);
-    const [row] = await db.query<{ deletion_effective_at: Date | null }>(
-      'SELECT deletion_effective_at FROM accounts WHERE id = $1',
+    const [row] = await db.query<{
+      deletion_effective_at: Date | null;
+      location_updated_at: Date | null;
+    }>(
+      `SELECT a.deletion_effective_at, p.location_updated_at
+       FROM accounts a LEFT JOIN profiles p ON p.account_id = a.id WHERE a.id = $1`,
       [account.id],
     );
     return {
@@ -83,6 +87,10 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
         ? new Date(row.deletion_effective_at).toISOString()
         : null,
       profile: await load(account.id),
+      // Whether an approximate area is set; the area itself is never sent back.
+      location_updated_at: row?.location_updated_at
+        ? new Date(row.location_updated_at).toISOString()
+        : null,
     };
   });
 

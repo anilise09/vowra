@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../domain/account_profile_contract.dart';
 import '../../domain/gender.dart';
 import '../../domain/lifestyle.dart';
+import '../../domain/location_grid.dart';
 import '../../domain/match_reason.dart';
 import '../../domain/profile_prompt.dart';
 import '../../domain/safety_report.dart';
@@ -41,6 +42,7 @@ class ServerPerson {
     this.reasons = const [],
     this.demoPortrait,
     this.gender,
+    this.distanceBand,
   });
 
   final String accountId;
@@ -60,6 +62,9 @@ class ServerPerson {
   /// Only present when this person chose to show it.
   final Gender? gender;
 
+  /// A coarse band such as "5–10 km away", when both of you share an area.
+  final String? distanceBand;
+
   factory ServerPerson.fromJson(Map<String, dynamic> json) => ServerPerson(
     accountId: json['account_id'] as String,
     name: json['display_name'] as String,
@@ -73,6 +78,7 @@ class ServerPerson {
     reasons: MatchReason.parse(json['reasons']),
     demoPortrait: json['demo_portrait'] as String?,
     gender: Gender.fromKey(json['gender']),
+    distanceBand: json['distance_band'] as String?,
   );
 }
 
@@ -154,6 +160,7 @@ class MeState {
     required this.lifecycle,
     required this.profile,
     this.deletionEffectiveAt,
+    this.areaUpdatedAt,
   });
 
   final String ageState;
@@ -164,6 +171,9 @@ class MeState {
 
   /// Set while a deletion is scheduled: the server's date, never assumed.
   final DateTime? deletionEffectiveAt;
+
+  /// When the approximate area was last set; null when it is off.
+  final DateTime? areaUpdatedAt;
 
   bool get paused => lifecycle == 'paused';
   bool get deletionScheduled => lifecycle == 'deletion_scheduled';
@@ -465,12 +475,14 @@ class VawraApi {
     final json = await _send('GET', '/v1/me/profile');
     final profile = json['profile'] as Map<String, dynamic>?;
     final deletion = json['deletion_effective_at'] as String?;
+    final area = json['location_updated_at'] as String?;
     return MeState(
       ageState: json['age_state'] as String,
       lifecycle: json['lifecycle'] as String,
       deletionEffectiveAt: deletion == null
           ? null
           : DateTime.parse(deletion).toLocal(),
+      areaUpdatedAt: area == null ? null : DateTime.parse(area).toLocal(),
       profile: profile == null
           ? null
           : UserProfile(
@@ -494,6 +506,13 @@ class VawraApi {
             ),
     );
   }
+
+  /// Sets the approximate area: a cell centre, never an exact point.
+  Future<void> setArea(AreaCell cell) =>
+      _send('PUT', '/v1/me/location', body: {'lat': cell.lat, 'lng': cell.lng});
+
+  /// Removes the area; distances are hidden again at once.
+  Future<void> clearArea() => _send('DELETE', '/v1/me/location');
 
   /// Everything the server holds about this account, as its JSON. Needs a
   /// recent sign-in, like deletion.

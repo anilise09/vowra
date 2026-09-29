@@ -1,4 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- The server connection, in release builds too (debug and profile add it themselves). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Approximate area only, asked for when the person turns it on in Settings.
+         Precise and background location are never requested. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- The location plugin declares this for background tracking, which Vawra never does. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:node="remove"/>
     <application
         android:label="Vawra"
         android:name="${applicationName}"

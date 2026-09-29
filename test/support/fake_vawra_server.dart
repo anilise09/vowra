@@ -100,6 +100,13 @@ class FakeVawraServer {
   /// How many times the data export was served.
   int exports = 0;
 
+  /// The approximate area as sent (a cell centre), and when.
+  Map<String, dynamic>? area;
+  DateTime? areaAt;
+
+  /// An error code the next area update fails with, like the real server.
+  String? areaError;
+
   /// The server's deletion date while a deletion is scheduled.
   DateTime? deletionAt;
   bool _revoked = false;
@@ -131,9 +138,11 @@ class FakeVawraServer {
     List<Map<String, String>> prompts = const [],
     List<Map<String, String>> reasons = const [],
     String? demoPortrait,
+    String? distanceBand,
   }) {
     final id = _id();
     people[id] = {
+      'distance_band': distanceBand,
       'demo_portrait': demoPortrait,
       'reasons': reasons,
       'lifestyle': lifestyle,
@@ -255,6 +264,24 @@ class FakeVawraServer {
             : 'active',
         'deletion_effective_at': deletionAt?.toIso8601String(),
         'profile': profile,
+        'location_updated_at': areaAt?.toIso8601String(),
+      });
+    }
+    if (path == '/v1/me/location') {
+      if (method == 'DELETE') {
+        area = null;
+        areaAt = null;
+        return http.Response('', 204);
+      }
+      if (areaError case final code?) {
+        areaError = null;
+        return _error(code == 'slow_down' ? 429 : 422, code);
+      }
+      area = Map<String, dynamic>.from(body);
+      areaAt = DateTime.utc(2026, 9, 28, 12);
+      return _json(200, {
+        'updated_at': areaAt!.toIso8601String(),
+        'cell_km': 2,
       });
     }
     if (path == '/v1/me/export') {
@@ -332,7 +359,7 @@ class FakeVawraServer {
           for (final p in people.values)
             if (!mySwipes.containsKey(p['account_id']) &&
                 !blocked.contains(p['account_id']))
-              {...p, 'distance_band': null},
+              p,
         ],
       });
     }

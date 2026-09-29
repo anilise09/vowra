@@ -6,6 +6,7 @@ import { chatRoutes } from './routes/chat.js';
 import { discoveryRoutes } from './routes/discovery.js';
 import { eventRoutes } from './routes/events.js';
 import { lifecycleRoutes } from './routes/lifecycle.js';
+import { locationRoutes } from './routes/location.js';
 import { profileRoutes } from './routes/profile.js';
 import { safetyRoutes } from './routes/safety.js';
 
@@ -90,6 +91,7 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
   chatRoutes(app, services);
   safetyRoutes(app, services);
   lifecycleRoutes(app, services);
+  locationRoutes(app, services);
   eventRoutes(app, services);
   return app;
 }

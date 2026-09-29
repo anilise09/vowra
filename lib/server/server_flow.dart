@@ -25,6 +25,8 @@ import '../features/shared/profile_image.dart';
 import '../main.dart' show SafetySheet, WelcomeScreen;
 import '../theme/vawra_navigation_shell.dart';
 import '../theme/vawra_theme.dart';
+import '../data/area_locator.dart';
+import 'area_sheet.dart';
 import 'data_export_page.dart';
 
 /// Plain-language text for a failed call. Server codes never reach the screen
@@ -224,6 +226,12 @@ Future<void> withFreshSignIn(
     );
   }
 }
+
+/// The export allows a few copies a day; say so rather than "a few minutes".
+String describeExportError(Object error) =>
+    error is ApiException && error.code == 'rate_limited'
+    ? 'You can download your data 5 times a day. Try again tomorrow.'
+    : describeApiError(error);
 
 /// Fetches the person's data (confirming a recent sign-in first when the
 /// server asks) and opens it above the page it was asked from.
@@ -491,7 +499,7 @@ class _DeletionScheduledScreenState extends State<DeletionScheduledScreen> {
     try {
       await openDataExport(Navigator.of(context), widget.api);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      messenger.showSnackBar(SnackBar(content: Text(describeExportError(e))));
     }
   }
 
@@ -679,7 +687,7 @@ DemoProfile _detailed(ServerPerson person) => DetailedProfile(
   person.name,
   person.age ?? 18,
   person.intent?.label ?? '',
-  'Distance hidden',
+  person.distanceBand ?? 'Distance hidden',
   person.bio,
   person.interests,
   '$serverPersonPrefix${person.accountId}',
@@ -768,6 +776,9 @@ class _ServerHomeState extends State<ServerHome> {
   /// Read receipts and typing; null until loaded.
   bool? shareReceipts;
 
+  /// When the approximate area was set; null when distance is off.
+  late DateTime? areaSetAt = widget.me.areaUpdatedAt;
+
   /// Checks since the last refresh; counting ticks keeps this testable.
   int _checksSinceRefresh = 0;
 
@@ -775,6 +786,7 @@ class _ServerHomeState extends State<ServerHome> {
   void initState() {
     super.initState();
     _refreshAll();
+    if (areaSetAt != null) _refreshArea();
     api
         .shareReadReceipts()
         .then((on) {
@@ -1049,8 +1061,29 @@ class _ServerHomeState extends State<ServerHome> {
     try {
       await openDataExport(navigator, api);
     } catch (e) {
-      if (mounted && !_signedOutBy(e)) _toast(context, describeApiError(e));
+      if (mounted && !_signedOutBy(e)) _toast(context, describeExportError(e));
     }
+  }
+
+  /// Keeps the area current without asking: only with a permission the
+  /// person already gave, and quietly (the server allows a new area every 15
+  /// minutes).
+  Future<void> _refreshArea() async {
+    final fix = await areaLocator.locate(ask: false);
+    final cell = fix.cell;
+    if (cell == null) return;
+    try {
+      await api.setArea(cell);
+    } catch (_) {}
+  }
+
+  Future<bool> _chooseArea(BuildContext context) async {
+    final on = await AreaSheet.show(context, api: api, on: areaSetAt != null);
+    if (!mounted) return on;
+    final changed = on != (areaSetAt != null);
+    setState(() => areaSetAt = on ? (areaSetAt ?? DateTime.now()) : null);
+    if (changed) _refreshAll();
+    return on;
   }
 
   Future<void> _setShareReceipts(bool on) async {
@@ -1187,6 +1220,8 @@ class _ServerHomeState extends State<ServerHome> {
           shareReadReceipts: shareReceipts ?? false,
           onShareReadReceiptsChanged: _setShareReceipts,
           onDownloadData: () => _downloadData(navigator),
+          areaOn: areaSetAt != null,
+          onArea: () => _chooseArea(navigator.context),
         ),
       ),
     );

@@ -161,12 +161,10 @@ git push origin $NEW:refs/heads/gh-pages
 
 ## Next work that needs nobody
 
-- Location as a distance band: opt-in, coarse, never exact (design in
-  `docs/DATA_LIFECYCLE_CONTRACT.md`, "Location and privacy zones"). Distance shows "hidden" today.
+- Phone test of BE-10 (distance): needs the owner's yes before granting location on their phone,
+  or an emulator with a mock location. Privacy zones (home/work) are still design only.
 - Moderation console and appeals for stored reports, with an audit trail.
 - Load and abuse tests (many members, spam and scam patterns) and a security review pass.
-- Small: the export's `429 rate_limited` message says "wait a few minutes" but the limit is per
-  day; give it its own wording.
 
 ## State left on the machine
 

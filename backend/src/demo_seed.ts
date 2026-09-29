@@ -1,3 +1,4 @@
+import { type Cell, snapToCell } from './location.js';
 import type { Sealer } from './crypto.js';
 import type { Db } from './db.js';
 import { interests as allowedInterests, lifestyleOptions } from './rules.js';
@@ -37,6 +38,18 @@ function habitsFor(index: number): Record<string, string> {
 export const demoEmail = (index: number) => `demo-${String(index).padStart(3, '0')}@vawra.test`;
 
 /**
+ * A made-up area for a demo member: spread from 1 to 150 km around [near]
+ * in a fixed pattern, so every distance band appears.
+ */
+export function demoArea(near: Cell, index: number): Cell {
+  const km = 1 + ((index * 37) % 150);
+  const bearing = ((index * 137.5) % 360) * (Math.PI / 180);
+  const lat = near.lat + (km / 111.2) * Math.cos(bearing);
+  const lng = near.lng + (km / (111.2 * Math.cos((near.lat * Math.PI) / 180))) * Math.sin(bearing);
+  return snapToCell(lat, lng);
+}
+
+/**
  * Adds synthetic demo members (age-verified, active) for local testing.
  * Idempotent: members already present are left alone. Returns how many were added.
  */
@@ -45,6 +58,7 @@ export async function seedDemo(
   sealer: Sealer,
   people: DemoProfile[],
   now: Date,
+  near?: Cell,
 ): Promise<number> {
   let added = 0;
   for (const [index, person] of people.entries()) {
@@ -90,6 +104,13 @@ export async function seedDemo(
           person.gender,
         ],
       );
+      if (near) {
+        const area = demoArea(near, index);
+        await tx.query(
+          'UPDATE profiles SET location_sealed = $2, location_updated_at = $3 WHERE account_id = $1',
+          [id, sealer.seal(JSON.stringify(area)), now],
+        );
+      }
     });
     added++;
   }
