@@ -107,6 +107,17 @@ class FakeVawraServer {
   /// An error code the next area update fails with, like the real server.
   String? areaError;
 
+  /// Set to suspend the signed-in person: {since, reason}.
+  Map<String, dynamic>? suspension;
+  final appeals = <String>[];
+  String? appealState;
+  bool moderator = false;
+
+  /// The moderation queue and decisions made on it.
+  final modReports = <Map<String, dynamic>>[];
+  final modAppeals = <Map<String, dynamic>>[];
+  final decisions = <String>[];
+
   /// The server's deletion date while a deletion is scheduled.
   DateTime? deletionAt;
   bool _revoked = false;
@@ -259,13 +270,51 @@ class FakeVawraServer {
         'age_state': verified ? 'adult_verified' : 'assurance_required',
         'lifecycle': deletionAt != null
             ? 'deletion_scheduled'
+            : suspension != null
+            ? 'suspended'
             : paused
             ? 'paused'
             : 'active',
         'deletion_effective_at': deletionAt?.toIso8601String(),
         'profile': profile,
         'location_updated_at': areaAt?.toIso8601String(),
+        'suspension': suspension == null
+            ? null
+            : {
+                ...suspension!,
+                'appeal': appealState == null
+                    ? null
+                    : {
+                        'state': appealState,
+                        'created_at': '2026-09-29T12:00:00.000Z',
+                      },
+              },
+        'moderator': moderator,
       });
+    }
+    if (path == '/v1/me/appeal') {
+      if (appealState == 'open') return _error(409, 'appeal_open');
+      appeals.add(body['message'] as String);
+      appealState = 'open';
+      return _json(202, {
+        'state': 'open',
+        'created_at': '2026-09-29T12:00:00.000Z',
+      });
+    }
+    if (path.startsWith('/v1/mod/')) {
+      if (!moderator) return _error(404, 'not_found');
+      if (path == '/v1/mod/reports') return _json(200, {'reports': modReports});
+      if (path == '/v1/mod/appeals') return _json(200, {'appeals': modAppeals});
+      final decision = RegExp(r'^/v1/mod/(reports|appeals)/([^/]+)/decision$')
+          .firstMatch(path);
+      if (decision != null) {
+        if (!recentSignIn) return _error(403, 'reauthentication_required');
+        final id = decision.group(2)!;
+        decisions.add('${decision.group(1)}:$id:${body['outcome']}');
+        modReports.removeWhere((r) => r['report_id'] == id);
+        modAppeals.removeWhere((a) => a['appeal_id'] == id);
+        return _json(200, {'state': body['outcome']});
+      }
     }
     if (path == '/v1/me/location') {
       if (method == 'DELETE') {

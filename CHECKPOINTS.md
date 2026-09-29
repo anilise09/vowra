@@ -1,5 +1,33 @@
 # Checkpoints
 
+## BE-11 - Moderation: review reports, suspend, appeal (2026-09-29)
+
+- Reports were stored but nobody could act on them. Moderators (a role on the account) now get a
+  Moderation page from Settings: pending reports with the reason, the person's name and bio, how
+  often they have been reported, how many reports the reporter has made, and only the one
+  reported message as evidence. The reporter is never named. Dismiss or Suspend, each confirmed,
+  with an optional note for moderators.
+- Suspending signs the person out everywhere, hides them from Discover and Likes you, closes
+  their conversations and settles every open report about them. Signing in again shows "Your
+  account is suspended", why and since when, and an appeal form; downloading their data,
+  deleting the account and signing out stay available. Pause, resume and delete-then-cancel
+  cannot lift a suspension.
+- One open appeal at a time; the moderator who suspended someone cannot decide their appeal, so
+  a second person always looks. Overturning restores the account as it was.
+- Every decision needs a recent sign-in (an older one confirms with a code and comes back to the
+  page), is audited, and never touches the moderator's own reports. `/v1/mod/*` answers 404 to
+  members. Notes and who decided never reach the member or their export.
+- `npm run dev:moderator -- <email> [--remove]` makes a local test account a moderator (local
+  database only; there is no staff sign-in yet).
+- Found by the tests and fixed: the decision dialog disposed its note field while still closing,
+  which throws on a phone.
+- Tests: backend 82 (visibility, evidence, own-report conflict, dismiss, suspend effects, recent
+  sign-in, appeals and the second moderator, input, export, delete-and-cancel); letting moderators
+  see their own reports, dropping the second-moderator rule, skipping the sign-out or leaving
+  chats open each fails a test. App 208 passed (one existing skip): suspended screen and appeals,
+  no Moderation row for members, evidence and confirm, the code step, the second-moderator rule
+  in the UI; removing the suspended screen fails three tests. Not yet on a phone.
+
 ## BE-10 - Distance from an approximate area, never an exact spot (2026-09-29)
 
 - Cards used to say "Distance hidden" for everyone. Settings > Discover now has "Distance": turned

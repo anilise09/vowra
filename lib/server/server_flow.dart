@@ -28,6 +28,7 @@ import '../theme/vawra_theme.dart';
 import '../data/area_locator.dart';
 import 'area_sheet.dart';
 import 'data_export_page.dart';
+import 'moderation_screens.dart';
 
 /// Plain-language text for a failed call. Server codes never reach the screen
 /// raw, and nothing reveals whether an email has an account.
@@ -74,6 +75,8 @@ Future<void> openSignedIn(NavigatorState navigator, VawraApi api) async {
       effectiveAt: me.deletionEffectiveAt,
       signedIn: true,
     );
+  } else if (me.suspension case final suspension? when me.suspended) {
+    next = SuspendedScreen(api: api, suspension: suspension);
   } else if (me.profile == null) {
     next = _NewProfile(api: api);
   } else if (!me.canDate) {
@@ -1222,6 +1225,13 @@ class _ServerHomeState extends State<ServerHome> {
           onDownloadData: () => _downloadData(navigator),
           areaOn: areaSetAt != null,
           onArea: () => _chooseArea(navigator.context),
+          onModeration: widget.me.moderator
+              ? () => navigator.push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ModerationPage(api: api),
+                  ),
+                )
+              : null,
         ),
       ),
     );

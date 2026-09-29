@@ -22,7 +22,11 @@ class SettingsPage extends StatefulWidget {
     this.onDownloadData,
     this.areaOn,
     this.onArea,
+    this.onModeration,
   });
+
+  /// Only for moderators: reviewing reports and appeals.
+  final VoidCallback? onModeration;
 
   /// Whether an approximate area is set; null hides the row (prototype).
   final bool? areaOn;
@@ -288,6 +292,14 @@ class _SettingsPageState extends State<SettingsPage> {
               title: 'Safety center',
               onTap: widget.onOpenSafetyCenter,
             ),
+            if (widget.onModeration case final open?)
+              _Row(
+                key: const Key('settings-moderation'),
+                icon: Icons.gavel_rounded,
+                title: 'Moderation',
+                subtitle: 'Review reports and appeals.',
+                onTap: open,
+              ),
           ],
         ),
         const _Heading('Privacy'),

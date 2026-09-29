@@ -7,7 +7,7 @@ import { openCell } from './location.js';
  * Deletion and data export need a sign-in within the reauthentication
  * window: a stolen or forgotten session on some device is never enough.
  */
-async function requireRecentSignIn(services: Services, account: Account) {
+export async function requireRecentSignIn(services: Services, account: Account) {
   const [family] = await services.db.query<{ created_at: Date }>(
     'SELECT created_at FROM session_families WHERE id = $1',
     [account.familyId],
@@ -66,6 +66,20 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       [me],
     );
     const cell = openCell(services, area?.location_sealed ?? null);
+    const [suspension] = await db.query<{ suspended_at: Date | null; suspension_reason: string | null }>(
+      'SELECT suspended_at, suspension_reason FROM accounts WHERE id = $1',
+      [me],
+    );
+    // Their own words and the outcomes; never moderator notes or who decided.
+    const appeals = await db.query<{
+      message: string;
+      state: string;
+      created_at: Date;
+      decided_at: Date | null;
+    }>(
+      'SELECT message, state, created_at, decided_at FROM appeals WHERE account_id = $1 ORDER BY created_at',
+      [me],
+    );
     const swipes = await db.query<{ kind: string; created_at: Date }>(
       'SELECT kind, created_at FROM swipes WHERE from_account = $1 ORDER BY created_at',
       [me],
@@ -121,6 +135,15 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       profile: profile
         ? { ...profile, updated_at: iso(profile.updated_at as Date) }
         : null,
+      suspension: suspension?.suspended_at
+        ? { since: iso(suspension.suspended_at), reason: suspension.suspension_reason }
+        : null,
+      appeals_you_made: appeals.map((a) => ({
+        message: a.message,
+        state: a.state,
+        at: iso(a.created_at),
+        decided_at: iso(a.decided_at),
+      })),
       approximate_area: cell
         ? { ...cell, cell_km: cellKm, updated_at: iso(area!.location_updated_at) }
         : null,
@@ -139,7 +162,7 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       security_events: events.map((e) => ({ kind: e.kind, at: iso(e.created_at) })),
       not_included: [
         'Messages other people sent you, their profiles and their account IDs',
-        'Internal safety and moderation notes',
+        'Internal safety and moderation notes, and which moderator decided',
         'Anything kept only on your phone',
       ],
     };

@@ -32,7 +32,8 @@ export interface Account {
   familyId: string;
   accessExpiresAt: Date;
   ageState: 'assurance_required' | 'pending_review' | 'adult_verified' | 'rejected';
-  lifecycle: 'active' | 'paused' | 'deletion_scheduled';
+  lifecycle: 'active' | 'paused' | 'deletion_scheduled' | 'suspended';
+  role: 'member' | 'moderator';
 }
 
 declare module 'fastify' {
@@ -71,8 +72,16 @@ export function requireDatingAccess(
   const account = requireAccount(request);
   if (account.ageState !== 'adult_verified') fail(403, 'age_assurance_required');
   if (account.lifecycle === 'deletion_scheduled') fail(409, 'deletion_scheduled');
+  if (account.lifecycle === 'suspended') fail(409, 'account_suspended');
   if (account.lifecycle === 'paused' && allowPaused) return account;
   if (account.lifecycle !== 'active') fail(409, 'account_paused');
+  return account;
+}
+
+/** Moderation routes look like they do not exist to anyone else. */
+export function requireModerator(request: FastifyRequest): Account {
+  const account = requireAccount(request);
+  if (account.role !== 'moderator') fail(404, 'not_found');
   return account;
 }
 

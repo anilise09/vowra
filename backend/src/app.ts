@@ -7,6 +7,7 @@ import { discoveryRoutes } from './routes/discovery.js';
 import { eventRoutes } from './routes/events.js';
 import { lifecycleRoutes } from './routes/lifecycle.js';
 import { locationRoutes } from './routes/location.js';
+import { moderationRoutes } from './routes/moderation.js';
 import { profileRoutes } from './routes/profile.js';
 import { safetyRoutes } from './routes/safety.js';
 
@@ -50,8 +51,10 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
       access_expires_at: Date;
       age_state: Account['ageState'];
       lifecycle: Account['lifecycle'];
+      role: Account['role'];
     }>(
-      `SELECT a.id, s.id AS session_id, s.family_id, s.access_expires_at, a.age_state, a.lifecycle
+      `SELECT a.id, s.id AS session_id, s.family_id, s.access_expires_at, a.age_state, a.lifecycle,
+              a.role
        FROM sessions s
        JOIN session_families f ON f.id = s.family_id
        JOIN accounts a ON a.id = s.account_id
@@ -67,6 +70,7 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
         accessExpiresAt: new Date(row.access_expires_at),
         ageState: row.age_state,
         lifecycle: row.lifecycle,
+        role: row.role,
       };
     }
   });
@@ -92,6 +96,7 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
   safetyRoutes(app, services);
   lifecycleRoutes(app, services);
   locationRoutes(app, services);
+  moderationRoutes(app, services);
   eventRoutes(app, services);
   return app;
 }

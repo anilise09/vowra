@@ -161,12 +161,20 @@ class MeState {
     required this.profile,
     this.deletionEffectiveAt,
     this.areaUpdatedAt,
+    this.suspension,
+    this.moderator = false,
   });
 
   final String ageState;
 
-  /// active, paused or deletion_scheduled.
+  /// active, paused, deletion_scheduled or suspended.
   final String lifecycle;
+
+  /// Only while suspended: why, since when, and the latest appeal.
+  final Suspension? suspension;
+
+  /// Whether this account reviews reports.
+  final bool moderator;
   final UserProfile? profile;
 
   /// Set while a deletion is scheduled: the server's date, never assumed.
@@ -177,8 +185,121 @@ class MeState {
 
   bool get paused => lifecycle == 'paused';
   bool get deletionScheduled => lifecycle == 'deletion_scheduled';
+  bool get suspended => lifecycle == 'suspended';
 
   bool get canDate => ageState == 'adult_verified';
+}
+
+class Suspension {
+  const Suspension({
+    required this.since,
+    this.reason,
+    this.appealState,
+    this.appealAt,
+  });
+
+  factory Suspension.fromJson(Map<String, dynamic> json) {
+    final appeal = json['appeal'] as Map<String, dynamic>?;
+    return Suspension(
+      since: DateTime.parse(json['since'] as String).toLocal(),
+      reason: reportReasonFromKey(json['reason'] as String?),
+      appealState: appeal?['state'] as String?,
+      appealAt: appeal == null
+          ? null
+          : DateTime.parse(appeal['created_at'] as String).toLocal(),
+    );
+  }
+
+  final DateTime since;
+  final ReportReason? reason;
+
+  /// open, upheld or overturned; null before any appeal.
+  final String? appealState;
+  final DateTime? appealAt;
+}
+
+ReportReason? reportReasonFromKey(String? key) {
+  for (final reason in ReportReason.values) {
+    if (reason.backendKey == key) return reason;
+  }
+  return null;
+}
+
+/// A report waiting for a moderator. The reporter is never identified.
+class ModReport {
+  const ModReport({
+    required this.reportId,
+    required this.reason,
+    required this.reportedAt,
+    required this.accountId,
+    required this.name,
+    required this.bio,
+    required this.status,
+    required this.reportsAgainst,
+    required this.reporterReportCount,
+    this.messageText,
+  });
+
+  factory ModReport.fromJson(Map<String, dynamic> json) => ModReport(
+    reportId: json['report_id'] as String,
+    reason: reportReasonFromKey(json['reason'] as String?),
+    reportedAt: DateTime.parse(json['reported_at'] as String).toLocal(),
+    accountId: json['account_id'] as String,
+    name: (json['display_name'] as String?) ?? 'No profile',
+    bio: (json['bio'] as String?) ?? '',
+    status: json['status'] as String,
+    reportsAgainst: json['reports_against'] as int,
+    reporterReportCount: json['reporter_report_count'] as int,
+    messageText: (json['message'] as Map<String, dynamic>?)?['text'] as String?,
+  );
+
+  final String reportId;
+  final ReportReason? reason;
+  final DateTime reportedAt;
+  final String accountId;
+  final String name;
+  final String bio;
+  final String status;
+  final int reportsAgainst;
+  final int reporterReportCount;
+
+  /// The one reported message, when the report pointed at one.
+  final String? messageText;
+}
+
+class ModAppeal {
+  const ModAppeal({
+    required this.appealId,
+    required this.message,
+    required this.createdAt,
+    required this.name,
+    required this.suspendedByYou,
+    this.suspendedAt,
+    this.reason,
+  });
+
+  factory ModAppeal.fromJson(Map<String, dynamic> json) => ModAppeal(
+    appealId: json['appeal_id'] as String,
+    message: json['message'] as String,
+    createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
+    name: (json['display_name'] as String?) ?? 'No profile',
+    suspendedByYou: json['suspended_by_you'] as bool,
+    suspendedAt: switch (json['suspended_at']) {
+      final String at => DateTime.parse(at).toLocal(),
+      _ => null,
+    },
+    reason: reportReasonFromKey(json['suspension_reason'] as String?),
+  );
+
+  final String appealId;
+  final String message;
+  final DateTime createdAt;
+  final String name;
+
+  /// A different moderator must decide it.
+  final bool suspendedByYou;
+  final DateTime? suspendedAt;
+  final ReportReason? reason;
 }
 
 extension ReportReasonKey on ReportReason {
@@ -476,6 +597,7 @@ class VawraApi {
     final profile = json['profile'] as Map<String, dynamic>?;
     final deletion = json['deletion_effective_at'] as String?;
     final area = json['location_updated_at'] as String?;
+    final suspension = json['suspension'] as Map<String, dynamic>?;
     return MeState(
       ageState: json['age_state'] as String,
       lifecycle: json['lifecycle'] as String,
@@ -483,6 +605,8 @@ class VawraApi {
           ? null
           : DateTime.parse(deletion).toLocal(),
       areaUpdatedAt: area == null ? null : DateTime.parse(area).toLocal(),
+      suspension: suspension == null ? null : Suspension.fromJson(suspension),
+      moderator: (json['moderator'] as bool?) ?? false,
       profile: profile == null
           ? null
           : UserProfile(
@@ -506,6 +630,48 @@ class VawraApi {
             ),
     );
   }
+
+  /// A suspended person asks for another look; one open appeal at a time.
+  Future<void> appeal(String message) =>
+      _send('POST', '/v1/me/appeal', body: {'message': message});
+
+  Future<List<ModReport>> moderationReports() async {
+    final json = await _send('GET', '/v1/mod/reports');
+    return [
+      for (final r in json['reports'] as List)
+        ModReport.fromJson(r as Map<String, dynamic>),
+    ];
+  }
+
+  /// [outcome] is `dismissed` or `suspended`. Needs a recent sign-in.
+  Future<void> decideReport(String reportId, String outcome, {String? note}) =>
+      _send(
+        'POST',
+        '/v1/mod/reports/$reportId/decision',
+        body: {
+          'outcome': outcome,
+          if (note != null && note.isNotEmpty) 'note': note,
+        },
+      );
+
+  Future<List<ModAppeal>> moderationAppeals() async {
+    final json = await _send('GET', '/v1/mod/appeals');
+    return [
+      for (final a in json['appeals'] as List)
+        ModAppeal.fromJson(a as Map<String, dynamic>),
+    ];
+  }
+
+  /// [outcome] is `upheld` or `overturned`. Needs a recent sign-in.
+  Future<void> decideAppeal(String appealId, String outcome, {String? note}) =>
+      _send(
+        'POST',
+        '/v1/mod/appeals/$appealId/decision',
+        body: {
+          'outcome': outcome,
+          if (note != null && note.isNotEmpty) 'note': note,
+        },
+      );
 
   /// Sets the approximate area: a cell centre, never an exact point.
   Future<void> setArea(AreaCell cell) =>

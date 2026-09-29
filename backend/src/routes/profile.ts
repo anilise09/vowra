@@ -75,11 +75,21 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
     const [row] = await db.query<{
       deletion_effective_at: Date | null;
       location_updated_at: Date | null;
+      suspended_at: Date | null;
+      suspension_reason: string | null;
     }>(
-      `SELECT a.deletion_effective_at, p.location_updated_at
+      `SELECT a.deletion_effective_at, p.location_updated_at, a.suspended_at, a.suspension_reason
        FROM accounts a LEFT JOIN profiles p ON p.account_id = a.id WHERE a.id = $1`,
       [account.id],
     );
+    const [appeal] =
+      account.lifecycle === 'suspended'
+        ? await db.query<{ state: string; created_at: Date }>(
+            `SELECT state, created_at FROM appeals WHERE account_id = $1
+             ORDER BY created_at DESC LIMIT 1`,
+            [account.id],
+          )
+        : [];
     return {
       age_state: account.ageState,
       lifecycle: account.lifecycle,
@@ -87,6 +97,18 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
         ? new Date(row.deletion_effective_at).toISOString()
         : null,
       profile: await load(account.id),
+      // Only the person's own view: why they are suspended and their latest appeal.
+      suspension:
+        account.lifecycle === 'suspended' && row?.suspended_at
+          ? {
+              since: new Date(row.suspended_at).toISOString(),
+              reason: row.suspension_reason,
+              appeal: appeal
+                ? { state: appeal.state, created_at: new Date(appeal.created_at).toISOString() }
+                : null,
+            }
+          : null,
+      moderator: account.role === 'moderator',
       // Whether an approximate area is set; the area itself is never sent back.
       location_updated_at: row?.location_updated_at
         ? new Date(row.location_updated_at).toISOString()
@@ -205,6 +227,7 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
   app.post('/v1/me/pause', async (request, reply) => {
     const account = requireAccount(request);
     if (account.lifecycle === 'deletion_scheduled') fail(409, 'deletion_scheduled');
+    if (account.lifecycle === 'suspended') fail(409, 'account_suspended');
     await db.query("UPDATE accounts SET lifecycle = 'paused' WHERE id = $1 AND lifecycle = 'active'", [
       account.id,
     ]);
@@ -217,6 +240,8 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
     if (account.ageState !== 'adult_verified') fail(403, 'age_assurance_required');
     // Resuming never undoes a scheduled deletion; only DELETE /v1/me/deletion does.
     if (account.lifecycle === 'deletion_scheduled') fail(409, 'deletion_scheduled');
+    // Nor a suspension: only an overturned appeal does.
+    if (account.lifecycle === 'suspended') fail(409, 'account_suspended');
     await db.query("UPDATE accounts SET lifecycle = 'active' WHERE id = $1 AND lifecycle = 'paused'", [
       account.id,
     ]);

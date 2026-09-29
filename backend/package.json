@@ -14,7 +14,8 @@
     "start": "node dist/src/server.js",
     "dev": "tsx src/server.ts",
     "dev:assure": "tsx scripts/dev-assure.ts",
-    "dev:seed-demo": "tsx scripts/seed-demo.ts"
+    "dev:seed-demo": "tsx scripts/seed-demo.ts",
+    "dev:moderator": "tsx scripts/dev-moderator.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

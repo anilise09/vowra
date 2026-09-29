@@ -60,6 +60,16 @@ Profile mutation contains no location. Added 2026-09-28 (BE-10): `PUT /v1/me/loc
 - Entitlements come only from verified store/provider records. They cannot grant messaging, reporting, blocking, or other safety access.
 - Moderation access is least-privilege and audited; ordinary analytics never receive message bodies, identity evidence, precise location, or call content.
 
+## Moderation (added 2026-09-29, BE-11)
+
+- `accounts.role` is `member` or `moderator`. Every `/v1/mod/*` route answers `404` to anyone who is not a moderator, so the console's existence is not revealed.
+- `GET /v1/mod/reports`: pending reports, oldest first, never including reports filed by or about the moderator. Each shows the reason, the reported person's name, bio and status, how many reports concern them, how many reports the reporter has made, and only the one reported message (if the report pointed at one). The reporter is never identified.
+- `POST /v1/mod/reports/:id/decision` `{outcome: dismissed|suspended, note?}`: needs a recent sign-in; `409 conflict_of_interest` for the moderator's own reports, `409 already_decided` for decided ones. Suspending sets `lifecycle = suspended`, revokes every session, closes their conversations (their matches' lists refresh), hides them from Discover and Likes you, and settles every open report about them as `actioned`. Someone already leaving or suspended keeps that state.
+- `GET /v1/mod/appeals` and `POST /v1/mod/appeals/:id/decision` `{outcome: upheld|overturned, note?}`: needs a recent sign-in; the moderator who suspended the account cannot decide its appeal (`409 second_moderator_required`). Overturning restores the lifecycle the person had before.
+- `POST /v1/me/appeal` `{message}` (1-1000 characters): only while suspended (`409 not_suspended`), one open appeal at a time (`409 appeal_open`).
+- A suspended person can still sign in, read `GET /v1/me/profile` (with `suspension: {since, reason, appeal}`), download their data and ask for deletion; dating routes, pause and resume answer `409 account_suspended`. Asking for deletion and cancelling it does not lift a suspension.
+- Decision notes and which moderator decided are internal: never returned to members or put in their export. Every decision and appeal is an audit event (kind and time only).
+
 ## Failure behavior
 
 The client fails closed when the service is unavailable, the session is invalid, age assurance is incomplete, or the server rejects a mutation. It may keep the existing memory-only synthetic prototype available in development builds, but it must never display a local write as a persisted account change.

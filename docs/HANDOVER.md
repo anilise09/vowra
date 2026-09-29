@@ -74,8 +74,9 @@ exec node dist/src/server.js
 
 - Port 8797 (8787 belongs to QuietWall's website dev server).
 - PGlite allows one process: stop the server (kill the node PID listening on 8797) before
-  `npm run dev:seed-demo [-- --remove]` or `npm run dev:assure -- <email> <age>` (marks a local
-  test account adult, because no age-assurance provider exists yet).
+  `npm run dev:seed-demo [-- --remove | --near <email>]`, `npm run dev:assure -- <email> <age>`
+  (marks a local test account adult, because no age-assurance provider exists yet) or
+  `npm run dev:moderator -- <email> [--remove]` (local moderator role).
 - `backend/.data/dev.env` holds the keys that seal the local database's emails. If it is lost,
   make new 32-byte base64 keys and start a fresh `.data/pglite`.
 - Dev drivers in `tools/dev/`: `vawra_driver.mjs` (sign up and drive synthetic test members:
@@ -163,7 +164,9 @@ git push origin $NEW:refs/heads/gh-pages
 
 - Phone test of BE-10 (distance): needs the owner's yes before granting location on their phone,
   or an emulator with a mock location. Privacy zones (home/work) are still design only.
-- Moderation console and appeals for stored reports, with an audit trail.
+- Moderation is built (BE-11) but moderators are made with a local dev command; a real staff
+  sign-in (separate from member accounts, with two-person access for sensitive evidence) comes
+  with hosting.
 - Load and abuse tests (many members, spam and scam patterns) and a security review pass.
 
 ## State left on the machine
