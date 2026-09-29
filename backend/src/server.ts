@@ -5,6 +5,7 @@ import { Sealer } from './crypto.js';
 import { migrate, openPglite, openPostgres } from './db.js';
 import type { Delivery } from './context.js';
 import { runDueDeletions } from './jobs/deletions.js';
+import { runRetention } from './jobs/retention.js';
 import { MemoryNudgeBus } from './nudges.js';
 import { DiskMediaStore, MediaGrants } from './media.js';
 
@@ -60,6 +61,8 @@ const clock = { now: () => new Date() };
 const sweep = () =>
   runDueDeletions(db, clock, media)
     .then((n) => n > 0 && app.log.info({ deleted: n }, 'scheduled deletions completed'))
-    .catch((err: Error) => app.log.error({ err: { message: err.message } }, 'deletion job failed'));
+    .then(() => runRetention(db, clock))
+    .then((removed) => app.log.info({ removed }, 'retention sweep completed'))
+    .catch((err: Error) => app.log.error({ err: { message: err.message } }, 'scheduled job failed'));
 await sweep();
 setInterval(sweep, 60 * 60 * 1000).unref();

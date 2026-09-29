@@ -38,6 +38,23 @@ Open decision for counsel: reports filed against a deleted account are removed w
 
 Backups age out under a documented schedule and are not restored selectively for ordinary product use. Legal holds and narrowly retained abuse evidence are segregated, access-controlled, audited, purpose-limited, and automatically reviewed for expiry. They cannot reactivate or rediscover the deleted account.
 
+## Retention schedule (implemented BE-13, 2026-09-29; values pending legal review)
+
+An hourly job (`backend/src/jobs/retention.ts`) removes what is no longer needed:
+
+| What | Kept for | Why |
+|---|---|---|
+| Used or expired sign-in codes | 1 day | nothing needs them afterwards |
+| Ended sign-ins (signed out, deleted, suspended) | 30 days | investigating account takeovers |
+| Rotated session records | 30 days | detecting reuse of an old refresh token |
+| A sign-in on a device unused for 90 days | ends | the device signs in again |
+| Photo uploads never sent | 1 day | an abandoned grant |
+| Rejected photo records (files deleted at once) | 90 days | answering a question about the rejection |
+| Security audit events (kind and time only) | 365 days | investigating abuse |
+| Decided reports and appeals, with notes | 730 days | repeat-abuse history |
+
+Backups are rotated after seven days (`docs/RECOVERY.md`), so deleted data leaves them too.
+
 ## Location and privacy zones
 
 Location is optional until a reviewed product flow explicitly requires it. Permission denial leaves safe non-location account controls usable. A future client encrypts an exact sample to a pinned server key before transport; `EncryptedLocationEnvelope` contains ciphertext, key ID, and capture time, never latitude/longitude fields.

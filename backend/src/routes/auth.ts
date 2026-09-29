@@ -197,10 +197,13 @@ export function authRoutes(app: FastifyInstance, services: Services) {
 
   app.delete('/v1/session', async (request, reply) => {
     const account = requireAccount(request);
-    await db.query('UPDATE sessions SET revoked_at = $2 WHERE id = $1', [
-      account.sessionId,
-      clock.now(),
-    ]);
+    const now = clock.now();
+    // Signing out ends this device's whole sign-in, not only its current token.
+    await db.query('UPDATE sessions SET revoked_at = $2 WHERE id = $1', [account.sessionId, now]);
+    await db.query(
+      'UPDATE session_families SET revoked_at = $2 WHERE id = $1 AND revoked_at IS NULL',
+      [account.familyId, now],
+    );
     return noContent(reply);
   });
 

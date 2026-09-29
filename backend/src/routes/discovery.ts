@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { fail, requireDatingAccess, type Services } from '../context.js';
 import type { Db } from '../db.js';
-import { swipeRules } from '../rules.js';
+import { abuseRules, swipeRules } from '../rules.js';
 import { compatibility, type CompatibilityProfile } from '../compatibility.js';
 import { type Cell, distanceBand, distanceKm } from '../location.js';
 import { openCell } from './location.js';
@@ -146,6 +146,15 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     const now = clock.now();
     const kind = body.data!.kind;
     return db.transaction(async (tx) => {
+      if (kind !== 'pass') {
+        const [likes] = await tx.query<{ count: number }>(
+          `SELECT count(*)::int AS count FROM swipes
+           WHERE from_account = $1 AND kind IN ('like','super_like') AND created_at > $2
+             AND to_account <> $3`,
+          [me.id, new Date(now.getTime() - 24 * 60 * 60_000), other],
+        );
+        if ((likes?.count ?? 0) >= abuseRules.likesPerDay) fail(429, 'like_limit');
+      }
       if (kind === 'super_like') {
         // A repeat of an existing decision is idempotent and does not count.
         const [spent] = await tx.query<{ count: number }>(

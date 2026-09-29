@@ -9,6 +9,8 @@ export interface Db {
   /** Runs `work` in one transaction; rolls back on any thrown error. */
   transaction<T>(work: (tx: Db) => Promise<T>): Promise<T>;
   close(): Promise<void>;
+  /** PGlite only: the whole database as a gzipped tarball, for backups. */
+  dump?(): Promise<Buffer>;
 }
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), 'migrations');
@@ -39,10 +41,11 @@ function splitStatements(sql: string): string[] {
 }
 
 /** In-process PostgreSQL (WASM). Used for development and tests; no install needed. */
-export async function openPglite(dataDir?: string): Promise<Db> {
+export async function openPglite(dataDir?: string, restoreFrom?: Buffer): Promise<Db> {
   const { PGlite } = await import('@electric-sql/pglite');
   if (dataDir) mkdirSync(dataDir, { recursive: true });
-  const pg = dataDir ? new PGlite(dataDir) : new PGlite();
+  const options = restoreFrom ? { loadDataDir: new Blob([new Uint8Array(restoreFrom)]) } : {};
+  const pg = dataDir ? new PGlite(dataDir, options) : new PGlite(options);
   await pg.waitReady;
   const wrap = (runner: { query: typeof pg.query }): Db => ({
     async query<T>(sql: string, params: unknown[] = []) {
@@ -52,7 +55,10 @@ export async function openPglite(dataDir?: string): Promise<Db> {
     transaction: (work) => pg.transaction((tx) => work(wrap(tx as never))),
     close: () => pg.close(),
   });
-  return wrap(pg);
+  return {
+    ...wrap(pg),
+    dump: async () => Buffer.from(await (await pg.dumpDataDir('gzip')).arrayBuffer()),
+  };
 }
 
 /** A real PostgreSQL server, selected with DATABASE_URL. */

@@ -89,6 +89,12 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
     return reply.code(500).send({ error: 'internal', request_id: request.id });
   });
 
+  // Account data must never sit in a shared cache, and nothing is sniffed as another type.
+  app.addHook('onSend', async (_request, reply) => {
+    reply.header('x-content-type-options', 'nosniff');
+    if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store');
+  });
+
   app.get('/v1/health', async () => ({ ok: true }));
   authRoutes(app, services);
   profileRoutes(app, services);

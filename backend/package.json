@@ -15,7 +15,9 @@
     "dev": "tsx src/server.ts",
     "dev:assure": "tsx scripts/dev-assure.ts",
     "dev:seed-demo": "tsx scripts/seed-demo.ts",
-    "dev:moderator": "tsx scripts/dev-moderator.ts"
+    "dev:moderator": "tsx scripts/dev-moderator.ts",
+    "dev:backup": "tsx scripts/backup.ts",
+    "dev:restore": "tsx scripts/restore.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

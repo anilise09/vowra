@@ -41,6 +41,9 @@ String describeApiError(Object error) {
     'invalid_proof' => 'That code didn\'t work. Codes work once and expire, so ask for a new one.',
     'slow_down' => 'Slow down a little: up to 5 messages a minute.',
     'super_like_limit' => 'You\'ve used today\'s Super Likes. More tomorrow.',
+    'like_limit' => 'You\'ve liked a lot of people today. More tomorrow.',
+    'report_limit' =>
+      'You\'ve sent many reports today. You can still block anyone at any time.',
     'conversation_closed' => 'This conversation has closed.',
     'account_paused' => 'Your profile is paused. Resume it to meet new people.',
     'age_assurance_required' => 'Your age needs to be confirmed first.',

@@ -10,6 +10,12 @@ export const intents = [
 
 export const genders = ['woman', 'man', 'nonbinary'] as const;
 
+/** Generous for people, a wall for bots. Passes are not limited. */
+export const abuseRules = {
+  likesPerDay: 300,
+  reportsPerDay: 20,
+};
+
 export const interests = [
   'Arts',
   'Books',

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { audit, fail, noContent, requireAccount, type Services } from '../context.js';
-import { reportReasons } from '../rules.js';
+import { abuseRules, reportReasons } from '../rules.js';
 
 const blockBody = z.object({ account_id: z.string().uuid() }).strict();
 const reportBody = z
@@ -51,6 +51,11 @@ export function safetyRoutes(app: FastifyInstance, services: Services) {
     const { account_id: target, reason, message_id } = body.data!;
     if (target === me.id) fail(400, 'invalid_request');
     const now = clock.now();
+    const [recent] = await db.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM reports WHERE reporter = $1 AND created_at > $2',
+      [me.id, new Date(now.getTime() - 24 * 60 * 60_000)],
+    );
+    if ((recent?.n ?? 0) >= abuseRules.reportsPerDay) fail(429, 'report_limit');
     const exists = await db.query('SELECT 1 FROM accounts WHERE id = $1', [target]);
     if (exists.length > 0) {
       // A message reference is kept only if it is the reported person's message

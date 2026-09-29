@@ -1,5 +1,27 @@
 # Checkpoints
 
+## BE-13 - Retention, backup and recovery, and a security review (2026-09-29)
+
+- Retention: an hourly job clears used sign-in codes, ended sign-ins, rotated tokens, unsent
+  uploads, rejected photo records, old audit rows and long-decided reports, on a written schedule
+  (`DATA_LIFECYCLE_CONTRACT.md`). A device unused for 90 days signs in again.
+- Backup and recovery: `npm run dev:backup` / `dev:restore` snapshot and restore the local
+  database with the photo files, keeping seven. Drill on the real local data: 267 accounts, backup
+  9.7 s and 6.1 MB, restore 3.7 s; afterwards an existing session and a fresh sign-in both worked
+  (`docs/RECOVERY.md`). An automated test restores a backup into a new database on every run.
+- Security review 1 (`docs/SECURITY_REVIEW.md`), with fixes:
+  - sign-out now ends the device's whole sign-in, not only its current token;
+  - the in-memory rate limiter forgets finished windows (it grew without end);
+  - likes stop at 300 a day and reports at 20 a day (bots and queue floods); passes and blocks stay
+    unlimited, and the app explains both limits;
+  - every response carries `nosniff` and `no-store` unless a route sets its own caching;
+  - Android backup and device-to-device transfer are off, so tokens and cached data stay on the
+    phone (checked in the built APK).
+  Open items are listed there: shared rate-limit store, device attestation, production HTTPS and
+  encrypted backups, a staff sign-in, and an independent pen test.
+- Tests: backend 99 (retention and the live sign-in surviving it, idle expiry, backup-restore
+  round trip, rotation, like and report limits, limiter memory, headers). Flutter 213.
+
 ## BE-12 - Profile photos, checked by a person before anyone sees them (2026-09-29)
 
 - Profile > Photos: pick up to 6 from the phone's gallery (the system picker; no new Android
