@@ -10,4 +10,4 @@
 @media(max-width:380px){.nav-cta{display:none}.menu-toggle{margin-left:auto}.hero-actions{flex-wrap:wrap}.hero-art{height:420px}.hero-phone{height:380px;width:190px}.eyebrow{font-size:9px}.floating-tag-one{left:-3%}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.marquee-inner{animation:none}*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 /* Decorative orbits may extend beyond the art box; never make the page pan sideways. */
-body{overflow-x:clip}.marquee{margin-inline:0}
+body{overflow-x:clip}.marquee{margin-inline:0}.hero-art{overflow:clip}
