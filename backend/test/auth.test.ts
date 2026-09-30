@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { pkceChallenge } from '../src/crypto.js';
 import { initiationMessage } from '../src/routes/auth.js';
+import { DbRateLimiter } from '../src/rate_limit.js';
 import { type Harness, signIn, startHarness, state, verifier } from './harness.js';
 
 let h: Harness;
@@ -15,6 +16,19 @@ const request = (identifier: string, purpose = 'sign_in', v = verifier(), s = st
   });
 
 describe('sign-in requests', () => {
+  it('shares an atomic limit across server instances, then resets after the window', async () => {
+    const first = new DbRateLimiter(h.db, 5, 15 * 60_000, h.clock);
+    const second = new DbRateLimiter(h.db, 5, 15 * 60_000, h.clock);
+    const key = h.sealer.lookup('auth:sign_in:shared@example.test');
+    const attempts = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => (i % 2 === 0 ? first : second).take(key)),
+    );
+    expect(attempts.filter(Boolean)).toHaveLength(5);
+    expect(await second.take(key)).toBe(false);
+    h.clock.advance(15 * 60_000);
+    expect(await first.take(key)).toBe(true);
+  });
+
   it('answer identically for known, unknown, recovery and throttled requests', async () => {
     await signIn(h, 'known@example.test');
     const bodies = new Set<string>();
@@ -41,14 +55,16 @@ describe('sign-in requests', () => {
     expect(h.outbox.filter((m) => m.email === 'flood@example.test')).toHaveLength(5);
   });
 
-  it('never stores the email or tokens in clear', async () => {
+  it('never stores the email, network address or tokens in clear', async () => {
     const p = await signIn(h, 'secret.person@example.test');
     const dump = JSON.stringify([
       await h.db.query('SELECT * FROM accounts'),
       await h.db.query('SELECT * FROM auth_requests'),
       await h.db.query('SELECT * FROM sessions'),
+      await h.db.query('SELECT * FROM auth_rate_limit_windows'),
     ]);
     expect(dump).not.toContain('secret.person');
+    expect(dump).not.toContain('127.0.0.1');
     expect(dump).not.toContain(p.access);
     expect(dump).not.toContain(p.refresh);
   });

@@ -8,6 +8,8 @@ const DAY = 24 * 60 * 60 * 1000;
  * pending legal review per region; see docs/DATA_LIFECYCLE_CONTRACT.md.
  */
 export const retention = {
+  /** Expired sign-in throttle counters (the active window is 15 minutes). */
+  authRateLimitDays: 1,
   /** Used or expired sign-in codes. */
   signInRequestsDays: 1,
   /** Sessions and sign-ins that ended (revoked or expired). */
@@ -33,6 +35,10 @@ export async function runRetention(db: Db, clock: Clock): Promise<Record<string,
   const before = (days: number) => new Date(now - days * DAY);
   const count = async (sql: string, params: unknown[]) => (await db.query(sql, params)).length;
   return {
+    authRateLimits: await count(
+      'DELETE FROM auth_rate_limit_windows WHERE window_start < $1 RETURNING 1',
+      [before(retention.authRateLimitDays)],
+    ),
     signInRequests: await count(
       `DELETE FROM auth_requests WHERE (used_at IS NOT NULL OR expires_at < $2) AND expires_at < $1
        RETURNING 1`,

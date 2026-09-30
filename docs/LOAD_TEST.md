@@ -38,6 +38,6 @@ mix, and the per-minute message limit.
 
 - Run the same mix against PostgreSQL on the chosen host, over the network, with a target of p95
   under 300 ms at the expected peak (to be set from the launch plan), and record it here.
-- Add the shared rate-limit store before running more than one server process
-  (`docs/SECURITY_REVIEW.md`).
+- Exercise the shared sign-in throttle from multiple server instances against PostgreSQL on the
+  chosen host (`docs/SECURITY_REVIEW.md`).
 - Load the live-update streams (5 per account) and photo reads, which this run does not cover.

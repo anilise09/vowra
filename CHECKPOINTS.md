@@ -1,5 +1,16 @@
 # Checkpoints
 
+## BE-20 follow-up - sign-in throttling shared by every server (2026-09-30)
+
+- Replaced the per-process sign-in limiter with atomic database counters, so adding another
+  server cannot multiply the email-address or network attempt allowance. Concurrent attempts
+  from two limiter instances admit exactly the configured five requests, then the window resets.
+- Counter keys are HMAC lookups: neither email addresses nor network addresses are stored in the
+  throttle table. Expired windows are removed by the hourly retention job after one day.
+- Migration `012_auth_rate_limits.sql`; the deployment, load-test, data-lifecycle and security
+  notes now describe the shared store and the remaining multi-instance work accurately.
+- Backend type-check and production build pass; all 160 backend tests pass.
+
 ## BE-20 - Ready to deploy: strict settings, readiness, clean shutdown, image (2026-09-30)
 
 - Settings are checked at start and every problem is listed at once, never a secret: keys must be

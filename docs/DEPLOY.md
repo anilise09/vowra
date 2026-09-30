@@ -12,8 +12,9 @@ One Node 22 process per instance (`backend/Dockerfile`), stateless apart from:
 - **Media**: processed photos. Today a directory (`VAWRA_MEDIA_DIR`, the `/data` volume in the
   image); an S3-compatible object store replaces it before more than one instance runs.
 - **In-memory state** that must become shared before running more than one instance: the
-  live-update nudge bus, call setup messages, and the in-memory rate limits (see
-  `docs/SECURITY_REVIEW.md`). Until then run exactly one instance.
+  live-update nudge bus and call setup messages (see `docs/SECURITY_REVIEW.md`). Sign-in
+  throttling is already shared through PostgreSQL. Until the remaining state moves, run exactly
+  one instance.
 
 ## Settings
 

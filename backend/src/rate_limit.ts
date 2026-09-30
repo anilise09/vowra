@@ -1,36 +1,32 @@
 import type { Clock } from './context.js';
+import type { Db } from './db.js';
 
-/** Fixed-window counter. In-memory: one process only, which is all this build runs. */
-export class RateLimiter {
-  private readonly windows = new Map<string, { start: number; count: number }>();
-
+/** Atomic fixed-window counter shared by every server using the same database. */
+export class DbRateLimiter {
   constructor(
+    private readonly db: Db,
     private readonly limit: number,
     private readonly windowMs: number,
     private readonly clock: Clock,
   ) {}
 
-  /** Returns true and counts the hit when under the limit. */
-  take(key: string): boolean {
-    const now = this.clock.now().getTime();
-    // Forget finished windows so many distinct keys cannot grow memory without end.
-    if (this.windows.size > 10_000) {
-      for (const [k, w] of this.windows) {
-        if (now - w.start >= this.windowMs) this.windows.delete(k);
-      }
-    }
-    const window = this.windows.get(key);
-    if (!window || now - window.start >= this.windowMs) {
-      this.windows.set(key, { start: now, count: 1 });
-      return true;
-    }
-    if (window.count >= this.limit) return false;
-    window.count += 1;
-    return true;
-  }
-
-  /** How many keys are being tracked (for tests). */
-  get size() {
-    return this.windows.size;
+  /** The caller must pass an HMAC lookup, never a raw identifier or IP address. */
+  async take(keyHash: string): Promise<boolean> {
+    const now = this.clock.now();
+    const expiredBefore = new Date(now.getTime() - this.windowMs);
+    const rows = await this.db.query(
+      `INSERT INTO auth_rate_limit_windows (key_hash, window_start, hits)
+       VALUES ($1, $2, 1)
+       ON CONFLICT (key_hash) DO UPDATE SET
+         window_start = CASE WHEN auth_rate_limit_windows.window_start <= $3
+                             THEN $2 ELSE auth_rate_limit_windows.window_start END,
+         hits = CASE WHEN auth_rate_limit_windows.window_start <= $3
+                     THEN 1 ELSE auth_rate_limit_windows.hits + 1 END
+       WHERE auth_rate_limit_windows.window_start <= $3
+          OR auth_rate_limit_windows.hits < $4
+       RETURNING hits`,
+      [keyHash, now, expiredBefore, this.limit],
+    );
+    return rows.length === 1;
   }
 }

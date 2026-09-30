@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { backupTo, listBackups, pruneBackups, readBackup } from '../src/backup.js';
 import { openPglite, migrate } from '../src/db.js';
 import { retention, runRetention } from '../src/jobs/retention.js';
-import { RateLimiter } from '../src/rate_limit.js';
+import { DbRateLimiter } from '../src/rate_limit.js';
 import { type Harness, member, type Person, signIn, startHarness, swipe } from './harness.js';
 
 let h: Harness;
@@ -196,13 +196,13 @@ describe('abuse limits', () => {
     expect(res.headers['x-content-type-options']).toBe('nosniff');
   });
 
-  it('the in-memory limiter forgets finished windows', () => {
-    let now = 0;
-    const limiter = new RateLimiter(1, 1000, { now: () => new Date(now) });
-    for (let i = 0; i <= 10_000; i++) limiter.take(`key-${i}`);
-    expect(limiter.size).toBe(10_001);
-    now = 5000;
-    limiter.take('new');
-    expect(limiter.size).toBe(1);
+  it('removes old shared sign-in counters but keeps active windows', async () => {
+    const limiter = new DbRateLimiter(h.db, 5, 15 * 60_000, h.clock);
+    await limiter.take(h.sealer.lookup('auth:sign_in:old@example.test'));
+    h.clock.advance((retention.authRateLimitDays + 1) * DAY);
+    await limiter.take(h.sealer.lookup('auth:sign_in:current@example.test'));
+    const removed = await runRetention(h.db, h.clock);
+    expect(removed.authRateLimits).toBe(1);
+    expect(await count('auth_rate_limit_windows')).toBe(1);
   });
 });

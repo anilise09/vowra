@@ -45,6 +45,7 @@ An hourly job (`backend/src/jobs/retention.ts`) removes what is no longer needed
 | What | Kept for | Why |
 |---|---|---|
 | Used or expired sign-in codes | 1 day | nothing needs them afterwards |
+| Sign-in throttle counters (HMAC keys only) | 1 day | abuse protection across server instances |
 | Ended sign-ins (signed out, deleted, suspended) | 30 days | investigating account takeovers |
 | Rotated session records | 30 days | detecting reuse of an old refresh token |
 | A sign-in on a device unused for 90 days | ends | the device signs in again |

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { hashToken, newToken, pkceChallenge } from '../crypto.js';
 import { audit, fail, noContent, requireAccount, type Services } from '../context.js';
 import type { Db } from '../db.js';
-import { RateLimiter } from '../rate_limit.js';
+import { DbRateLimiter } from '../rate_limit.js';
 
 /** Identical for known, unknown, throttled and recovery requests: no existence oracle. */
 export const initiationMessage = {
@@ -63,8 +63,8 @@ export async function issueSession(
 
 export function authRoutes(app: FastifyInstance, services: Services) {
   const { db, sealer, clock } = services;
-  const perIdentifier = new RateLimiter(5, 15 * 60_000, clock);
-  const perNetwork = new RateLimiter(30, 15 * 60_000, clock);
+  const perIdentifier = new DbRateLimiter(db, 5, 15 * 60_000, clock);
+  const perNetwork = new DbRateLimiter(db, 30, 15 * 60_000, clock);
 
   app.post('/v1/auth/requests', async (request, reply) => {
     const body = requestBody.safeParse(request.body);
@@ -72,7 +72,8 @@ export function authRoutes(app: FastifyInstance, services: Services) {
     const { identifier, purpose, code_challenge, state } = body.data!;
     const lookup = sealer.lookup(identifier);
     const allowed =
-      perIdentifier.take(`${purpose}:${lookup}`) && perNetwork.take(`ip:${request.ip}`);
+      (await perIdentifier.take(sealer.lookup(`auth:${purpose}:${lookup}`))) &&
+      (await perNetwork.take(sealer.lookup(`network:${request.ip}`)));
     if (allowed) {
       const known =
         (await db.query('SELECT 1 FROM accounts WHERE email_lookup = $1', [lookup])).length > 0;

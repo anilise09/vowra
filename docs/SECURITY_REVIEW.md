@@ -21,15 +21,16 @@ Found and fixed:
 - A sign-in on an abandoned device never expired. A device unused for 90 days now signs in again
   (retention job).
 - The in-memory rate limiter never forgot keys, so many distinct keys could grow memory without end.
-  It now forgets finished windows.
+  BE-13 made it forget finished windows; BE-20 replaced it with bounded database counters.
 
 Accepted:
 - Rotated refresh-token records are kept 30 days for reuse detection; an older stolen token is
   refused as unknown instead of also revoking the sign-in.
 
 Open:
-- The rate limiter lives in one process's memory. Running more than one server needs a shared
-  store (for example the database or Redis) before scaling out.
+- Sign-in throttling now uses atomic database counters shared by server instances (BE-20),
+  with HMAC keys for identifiers and networks and one-day cleanup. A multi-host staging
+  run on production PostgreSQL is still required before scaling out.
 - No sign-up friction beyond the email code (no device attestation such as Play Integrity or App
   Attest). Needed before launch against bot sign-ups.
 
@@ -133,5 +134,5 @@ Open:
 ## Still to do before launch
 
 An independent penetration test, a threat-model review with the chosen providers (email, storage,
-scanning, push, calls), the device-attestation decision, the shared rate-limit store, production
+scanning, push, calls), the device-attestation decision, a multi-host rate-limit test, production
 HTTPS and backups, and a staff sign-in for moderators separate from member accounts.
