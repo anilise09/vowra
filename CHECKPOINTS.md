@@ -1,5 +1,26 @@
 # Checkpoints
 
+## BE-20 - Ready to deploy: strict settings, readiness, clean shutdown, image (2026-09-30)
+
+- Settings are checked at start and every problem is listed at once, never a secret: keys must be
+  32 bytes and different, numbers must make sense. `VAWRA_ENV=production` also refuses the
+  development database, the development sign-in outbox, direct calls, a default listen address
+  and access tokens over an hour.
+- `GET /v1/ready`: the database answers and every migration this build ships is applied; `503`
+  with the reason otherwise, and while shutting down. `/v1/health` stays the liveness check.
+- Migrations run in one transaction under an advisory lock, so instances starting together never
+  apply one twice.
+- Clean stop on SIGTERM: readiness fails, a drain period lets traffic move away (10 s in
+  production), open live-update streams end instead of holding the shutdown, requests in flight
+  and the hourly job finish, the database closes; forced after drain plus 20 s.
+- Startup moved into `startServer()` so it is tested for real: 9 new tests, including a shutdown
+  with a signed-in live stream open. Six planted defects (stream hook, draining, pending-migration
+  check, production outbox refusal, key length, migration idempotence) each fail them.
+- `backend/Dockerfile` (Node 22, non-root, `/data` volume, health check) and `docs/DEPLOY.md`.
+  The image is not built here: Docker is not installed on this laptop. A build with only the
+  files the image copies compiles.
+- Backend 160 tests pass.
+
 ## Web-3 - The website catches up with the app (2026-09-30)
 
 - Home: three new "What's new" cards with screens captured on the Asus today (a voice call, the

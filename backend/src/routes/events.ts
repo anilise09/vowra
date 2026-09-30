@@ -11,6 +11,13 @@ const heartbeatMs = 25_000;
  * its session; the app reconnects with a fresh token.
  */
 export function eventRoutes(app: FastifyInstance, services: Services) {
+  // Open streams end when the server closes, so shutting down never waits on them;
+  // each app reconnects to another server.
+  const open = new Set<() => void>();
+  app.addHook('preClose', async () => {
+    for (const end of [...open]) end();
+  });
+
   app.get('/v1/events', async (request, reply) => {
     const me = requireDatingAccess(request, { allowPaused: true });
     if (services.nudges.listeners(me.id) >= maxStreamsPerAccount) fail(429, 'too_many_streams');
@@ -36,7 +43,13 @@ export function eventRoutes(app: FastifyInstance, services: Services) {
       clearInterval(heartbeat);
       clearTimeout(expiry);
       unsubscribe();
+      open.delete(end);
     };
+    const end = () => {
+      close();
+      res.end();
+    };
+    open.add(end);
     request.raw.on('close', close);
     res.on('close', close);
   });

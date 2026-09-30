@@ -15,19 +15,37 @@ export interface Db {
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), 'migrations');
 
+const migrationFiles = () =>
+  readdirSync(migrationsDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
+
+/**
+ * Applies new migrations in one transaction under an advisory lock, so several
+ * servers starting at once never run the same migration twice.
+ */
 export async function migrate(db: Db): Promise<void> {
   await db.query('CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY)');
+  await db.transaction(async (tx) => {
+    await tx.query('SELECT pg_advisory_xact_lock(7461722)');
+    const done = new Set(
+      (await tx.query<{ name: string }>('SELECT name FROM schema_migrations')).map((r) => r.name),
+    );
+    for (const file of migrationFiles()) {
+      if (done.has(file)) continue;
+      const sql = readFileSync(join(migrationsDir, file), 'utf8');
+      for (const statement of splitStatements(sql)) await tx.query(statement);
+      await tx.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file]);
+    }
+  });
+}
+
+/** Migrations this build ships that the database has not applied yet. */
+export async function pendingMigrations(db: Db): Promise<string[]> {
   const done = new Set(
     (await db.query<{ name: string }>('SELECT name FROM schema_migrations')).map((r) => r.name),
   );
-  for (const file of readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort()) {
-    if (done.has(file)) continue;
-    const sql = readFileSync(join(migrationsDir, file), 'utf8');
-    await db.transaction(async (tx) => {
-      for (const statement of splitStatements(sql)) await tx.query(statement);
-      await tx.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file]);
-    });
-  }
+  return migrationFiles().filter((f) => !done.has(f));
 }
 
 function splitStatements(sql: string): string[] {

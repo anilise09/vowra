@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { hashToken } from './crypto.js';
+import { pendingMigrations } from './db.js';
 import { ApiError, type Account, type Services } from './context.js';
 import { authRoutes } from './routes/auth.js';
 import { callRoutes } from './routes/calls.js';
@@ -13,7 +14,13 @@ import { moderationRoutes } from './routes/moderation.js';
 import { profileRoutes } from './routes/profile.js';
 import { safetyRoutes } from './routes/safety.js';
 
-export function buildApp(services: Services, options: { logger?: boolean } = {}): FastifyInstance {
+export interface AppOptions {
+  logger?: boolean;
+  /** True while the server is shutting down: readiness fails so traffic moves away. */
+  isDraining?: () => boolean;
+}
+
+export function buildApp(services: Services, options: AppOptions = {}): FastifyInstance {
   const app = Fastify({
     genReqId: () => crypto.randomUUID(),
     bodyLimit: 64 * 1024,
@@ -96,7 +103,20 @@ export function buildApp(services: Services, options: { logger?: boolean } = {})
     if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store');
   });
 
+  // Liveness: the process answers. Readiness: it can serve traffic right now.
   app.get('/v1/health', async () => ({ ok: true }));
+  app.get('/v1/ready', async (_request, reply) => {
+    if (options.isDraining?.()) return reply.code(503).send({ ready: false, reason: 'shutting_down' });
+    try {
+      await services.db.query('SELECT 1');
+      if ((await pendingMigrations(services.db)).length > 0) {
+        return reply.code(503).send({ ready: false, reason: 'migrations_pending' });
+      }
+    } catch {
+      return reply.code(503).send({ ready: false, reason: 'database' });
+    }
+    return { ready: true };
+  });
   authRoutes(app, services);
   profileRoutes(app, services);
   discoveryRoutes(app, services);
