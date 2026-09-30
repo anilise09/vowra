@@ -56,6 +56,12 @@ export async function runRetention(db: Db, clock: Clock): Promise<Record<string,
        RETURNING 1`,
       [before(retention.idleSignInDays)],
     ),
+    // Push tokens of sign-ins that ended: removed within the hour, not kept with the sign-in record.
+    signedOutDevices: await count(
+      `DELETE FROM devices d USING session_families f
+       WHERE f.id = d.family_id AND f.revoked_at IS NOT NULL RETURNING 1`,
+      [],
+    ),
     // Session records whose refresh token was rotated away long ago; the live one stays.
     rotatedSessions: await count(
       'DELETE FROM sessions WHERE refresh_used_at IS NOT NULL AND refresh_used_at < $1 RETURNING 1',

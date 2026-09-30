@@ -1,4 +1,5 @@
 import { emailProblems } from './email.js';
+import { pushProblems } from './push.js';
 
 export interface Config {
   enabled: boolean;
@@ -88,6 +89,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     if (config.accessTtlSeconds > 3600) problems.push('VAWRA_ACCESS_TTL must be at most 3600 seconds in production.');
   }
   problems.push(...emailProblems(env, production));
+  problems.push(...pushProblems(env));
   if (problems.length > 0) throw new ConfigError(problems);
   return config;
 }

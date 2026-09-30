@@ -3,6 +3,7 @@ import type { Db } from './db.js';
 import type { Sealer } from './crypto.js';
 import type { NudgeBus } from './nudges.js';
 import type { CallConfig, SignalBox } from './calls.js';
+import type { Notifier } from './push.js';
 import type { MediaGrants, MediaStore } from './media.js';
 
 export interface Clock {
@@ -25,6 +26,8 @@ export interface Services {
   grants: MediaGrants;
   /** Call setup messages, in memory for the life of each call. */
   signals: SignalBox;
+  /** Push notifications for people whose app is closed. */
+  notifier: Notifier;
   /** How phones reach each other in a call; null keeps calls switched off. */
   callConfig: CallConfig | null;
   accessTtlSeconds: number;

@@ -1,5 +1,27 @@
 # Checkpoints
 
+## BE-24 - Push notifications, server side (2026-09-30)
+
+- Phones register a push token (`POST /v1/me/devices`) tied to their sign-in, so signing out,
+  suspension or deletion stops pushes at once; tokens are sealed and removed within the hour after
+  a sign-in ends. People choose matches, messages, likes and calls (`/v1/me/notifications`).
+- A push goes out for a like, a match, a message (at most one per chat a minute) and an incoming
+  call, only when the person's app is not connected, only for what they left on. The text never
+  names anyone or quotes anything; a call is a silent high-priority wake-up that expires with the
+  45-second ring. Dead tokens are deleted when the push service says so.
+- Firebase Cloud Messaging (Android) and Apple Push Notification service (iPhone) are built in
+  directly, with no extra library: signed service-account sign-in for Google, an ES256 token over
+  HTTP/2 for Apple. Half-set push settings refuse to start.
+- The data download now also lists calls (missed when calls were added), notification settings
+  and push devices (platform and dates, never the token).
+- 14 new tests, including stand-in Google and Apple servers that verify each request's signature.
+  Ten planted defects (connected skip, message throttle, preferences, signed-out and suspended
+  accounts, dead tokens, token cache, Apple call type, retention, token moving) each fail them;
+  the suspension one passed at first because routes already refuse to reach a suspended person,
+  so the test now calls the notifier directly.
+- Not yet in the app: it needs a Firebase project (google-services.json) and an Apple push key,
+  which are the owner's accounts. Backend 183 tests pass.
+
 ## BE-23 - Sign-in codes by email: six digits, any SMTP provider (2026-09-30)
 
 - Sign-in codes are now six digits instead of a 43-character token, so people can type them. The

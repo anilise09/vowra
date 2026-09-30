@@ -124,8 +124,10 @@ export function discoveryRoutes(app: FastifyInstance, services: Services) {
     if (result.matched) {
       services.nudges.publish(me, { kind: 'match', match_id: result.match_id });
       services.nudges.publish(other, { kind: 'match', match_id: result.match_id });
+      services.notifier.notify(other, 'match', { match_id: result.match_id! });
     } else if (result.liked) {
       services.nudges.publish(other, { kind: 'like' });
+      services.notifier.notify(other, 'like');
     }
     return result.matched
       ? { matched: true, match_id: result.match_id }

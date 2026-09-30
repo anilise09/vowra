@@ -5,6 +5,7 @@ import { pkceChallenge, Sealer } from '../src/crypto.js';
 import { migrate, openPglite, type Db } from '../src/db.js';
 import { type CallConfig, SignalBox } from '../src/calls.js';
 import { MemoryNudgeBus } from '../src/nudges.js';
+import { Notifier, type PushSender } from '../src/push.js';
 import { MediaGrants, MemoryMediaStore } from '../src/media.js';
 
 export interface Harness {
@@ -15,6 +16,7 @@ export interface Harness {
   outbox: { email: string; proof: string; purpose: string }[];
   nudges: MemoryNudgeBus;
   media: MemoryMediaStore;
+  notifier: Notifier;
   close(): Promise<void>;
 }
 
@@ -26,7 +28,11 @@ export const testCallConfig: CallConfig = {
 };
 
 export async function startHarness(
-  options: { callConfig?: CallConfig | null; failDelivery?: boolean } = {},
+  options: {
+    callConfig?: CallConfig | null;
+    failDelivery?: boolean;
+    push?: { android?: PushSender; ios?: PushSender };
+  } = {},
 ): Promise<Harness> {
   const db = await openPglite();
   await migrate(db);
@@ -35,12 +41,14 @@ export async function startHarness(
   const outbox: Harness['outbox'] = [];
   const sealer = new Sealer(randomBytes(32), randomBytes(32));
   const nudges = new MemoryNudgeBus();
+  const notifier = new Notifier(db, sealer, nudges, options.push ?? {}, () => clock.now());
   const media = new MemoryMediaStore();
   const app = buildApp({
     nudges,
     media,
     grants: new MediaGrants(randomBytes(32)),
     signals: new SignalBox(),
+    notifier,
     callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
     db,
     sealer,
@@ -57,7 +65,17 @@ export async function startHarness(
     deletionGraceSeconds: 7 * 24 * 60 * 60,
   });
   await app.ready();
-  return { app, db, sealer, clock, outbox, nudges, media, close: async () => (await app.close(), await db.close()) };
+  return {
+    app,
+    db,
+    sealer,
+    clock,
+    outbox,
+    nudges,
+    media,
+    notifier,
+    close: async () => (await app.close(), await notifier.idle(), await db.close()),
+  };
 }
 
 export const verifier = () => randomBytes(32).toString('base64url');

@@ -77,6 +77,14 @@ Profile mutation contains no location. Added 2026-09-28 (BE-10): `PUT /v1/me/loc
 - `ice` is `{policy, servers}`. With `VAWRA_TURN_URLS` and `VAWRA_TURN_SECRET` set the policy is `relay`: all media goes through the TURN relay so neither person learns the other's IP address, with per-person credentials valid for two hours (TURN REST scheme). Without them calls are off, unless `VAWRA_CALLS_DEV_P2P=1` allows direct calls for development, which expose each phone's address to the other.
 - A block, unmatch, suspension or deletion request ends live calls at once; every call step also re-checks that the conversation is still open. Nothing about a call's content is recorded: the record is the two people, kind, times and outcome, kept 90 days.
 
+## Push notifications (added 2026-09-30, BE-24)
+
+- `POST /v1/me/devices` `{platform: android|ios, token}` registers this phone for push and returns `{device_id}`. The token belongs to the current sign-in: signing out, suspension or deletion ends it, and the hourly job removes tokens of ended sign-ins. One device per sign-in; the same token registering again moves to the newest account; at most 10 devices per account. Tokens are stored sealed. `DELETE /v1/me/devices/:id` removes one.
+- `GET /v1/me/notifications` and `PUT /v1/me/notifications` `{matches?, messages?, likes?, calls?}` (booleans; everything is on by default).
+- A push goes out for a new like, a new match (to the person who did not make it), a new message (at most one per conversation a minute) and an incoming call, only when the person has no live connection (`/v1/events`), only for what they left on, and only to devices of a live sign-in on an active or paused account. The text never names anyone or quotes anything ("You have a new message"); a call is a silent high-priority message `{type: call, call_id, match_id}` that expires after 45 seconds. A token the push service reports as dead is deleted.
+- Android through Firebase Cloud Messaging HTTP v1 (`VAWRA_FCM_CREDENTIALS_B64`, a service-account key); iPhone through APNs with a token key (`VAWRA_APNS_KEY_B64`, `VAWRA_APNS_KEY_ID`, `VAWRA_APNS_TEAM_ID`, `VAWRA_APNS_TOPIC`, `VAWRA_APNS_PRODUCTION=1`). Either may be left out; a half-set platform is refused at start.
+- The data download adds `calls`, `notifications` and `push_devices` (platform and dates only).
+
 ## Moderation (added 2026-09-29, BE-11)
 
 - `accounts.role` is `member` or `moderator`. Every `/v1/mod/*` route answers `404` to anyone who is not a moderator, so the console's existence is not revealed.

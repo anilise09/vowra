@@ -289,6 +289,7 @@ export function chatRoutes(app: FastifyInstance, services: Services) {
     });
     // The other person and this person's other devices.
     services.nudges.publish(sent.match.peer, { kind: 'message', match_id: sent.match.id });
+    services.notifier.notify(sent.match.peer, 'message', { match_id: sent.match.id });
     services.nudges.publish(me.id, { kind: 'message', match_id: sent.match.id });
     return reply
       .code(201)

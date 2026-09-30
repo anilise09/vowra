@@ -4,6 +4,7 @@ import { pendingMigrations } from './db.js';
 import { ApiError, type Account, type Services } from './context.js';
 import { authRoutes } from './routes/auth.js';
 import { callRoutes } from './routes/calls.js';
+import { deviceRoutes } from './routes/devices.js';
 import { chatRoutes } from './routes/chat.js';
 import { discoveryRoutes } from './routes/discovery.js';
 import { eventRoutes } from './routes/events.js';
@@ -127,6 +128,7 @@ export function buildApp(services: Services, options: AppOptions = {}): FastifyI
   moderationRoutes(app, services);
   mediaRoutes(app, services);
   callRoutes(app, services);
+  deviceRoutes(app, services);
   eventRoutes(app, services);
   return app;
 }

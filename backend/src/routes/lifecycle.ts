@@ -124,6 +124,33 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       'SELECT kind, created_at FROM audit_events WHERE account_id = $1 ORDER BY created_at',
       [me],
     );
+    // Calls you were in (never their content), push settings, and the devices
+    // registered for push (platform and dates only; tokens are not yours to keep).
+    const callRows = await db.query<{
+      kind: string;
+      role: string;
+      state: string;
+      with_name: string | null;
+      created_at: Date;
+      answered_at: Date | null;
+      ended_at: Date | null;
+    }>(
+      `SELECT c.kind, CASE WHEN c.caller = $1 THEN 'caller' ELSE 'callee' END AS role, c.state,
+              p.display_name AS with_name, c.created_at, c.answered_at, c.ended_at
+       FROM calls c
+       LEFT JOIN profiles p ON p.account_id = CASE WHEN c.caller = $1 THEN c.callee ELSE c.caller END
+       WHERE c.caller = $1 OR c.callee = $1
+       ORDER BY c.created_at`,
+      [me],
+    );
+    const [prefs] = await db.query<Record<string, boolean>>(
+      'SELECT matches, messages, likes, calls FROM notification_prefs WHERE account_id = $1',
+      [me],
+    );
+    const deviceRows = await db.query<{ platform: string; created_at: Date; last_seen_at: Date }>(
+      'SELECT platform, created_at, last_seen_at FROM devices WHERE account_id = $1 ORDER BY created_at',
+      [me],
+    );
     const now = clock.now();
     await audit(db, me, 'data_exported', now);
     reply.header('cache-control', 'no-store');
@@ -157,6 +184,21 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
         state: p.state,
         uploaded_at: iso(p.created_at),
         decided_at: iso(p.decided_at),
+      })),
+      calls: callRows.map((c) => ({
+        kind: c.kind,
+        you_were: c.role,
+        with: c.with_name,
+        outcome: c.state,
+        at: iso(c.created_at),
+        answered_at: iso(c.answered_at),
+        ended_at: iso(c.ended_at),
+      })),
+      notifications: prefs ?? { matches: true, messages: true, likes: true, calls: true },
+      push_devices: deviceRows.map((d) => ({
+        platform: d.platform,
+        registered_at: iso(d.created_at),
+        last_seen_at: iso(d.last_seen_at),
       })),
       swipes: swipes.map((s) => ({ kind: s.kind, at: iso(s.created_at) })),
       matches: matches.map((m) => ({

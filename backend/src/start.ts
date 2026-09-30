@@ -11,6 +11,7 @@ import { runDueDeletions } from './jobs/deletions.js';
 import { runRetention } from './jobs/retention.js';
 import { DiskMediaStore, MediaGrants } from './media.js';
 import { MemoryNudgeBus } from './nudges.js';
+import { Notifier, pushSendersFrom } from './push.js';
 
 export interface Running {
   app: FastifyInstance;
@@ -60,13 +61,18 @@ export async function startServer(
   // Local disk until a reviewed object store is chosen.
   const media = new DiskMediaStore(config.mediaDir);
   let draining = false;
+  const sealer = new Sealer(config.dataKey, config.lookupKey);
+  const nudges = new MemoryNudgeBus();
+  let log: (message: string, detail?: object) => void = () => {};
+  const notifier = new Notifier(db, sealer, nudges, pushSendersFrom(env), () => new Date(), (m, d) => log(m, d));
   const app = buildApp(
     {
       db,
-      sealer: new Sealer(config.dataKey, config.lookupKey),
+      sealer,
       clock: { now: () => new Date() },
       delivery: options.delivery ?? deliveryFor(config, env),
-      nudges: new MemoryNudgeBus(),
+      nudges,
+      notifier,
       media,
       grants: new MediaGrants(config.dataKey),
       signals: new SignalBox(),
@@ -78,6 +84,7 @@ export async function startServer(
     },
     { logger: options.logger ?? true, isDraining: () => draining },
   );
+  log = (message, detail) => app.log.warn(detail ?? {}, message);
   await app.listen({ host: config.host, port: config.port });
   const address = app.server.address();
   const port = typeof address === 'object' && address ? address.port : config.port;
@@ -108,6 +115,7 @@ export async function startServer(
         clearInterval(timer);
         if (options.drainMs) await new Promise((resolve) => setTimeout(resolve, options.drainMs));
         await app.close();
+        await notifier.idle();
         await sweeping;
         await db.close();
       })();

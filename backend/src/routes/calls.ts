@@ -127,6 +127,7 @@ export function callRoutes(app: FastifyInstance, services: Services) {
     });
     await audit(db, me.id, 'call_started', now);
     nudges.publish(match.peer, { kind: 'call', call_id: row.id, match_id: match.id });
+    services.notifier.notify(match.peer, 'call', { call_id: row.id, match_id: match.id });
     return view(row, me.id, now);
   });
 
