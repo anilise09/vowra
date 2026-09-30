@@ -145,6 +145,19 @@
 - This is the first real Apple-simulator validation, not a full iOS sign-off. Large-iPhone,
   larger-text, reduced-motion, physical iPhone/iPad, connected-server and real-call checks remain.
 
+## CI-1 - every change proves the app, server and website (2026-09-30)
+
+- Added least-privilege GitHub Actions for pull requests and `main`: the backend installs from its
+  lockfile, type-checks, runs every test, builds and audits production dependencies; Flutter uses
+  the project's exact 3.47.5 SDK, analyzes, runs every test and builds a debug Android APK; the
+  website runs its complete static check.
+- Third-party actions are pinned to immutable commit SHAs, workflow permissions are read-only, and
+  stale runs are cancelled when a newer commit arrives.
+- Dependabot now checks npm, pub, Gradle and GitHub Actions weekly. Updates still go through review
+  and the same tests; nothing auto-merges.
+- The roadmap no longer calls Phase 0 current: local engineering through Phase 4 is built, while
+  provider, legal, hosting and cross-platform gates remain open and Phase 5 stays on legal hold.
+
 ## BE-20 follow-up - sign-in throttling shared by every server (2026-09-30)
 
 - Replaced the per-process sign-in limiter with atomic database counters, so adding another

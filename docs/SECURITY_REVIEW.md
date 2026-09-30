@@ -129,9 +129,11 @@ Open:
 Checked: `npm audit --omit=dev` reports 0 vulnerabilities (2026-09-29). Flutter dependencies are
 from pub.dev with a committed lockfile.
 
-Open:
-- Add automated dependency alerts (for example Dependabot on the GitHub repository) and review
-  them at each checkpoint.
+Found and fixed:
+- GitHub had no automated dependency alerts. Dependabot now checks the backend npm lockfile,
+  Flutter packages, Android Gradle dependencies and pinned GitHub Actions every week. CI also runs
+  the production-dependency npm audit on every change. Dependency updates still require review and
+  the complete relevant test suite before merging.
 
 ## Still to do before launch
 
