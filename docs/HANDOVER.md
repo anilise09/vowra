@@ -205,5 +205,7 @@ git push origin $NEW:refs/heads/gh-pages
 - The local server may still be running on 8797 (started from this session). The demo database
   holds the 260 demo members (re-seeded with WebP portraits and genders) and the test members
   above.
-- The Asus has the latest profile build installed, signed in as Alex ("Show me: Everyone"); its
-  clipboard holds Alex's synthetic export from the copy check.
+- The Asus has the call build (8df5362) installed, signed in as Alex ("Show me: Everyone"), with
+  approximate location allowed and distance on, camera and microphone allowed, and the port link
+  to 8797. Calls and distance were tested there on 2026-09-30 (see CHECKPOINTS.md).
+- The 260 sample people are seeded around Alex's approximate area (`dev:seed-demo --near`).

@@ -1,5 +1,30 @@
 # Checkpoints
 
+## Device - Calls and distance on the owner's Asus (2026-09-30)
+
+- The call build (8df5362, arm64 profile, checksum checked after install) on the Asus, signed in as
+  Alex, against the local server with development direct calls; the other end was headless
+  Chromium with a fake camera and microphone, signed in as the test member Maya.
+- "Open to a call" on the phone saved to the server; Maya's opt-in reached the phone live and
+  woke the voice and video buttons (before that they explained both must opt in).
+- Maya's video call rang on the Asus and was answered there, with camera and microphone allowed
+  at that moment on the phone. In 30 s the browser decoded 324 frames (5.7 MB) from the Asus
+  camera plus audio, and sent video and audio back. When the browser hung up, the phone's call
+  page closed by itself and the camera was released.
+- Alex's voice call from the chat rang in the browser and connected about a second after it
+  answered; audio both ways; only Mute, Phone and End shown; Phone switched to Speaker; ending it
+  on the phone ended it in the browser. The microphone stopped at the end; the camera was never
+  opened.
+- Distance: approximate location only (precise location is not held). Turning distance on sent
+  the rounded area; the server returns only when it was updated. The 260 sample people were
+  re-seeded around that area on the server side (`dev:seed-demo --near`), so the area never
+  passed through a command line. Cards then showed bands ("5-10 km away"; 49 of 50 people).
+- Private places, on/off/on: "Hide my distance at this place" cleared the area on the server and
+  no bands showed anywhere, with Settings saying "Hidden right now: you're at a private place";
+  removing the place and "Update my area" brought the area and the bands back.
+- Left on the phone: the build, Alex's "Open to a call" on for Maya (Maya's is off), distance on,
+  no private places, the test-server port link. Nothing was saved to the phone's storage.
+
 ## BE-19b - First real calls: emulator and browser (2026-09-29)
 
 - A real call end to end without the owner's phones: Vawra on the Android 15 emulator (as the
