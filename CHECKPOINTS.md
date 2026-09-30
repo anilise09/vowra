@@ -123,7 +123,19 @@
   ("syntax error at or near no"). Lines now split on either ending. A new test splits the same
   migration both ways; without the fix it fails, and so did 126 tests in such a checkout.
 - Backend 161 tests pass.
+## BE-21 - media races close without leaks or quota bypasses (2026-09-30)
 
+- Upload grants are claimed and spent by one conditional database statement, so two server workers
+  cannot both accept the same token. A retry can refresh only the same still-pending photo with the
+  same declared bytes and audience; a profile upload ID cannot be reused as a chat-photo grant.
+- Profile and chat grant creation lock that account row while checking the six-profile-photo and
+  30-daily-upload limits, keeping both limits intact across concurrent server instances.
+- If someone deletes a photo while its bytes are being processed, the request now notices that the
+  owner row vanished, removes the just-written object and fails instead of leaving an orphan file.
+- Moderator decisions claim a pending photo conditionally inside the transaction. Simultaneous
+  approvals have one winner and can create at most one chat message.
+- Five new race/idempotency tests plus the strengthened replay test; backend type-check and build
+  pass, with all 165 backend tests green.
 ## Device - First real iOS Simulator critical flow (2026-09-30)
 
 - On the Intel Mac, installed CocoaPods 1.17.0 for the local toolchain and built Vawra with

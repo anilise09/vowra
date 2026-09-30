@@ -38,6 +38,16 @@ async function send(from: Person, matchId: string) {
   });
 }
 
+async function askToSend(from: Person, matchId: string, clientUploadId = randomUUID()) {
+  const bytes = await image();
+  return call(from, 'POST', `/v1/matches/${matchId}/photos`, {
+    client_upload_id: clientUploadId,
+    mime_type: 'image/jpeg',
+    byte_length: bytes.length,
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+  });
+}
+
 async function moderator() {
   const mod = await member(h, 'Mo');
   await makeModerator(h, mod);
@@ -82,6 +92,23 @@ describe('photos in a conversation', () => {
     expect((await call(ben, 'GET', '/v1/matches')).json().matches[0].last_message).toBe('Photo');
   });
 
+  it('two moderators deciding together deliver at most one message', async () => {
+    const { ana, ben, matchId } = await matched();
+    await call(ben, 'PUT', `/v1/matches/${matchId}/photo-consent`, { allow: true });
+    await send(ana, matchId);
+    const first = await moderator();
+    const second = await member(h, 'Mi');
+    await h.db.query("UPDATE accounts SET role = 'moderator' WHERE id = $1", [second.accountId]);
+    const [queued] = (await call(first, 'GET', '/v1/mod/photos')).json().photos;
+
+    const decisions = await Promise.all([
+      call(first, 'POST', `/v1/mod/photos/${queued.photo_id}/decision`, { outcome: 'approved' }),
+      call(second, 'POST', `/v1/mod/photos/${queued.photo_id}/decision`, { outcome: 'approved' }),
+    ]);
+    expect(decisions.map((r) => r.statusCode).sort()).toEqual([200, 409]);
+    expect(await thread(ben, matchId)).toHaveLength(1);
+  });
+
   it('are never profile photos', async () => {
     const { ana, ben, matchId } = await matched();
     await call(ben, 'PUT', `/v1/matches/${matchId}/photo-consent`, { allow: true });
@@ -120,5 +147,35 @@ describe('photos in a conversation', () => {
     await call(ben, 'PUT', `/v1/matches/${matchId}/photo-consent`, { allow: true });
     const cy = await member(h, 'Cy');
     expect((await send(cy, matchId)).statusCode).toBe(404);
+  });
+
+  it('keeps the daily upload limit when two servers create the last slot together', async () => {
+    const { ana, ben, matchId } = await matched();
+    await call(ben, 'PUT', `/v1/matches/${matchId}/photo-consent`, { allow: true });
+    for (let i = 0; i < 29; i++) expect((await askToSend(ana, matchId)).statusCode).toBe(200);
+
+    const attempts = await Promise.all([askToSend(ana, matchId), askToSend(ana, matchId)]);
+    expect(attempts.map((r) => r.statusCode).sort()).toEqual([200, 429]);
+    expect(
+      await h.db.query('SELECT id FROM media WHERE owner = $1', [ana.accountId]),
+    ).toHaveLength(30);
+  });
+
+  it('cannot reuse a profile upload id to bypass chat context', async () => {
+    const { ana, ben, matchId } = await matched();
+    await call(ben, 'PUT', `/v1/matches/${matchId}/photo-consent`, { allow: true });
+    const clientUploadId = randomUUID();
+    const bytes = await image();
+    expect(
+      (
+        await call(ana, 'POST', '/v1/me/photos', {
+          client_upload_id: clientUploadId,
+          mime_type: 'image/jpeg',
+          byte_length: bytes.length,
+          sha256: createHash('sha256').update(bytes).digest('hex'),
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect((await askToSend(ana, matchId, clientUploadId)).statusCode).toBe(409);
   });
 });

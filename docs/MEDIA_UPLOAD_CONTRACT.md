@@ -90,7 +90,9 @@ Every request derives the account from the validated session and reauthorizes th
 audience. Completion, status, read, attach, reorder, replace, and delete endpoints all require ownership
 or explicit recipient authorization; knowledge of an opaque ID is insufficient.
 
-Before implementation: choose and review storage, malware-scanning, content-moderation, perceptual-hash,
-and managed explicit-media providers; define regional legality and retention; threat-model upload replay,
-polyglots, decompression bombs, transcoder escape, cache leakage, and cross-account IDOR; add concurrent
-delete/moderate/block tests; and complete privacy, safety, and security review.
+Before production providers: choose and review storage, malware-scanning, content-moderation,
+perceptual-hash and managed explicit-media providers; define regional legality and retention; and
+complete their privacy, safety and security review. The local implementation now tests upload replay,
+polyglot/signature rejection, decompression bombs, metadata removal, cache authorization, cross-account
+IDOR, deletion during processing, simultaneous moderation, consent withdrawal, unmatch and block.
+Provider adapters still need equivalent transcoder-escape, callback-replay and failure-mode tests.
