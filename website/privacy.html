@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff9f7">
+  <meta name="description" content="How Vawra, an 18+ dating app in development, handles your data: what it keeps, who sees what, how long it is kept and the controls you have.">
+  <title>Your Data at Vawra</title>
+  <link rel="icon" href="assets/brand/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav shell" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Vawra home"><img src="assets/brand/lockup.webp" alt="Vawra" width="520" height="173"></a>
+      <div class="nav-links" id="nav-links">
+        <a href="index.html#experience">The experience</a><a href="index.html#new">What’s new</a><a href="safety.html">Safety</a><a href="privacy.html" aria-current="page">Privacy</a><a href="index.html#faq">FAQs</a>
+      </div>
+      <a class="nav-cta" href="index.html#preview">Explore the preview <span aria-hidden="true">↗</span></a>
+      <button class="menu-toggle" type="button" aria-label="Open menu" aria-controls="nav-links" aria-expanded="false"><span></span><span></span></button>
+    </nav>
+  </header>
+
+  <main id="main" class="doc shell">
+    <span class="kicker">YOUR DATA</span>
+    <h1>What Vawra keeps,<br><em>and why.</em></h1>
+    <p class="doc-lede">A plain-language description of how the Vawra app in development handles personal data. Vawra is not launched; this is not yet its legal privacy policy, which will be reviewed by a lawyer before launch. Retention periods below may change in that review.</p>
+
+    <nav class="doc-toc" aria-label="On this page">
+      <a href="#keeps">What Vawra keeps</a><a href="#never">What it never collects</a><a href="#who">Who sees what</a><a href="#how-long">How long</a><a href="#controls">Your controls</a><a href="#security">Security</a>
+    </nav>
+
+    <section id="keeps" aria-labelledby="keeps-title">
+      <h2 id="keeps-title">What Vawra keeps</h2>
+      <ul class="doc-list">
+        <li><strong>Your email address,</strong> to send one-time sign-in codes. It is stored encrypted. There are no passwords.</li>
+        <li><strong>Your profile:</strong> name, age, what you’re looking for, interests, prompts and the photos you add.</li>
+        <li><strong>How you identify and who you’d like to meet,</strong> used only for matching.</li>
+        <li><strong>The result of your age check,</strong> which opens dating on your account.</li>
+        <li><strong>Your approximate area, only if you turn distance on:</strong> a square about 2 km across, stored encrypted.</li>
+        <li><strong>Likes, matches and messages,</strong> so your conversations work.</li>
+        <li><strong>Blocks and reports,</strong> to keep people safe.</li>
+        <li><strong>Call records:</strong> who called whom, voice or video, when, and how it ended. Never what was said or seen.</li>
+        <li><strong>Security events:</strong> the kind and time of events such as signing in, for investigating abuse.</li>
+      </ul>
+    </section>
+
+    <section id="never" aria-labelledby="never-title">
+      <h2 id="never-title">What it never collects</h2>
+      <ul class="doc-list">
+        <li>Your exact location. The app asks your phone for approximate location only, never precise or background location.</li>
+        <li>Your contacts, other apps or browsing.</li>
+        <li>Recordings or content of calls. Calls go from phone to phone; the server only helps them connect.</li>
+        <li>Advertising or analytics tracking. The app contains no advertising or analytics code.</li>
+        <li>Your photos’ hidden location data, which is removed when a photo is processed.</li>
+      </ul>
+    </section>
+
+    <section id="who" aria-labelledby="who-title">
+      <h2 id="who-title">Who sees what</h2>
+      <div class="doc-grid">
+        <article><h3>Other members see</h3><p>Your name, age, profile and approved photos; how you identify, only if you choose to show it; a distance band, if you both have distance on; and what you have in common.</p></article>
+        <article><h3>Other members never see</h3><p>Your email, your area, who you’d like to meet, your age-check details, who you’ve blocked or reported, and whether you’ve read a message, unless you both share read receipts.</p></article>
+      </div>
+      <p>Moderators see only what they need to review a report: the reason, the profile, and the one message you chose to include. Photos are reviewed by a person before anyone else sees them.</p>
+    </section>
+
+    <section id="how-long" aria-labelledby="how-long-title">
+      <h2 id="how-long-title">How long it is kept</h2>
+      <div class="doc-table" role="table" aria-label="How long data is kept">
+        <div role="row"><span role="columnheader">What</span><span role="columnheader">Kept for</span></div>
+        <div role="row"><span role="cell">Your account, profile, matches and messages</span><span role="cell">Until you delete your account, then removed after a 7-day grace period</span></div>
+        <div role="row"><span role="cell">Your approximate area</span><span role="cell">Until you turn distance off, which removes it at once</span></div>
+        <div role="row"><span role="cell">Used or expired sign-in codes</span><span role="cell">1 day</span></div>
+        <div role="row"><span role="cell">Ended sign-ins on a device</span><span role="cell">30 days; a device unused for 90 days signs in again</span></div>
+        <div role="row"><span role="cell">Rejected photo records (the photo itself is deleted at once)</span><span role="cell">90 days</span></div>
+        <div role="row"><span role="cell">Call records</span><span role="cell">90 days</span></div>
+        <div role="row"><span role="cell">Security events (kind and time only)</span><span role="cell">1 year</span></div>
+        <div role="row"><span role="cell">Decided reports and appeals</span><span role="cell">2 years, to recognise repeat abuse</span></div>
+        <div role="row"><span role="cell">Backups</span><span role="cell">Replaced after 7 days, so deleted data leaves them too</span></div>
+      </div>
+    </section>
+
+    <section id="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Your controls</h2>
+      <ul class="doc-list">
+        <li><strong>Download a copy</strong> of everything Vawra keeps about you, from Settings. It includes your own messages, never anyone else’s.</li>
+        <li><strong>Delete your account</strong> from Settings. It is removed after 7 days, in case you change your mind; signing in before then keeps it.</li>
+        <li><strong>Take a break</strong> by turning off “Show me on Discover”.</li>
+        <li><strong>Turn distance off</strong> at any time, or hide it near private places. Private places are kept only on your phone.</li>
+        <li><strong>Choose read receipts and typing,</strong> shared only when both of you turn them on.</li>
+        <li><strong>Decide who can send you photos</strong> and who can call you, one match at a time.</li>
+      </ul>
+    </section>
+
+    <section id="security" aria-labelledby="security-title">
+      <h2 id="security-title">Security</h2>
+      <p>Sign-in uses one-time codes instead of passwords, and signing out ends every sign-in on that device. Email addresses and areas are stored encrypted. Photo links work only for the person viewing them and expire after 15 minutes. The app does not back up your Vawra data to other services. A security review has been written and an independent test is planned before launch.</p>
+    </section>
+
+    <p class="doc-foot">Vawra is in development and not a live dating service; there is no public contact address yet. <a href="safety.html">How Vawra keeps you safe →</a></p>
+  </main>
+
+  <footer class="footer shell"><a class="footer-brand" href="index.html"><img src="assets/brand/lockup.webp" alt="Vawra" width="520" height="173" loading="lazy"></a><div><a href="index.html#experience">Experience</a><a href="safety.html">Safety</a><a href="privacy.html">Privacy</a><a href="index.html#faq">FAQs</a></div><p>© <span id="year">2026</span> Vawra. 18+ concept in development. Not a live dating service.</p></footer>
+</body>
+</html>

@@ -1,5 +1,24 @@
 # Checkpoints
 
+## Web-3 - The website catches up with the app (2026-09-30)
+
+- Home: three new "What's new" cards with screens captured on the Asus today (a voice call, the
+  scam warning, the Distance sheet with private places); the safety list now says what is built
+  (checked photos, opt-in chat photos, calls both opt in and never recorded, moderation with
+  appeals) instead of "calls are not built yet"; four new FAQs (calls, location, photos,
+  deleting an account).
+- New pages: `safety.html` (community guidelines, the safety tools, reports and moderation,
+  meeting safely) and `privacy.html` (what is kept and never collected, who sees what, the
+  retention table, your controls, security), marked as not yet the legal privacy policy.
+- Fixed: the footer logo was squashed (width set, height left at the HTML value); long safety
+  points wrapped under their number.
+- `website/check.ps1` now covers all three pages: links and anchors across pages, assets, no forms
+  or outside requests, the launch disclosure on every page, no launch wording, calls described
+  only with both opt-in and never recorded, the privacy page's draft status, logo proportions.
+  Four planted defects (squashed logo, "calls are not built", a broken anchor, a missing
+  disclosure) each fail it.
+- Checked in Chromium at 1280 and 390 wide: every image loads, no sideways scrolling.
+
 ## BE-15b - Dates and times are not phone numbers (2026-09-30)
 
 - Found on the Asus: a message with a timestamp ("2026-09-27 18:14:48") got the "Moving to
