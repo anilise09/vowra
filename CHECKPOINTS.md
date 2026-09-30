@@ -1,5 +1,13 @@
 # Checkpoints
 
+## BE-15b - Dates and times are not phone numbers (2026-09-30)
+
+- Found on the Asus: a message with a timestamp ("2026-09-27 18:14:48") got the "Moving to
+  another app?" warning because the phone-number pattern read the date and hour as ten digits.
+  Dates (2026-10-03, 03.10.2026, 2026/10/03) and clock times (19:30, 18:14:48.98) are now removed
+  before looking for a phone number; real numbers ("204 555 0182", "+1 (204) 555-0182",
+  "2045550182") are still flagged. Six new cases; the date cases fail without the fix.
+
 ## Device - Calls and distance on the owner's Asus (2026-09-30)
 
 - The call build (8df5362, arm64 profile, checksum checked after install) on the Asus, signed in as

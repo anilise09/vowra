@@ -32,10 +32,20 @@ const link: RegExp[] = [
 
 const digits = (s: string) => s.replace(/\D/g, '').length;
 
+/**
+ * Dates ("2026-10-03", "03.10.2026") and clock times ("19:30", "18:14:48.98")
+ * read as long digit runs; they are removed before looking for a phone number.
+ */
+const withoutDatesAndTimes = (s: string) =>
+  s
+    .replace(/\b\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?\b/g, ' ')
+    .replace(/\b\d{4}[-/.]\d{1,2}[-/.]\d{1,2}\b/g, ' ')
+    .replace(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}\b/g, ' ');
+
 export function safetyHints(text: string): SafetyHint[] {
   const hints: SafetyHint[] = [];
   if (money.some((r) => r.test(text))) hints.push('money');
-  const phone = offPlatform[2]!.exec(text);
+  const phone = offPlatform[2]!.exec(withoutDatesAndTimes(text));
   const otherOff = offPlatform.filter((_, i) => i !== 2).some((r) => r.test(text));
   if (otherOff || (phone && digits(phone[0]) >= 9)) hints.push('off_platform');
   if (link.some((r) => r.test(text))) hints.push('link');

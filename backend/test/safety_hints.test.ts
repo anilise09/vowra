@@ -13,6 +13,8 @@ describe('safety hints', () => {
     ['just send it on Cash App', 'money'],
     ['Add me on WhatsApp, I rarely check this app', 'off_platform'],
     ['text me at +1 (204) 555-0182', 'off_platform'],
+    ['204 555 0182 is my number', 'off_platform'],
+    ['call 2045550182 tonight', 'off_platform'],
     ['my email is maya.test@example.com', 'off_platform'],
     ['let us talk on telegram', 'off_platform'],
     ['look at my pics www.not-a-scam.example', 'link'],
@@ -26,6 +28,11 @@ describe('safety hints', () => {
     'I was born in 1994 and moved here in 2019',
     'Coffee on Saturday at 10?',
     'The meetup is at 7 pm near the station',
+    // Dates and clock times are not phone numbers.
+    'Live nudge check 2026-09-27 18:14:48.982177',
+    'See you 2026-10-03 at 19:30?',
+    'Flight lands 2026/10/03 18:05, then dinner',
+    'Tickets for 03.10.2026 19:30 are booked',
   ];
 
   it.each(flagged)('flags "%s" as %s', (text, hint) => {
