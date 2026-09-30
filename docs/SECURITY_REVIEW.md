@@ -93,9 +93,15 @@ Checked: the server binds to 127.0.0.1 by default. Release builds get the platfo
 blocks plain HTTP (Android 9+ and iOS App Transport Security); only debug and profile builds carry a
 network setting that allows plain HTTP to local test addresses.
 
+Found and fixed:
+- Production accepted account traffic on its private HTTP listener and had no HSTS contract.
+  It now requires HTTPS directly or a forwarded HTTPS protocol from an explicit proxy IP/CIDR,
+  refuses trust-all proxy settings, ignores spoofed forwarded headers and sends one-year HSTS.
+  Private liveness/readiness probes remain available over the container network.
+
 Open:
-- Production needs HTTPS in front of the server (the host's TLS terminator) and HSTS. Certificate
-  pinning in the app is a later decision; it complicates key rotation.
+- The chosen host must still supply and renew the public HTTPS certificate at its TLS terminator.
+  Certificate pinning in the app is a later decision; it complicates key rotation.
 
 ## Calls (added BE-18 and BE-19)
 
@@ -134,5 +140,6 @@ Open:
 ## Still to do before launch
 
 An independent penetration test, a threat-model review with the chosen providers (email, storage,
-scanning, push, calls), the device-attestation decision, a multi-host rate-limit test, production
-HTTPS and backups, and a staff sign-in for moderators separate from member accounts.
+scanning, push, calls), the device-attestation decision, a multi-host rate-limit test, a production
+TLS certificate and encrypted backups, and a staff sign-in for moderators separate from member
+accounts.

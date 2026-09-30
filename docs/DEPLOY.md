@@ -30,9 +30,12 @@ Generate a key with `node -e "console.log(require('crypto').randomBytes(32).toSt
 and keep both in the host's secret store; losing the data key loses sealed data.
 
 Production (`VAWRA_ENV=production`, set in the image) additionally requires `DATABASE_URL` and
-`VAWRA_HOST` (the image sets `0.0.0.0`), and refuses `VAWRA_DEV_OUTBOX`, `VAWRA_CALLS_DEV_P2P`
-and an access token longer than an hour. Every problem is listed at once and the process exits;
-no secret is ever printed.
+`VAWRA_HOST` (the image sets `0.0.0.0`) plus the explicit `VAWRA_TRUST_PROXY`, and refuses
+`VAWRA_DEV_OUTBOX`, `VAWRA_CALLS_DEV_P2P` and an access token longer than an hour. Every problem
+is listed at once and the process exits; no secret is ever printed.
+
+`VAWRA_TRUST_PROXY` is a comma-separated list of the TLS terminator's IP addresses or CIDRs.
+Never set it to `*`: forwarded headers from every other peer are ignored.
 
 Optional:
 
@@ -53,6 +56,9 @@ Optional:
 - `GET /v1/ready`: readiness. The database answers and every migration this build ships is
   applied; `503` with a reason (`database`, `migrations_pending`, `shutting_down`) otherwise.
   Point the load balancer here.
+- Health and readiness may use the container's private HTTP listener. Every account/API route in
+  production requires HTTPS directly or `X-Forwarded-Proto: https` from a configured trusted
+  proxy; spoofed forwarded headers are ignored. HTTPS responses carry one-year HSTS.
 
 ## Start, update, stop
 
@@ -71,7 +77,8 @@ cd backend
 docker build -t vawra-server .
 docker run --rm -p 8797:8797 -v vawra-data:/data \
   -e VAWRA_SERVER_ENABLED=1 -e DATABASE_URL=postgres://... \
-  -e VAWRA_DATA_KEY=... -e VAWRA_LOOKUP_KEY=... vawra-server
+  -e VAWRA_DATA_KEY=... -e VAWRA_LOOKUP_KEY=... \
+  -e VAWRA_TRUST_PROXY=10.0.0.0/8 vawra-server
 ```
 
 The image runs as the unprivileged `node` user; `/data` is its only writable place.

@@ -1,5 +1,17 @@
 # Checkpoints
 
+## BE-22 - production account traffic cannot fall back to HTTP (2026-09-30)
+
+- Production now refuses to start without `VAWRA_TRUST_PROXY`, an explicit comma-separated list of
+  the TLS terminator's IP addresses/CIDRs; wildcard/trust-everyone values are refused.
+- Every account/API route requires HTTPS directly or a forwarded HTTPS protocol from one of those
+  trusted peers. A forged `X-Forwarded-Proto` from any other address is ignored and receives
+  `426 https_required`.
+- HTTPS responses carry one-year HSTS. Private HTTP liveness/readiness probes remain available so
+  container orchestration can still observe and drain the service without leaving the host.
+- TypeScript and production build pass with all 162 backend tests. The host still needs a real TLS
+  certificate and renewal policy; this checkpoint enforces its boundary rather than claiming one.
+
 ## Device - First real iOS Simulator critical flow (2026-09-30)
 
 - On the Intel Mac, installed CocoaPods 1.17.0 for the local toolchain and built Vawra with

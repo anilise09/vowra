@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../src/app.js';
+import { buildApp, type AppOptions } from '../src/app.js';
 import { pkceChallenge, Sealer } from '../src/crypto.js';
 import { migrate, openPglite, type Db } from '../src/db.js';
 import { type CallConfig, SignalBox } from '../src/calls.js';
@@ -26,7 +26,7 @@ export const testCallConfig: CallConfig = {
 };
 
 export async function startHarness(
-  options: { callConfig?: CallConfig | null } = {},
+  options: { callConfig?: CallConfig | null; appOptions?: AppOptions } = {},
 ): Promise<Harness> {
   const db = await openPglite();
   await migrate(db);
@@ -36,21 +36,24 @@ export async function startHarness(
   const sealer = new Sealer(randomBytes(32), randomBytes(32));
   const nudges = new MemoryNudgeBus();
   const media = new MemoryMediaStore();
-  const app = buildApp({
-    nudges,
-    media,
-    grants: new MediaGrants(randomBytes(32)),
-    signals: new SignalBox(),
-    callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
-    db,
-    sealer,
-    clock,
-    delivery: { sendProof: async (email, proof, purpose) => void outbox.push({ email, proof, purpose }) },
-    accessTtlSeconds: 900,
-    proofTtlSeconds: 600,
-    reauthWindowSeconds: 600,
-    deletionGraceSeconds: 7 * 24 * 60 * 60,
-  });
+  const app = buildApp(
+    {
+      nudges,
+      media,
+      grants: new MediaGrants(randomBytes(32)),
+      signals: new SignalBox(),
+      callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
+      db,
+      sealer,
+      clock,
+      delivery: { sendProof: async (email, proof, purpose) => void outbox.push({ email, proof, purpose }) },
+      accessTtlSeconds: 900,
+      proofTtlSeconds: 600,
+      reauthWindowSeconds: 600,
+      deletionGraceSeconds: 7 * 24 * 60 * 60,
+    },
+    options.appOptions,
+  );
   await app.ready();
   return { app, db, sealer, clock, outbox, nudges, media, close: async () => (await app.close(), await db.close()) };
 }

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { ConfigError, loadConfig } from '../src/config.js';
 import { migrate, openPglite, pendingMigrations } from '../src/db.js';
 import { type Running, startServer } from '../src/start.js';
-import { type Harness, member } from './harness.js';
+import { type Harness, member, startHarness } from './harness.js';
 
 const key = () => randomBytes(32).toString('base64');
 const base = () => ({ VAWRA_DATA_KEY: key(), VAWRA_LOOKUP_KEY: key() });
@@ -55,6 +55,7 @@ describe('settings', () => {
     expect(problems).toMatch(/VAWRA_DEV_OUTBOX/);
     expect(problems).toMatch(/VAWRA_CALLS_DEV_P2P/);
     expect(problems).toMatch(/VAWRA_HOST/);
+    expect(problems).toMatch(/VAWRA_TRUST_PROXY/);
     expect(problems).toMatch(/VAWRA_ACCESS_TTL must be at most 3600/);
     // Error messages never repeat a secret.
     expect(problems).not.toContain(base().VAWRA_DATA_KEY);
@@ -66,12 +67,52 @@ describe('settings', () => {
       VAWRA_ENV: 'production',
       DATABASE_URL: 'postgres://vawra@db.internal/vawra',
       VAWRA_HOST: '0.0.0.0',
+      VAWRA_TRUST_PROXY: '10.0.0.0/8',
     });
-    expect(config.production).toBe(true);
+    expect(config).toMatchObject({ production: true, trustedProxies: ['10.0.0.0/8'] });
+  });
+
+  it('never allows a production setting that trusts every forwarded header', () => {
+    expect(problemsOf({ ...base(), VAWRA_TRUST_PROXY: '*' }).join()).toMatch(/never trust everyone/);
   });
 
   it('rejects an unknown environment name', () => {
     expect(problemsOf({ ...base(), VAWRA_ENV: 'prod' }).join()).toMatch(/VAWRA_ENV must be/);
+  });
+});
+
+describe('production transport', () => {
+  it('trusts HTTPS only from the configured proxy and sends HSTS', async () => {
+    const h = await startHarness({
+      appOptions: { enforceHttps: true, trustedProxies: ['127.0.0.1'] },
+    });
+    try {
+      const plain = await h.app.inject({ method: 'GET', url: '/v1/discovery' });
+      expect(plain.statusCode).toBe(426);
+      expect(plain.json().error).toBe('https_required');
+
+      const spoofed = await h.app.inject({
+        method: 'GET',
+        url: '/v1/discovery',
+        remoteAddress: '203.0.113.9',
+        headers: { 'x-forwarded-proto': 'https' },
+      });
+      expect(spoofed.statusCode).toBe(426);
+
+      const secure = await h.app.inject({
+        method: 'GET',
+        url: '/v1/discovery',
+        remoteAddress: '127.0.0.1',
+        headers: { 'x-forwarded-proto': 'https' },
+      });
+      expect(secure.statusCode).toBe(401);
+      expect(secure.headers['strict-transport-security']).toBe('max-age=31536000');
+
+      // Private orchestrator probes do not need to loop through the TLS proxy.
+      expect((await h.app.inject({ method: 'GET', url: '/v1/health' })).statusCode).toBe(200);
+    } finally {
+      await h.close();
+    }
   });
 });
 

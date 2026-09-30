@@ -4,6 +4,8 @@ export interface Config {
   production: boolean;
   host: string;
   port: number;
+  /** Addresses/CIDRs of the TLS terminator allowed to set forwarded protocol/address headers. */
+  trustedProxies: string[];
   databaseUrl?: string;
   dataDir?: string;
   /** Processed photos, until a reviewed object store is chosen. */
@@ -59,11 +61,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
   const port = positive(problems, 'VAWRA_PORT', env.VAWRA_PORT, 8797);
   if (port > 65535) problems.push('VAWRA_PORT must be at most 65535.');
+  const trustedProxies = (env.VAWRA_TRUST_PROXY ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (trustedProxies.some((value) => ['*', 'true', 'all'].includes(value.toLowerCase()))) {
+    problems.push('VAWRA_TRUST_PROXY must list explicit proxy addresses or CIDRs, never trust everyone.');
+  }
   const config: Config = {
     enabled: env.VAWRA_SERVER_ENABLED === '1',
     production,
     host: env.VAWRA_HOST ?? '127.0.0.1',
     port,
+    trustedProxies,
     databaseUrl: env.DATABASE_URL,
     dataDir: env.VAWRA_DATA_DIR ?? '.data/pglite',
     mediaDir: env.VAWRA_MEDIA_DIR ?? '.data/media',
@@ -83,6 +93,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       problems.push('VAWRA_CALLS_DEV_P2P shows each phone’s address to the other; production calls use a relay.');
     }
     if (!env.VAWRA_HOST) problems.push('Production needs VAWRA_HOST set explicitly (for example 0.0.0.0 in a container).');
+    if (config.trustedProxies.length === 0) {
+      problems.push('Production needs VAWRA_TRUST_PROXY set to the TLS terminator address or CIDR.');
+    }
     if (config.accessTtlSeconds > 3600) problems.push('VAWRA_ACCESS_TTL must be at most 3600 seconds in production.');
   }
   if (problems.length > 0) throw new ConfigError(problems);
