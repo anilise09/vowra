@@ -99,7 +99,12 @@ export async function startServer(
       reauthWindowSeconds: config.reauthWindowSeconds,
       deletionGraceSeconds: config.deletionGraceSeconds,
     },
-    { logger: options.logger ?? true, isDraining: () => draining },
+    {
+      logger: options.logger ?? true,
+      trustedProxies: config.trustedProxies,
+      enforceHttps: config.production,
+      isDraining: () => draining,
+    },
   );
   log = (message, detail) => app.log.warn(detail ?? {}, message);
   await app.listen({ host: config.host, port: config.port });

@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../src/app.js';
+import { buildApp, type AppOptions } from '../src/app.js';
 import { pkceChallenge, Sealer } from '../src/crypto.js';
 import { migrate, openPglite, type Db } from '../src/db.js';
 import { type CallConfig, DbSignalBox, MemorySignalBox } from '../src/calls.js';
@@ -36,6 +36,7 @@ export async function startHarness(
     callConfig?: CallConfig | null;
     failDelivery?: boolean;
     push?: { android?: PushSender; ios?: PushSender };
+    appOptions?: AppOptions;
     /**
      * Share live updates, presence and call setup through the database, as
      * servers on PostgreSQL do. With [join], this is a second server on the
@@ -60,29 +61,32 @@ export async function startHarness(
   const presence = shared ? new DbPresence(db, instanceId) : new LocalPresence(nudges);
   const notifier = new Notifier(db, sealer, presence, options.push ?? {}, () => clock.now());
   const media = new MemoryMediaStore();
-  const app = buildApp({
-    nudges,
-    media,
-    grants: new MediaGrants(randomBytes(32)),
-    signals: shared ? new DbSignalBox(db) : new MemorySignalBox(),
-    notifier,
-    presence,
-    ageCheck: options.ageCheck ?? null,
-    callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
-    db,
-    sealer,
-    clock,
-    delivery: {
-      sendProof: async (email, proof, purpose) => {
-        if (options.failDelivery) throw new Error('mail server unreachable');
-        outbox.push({ email, proof, purpose });
+  const app = buildApp(
+    {
+      nudges,
+      media,
+      grants: new MediaGrants(randomBytes(32)),
+      signals: shared ? new DbSignalBox(db) : new MemorySignalBox(),
+      notifier,
+      presence,
+      ageCheck: options.ageCheck ?? null,
+      callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
+      db,
+      sealer,
+      clock,
+      delivery: {
+        sendProof: async (email, proof, purpose) => {
+          if (options.failDelivery) throw new Error('mail server unreachable');
+          outbox.push({ email, proof, purpose });
+        },
       },
+      accessTtlSeconds: 900,
+      proofTtlSeconds: 600,
+      reauthWindowSeconds: 600,
+      deletionGraceSeconds: 7 * 24 * 60 * 60,
     },
-    accessTtlSeconds: 900,
-    proofTtlSeconds: 600,
-    reauthWindowSeconds: 600,
-    deletionGraceSeconds: 7 * 24 * 60 * 60,
-  });
+    options.appOptions,
+  );
   await app.ready();
   return {
     app,

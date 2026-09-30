@@ -19,6 +19,10 @@ import { staffRoutes } from './routes/staff.js';
 
 export interface AppOptions {
   logger?: boolean;
+  /** Only these direct peers may supply X-Forwarded-* headers. */
+  trustedProxies?: string[];
+  /** Refuse account traffic unless the direct or trusted-forwarded protocol is HTTPS. */
+  enforceHttps?: boolean;
   /** True while the server is shutting down: readiness fails so traffic moves away. */
   isDraining?: () => boolean;
 }
@@ -27,6 +31,7 @@ export function buildApp(services: Services, options: AppOptions = {}): FastifyI
   const app = Fastify({
     genReqId: () => crypto.randomUUID(),
     bodyLimit: 64 * 1024,
+    trustProxy: options.trustedProxies ?? false,
     logger: options.logger
       ? {
           // Never log credentials, proofs or message/profile bodies.
@@ -50,6 +55,15 @@ export function buildApp(services: Services, options: AppOptions = {}): FastifyI
       const error = new Error('invalid JSON') as Error & { statusCode: number };
       error.statusCode = 400;
       done(error, undefined);
+    }
+  });
+
+  app.addHook('onRequest', async (request, reply) => {
+    // Container/liveness probes may use the private HTTP listener. All account
+    // traffic must arrive through the reviewed TLS terminator in production.
+    const probe = request.url === '/v1/health' || request.url === '/v1/ready';
+    if (options.enforceHttps && !probe && request.protocol !== 'https') {
+      return reply.code(426).send({ error: 'https_required', request_id: request.id });
     }
   });
 
@@ -101,9 +115,12 @@ export function buildApp(services: Services, options: AppOptions = {}): FastifyI
   });
 
   // Account data must never sit in a shared cache, and nothing is sniffed as another type.
-  app.addHook('onSend', async (_request, reply) => {
+  app.addHook('onSend', async (request, reply) => {
     reply.header('x-content-type-options', 'nosniff');
     if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store');
+    if (options.enforceHttps && request.protocol === 'https') {
+      reply.header('strict-transport-security', 'max-age=31536000');
+    }
   });
 
   // Liveness: the process answers. Readiness: it can serve traffic right now.

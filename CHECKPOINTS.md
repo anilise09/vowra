@@ -123,6 +123,18 @@
   ("syntax error at or near no"). Lines now split on either ending. A new test splits the same
   migration both ways; without the fix it fails, and so did 126 tests in such a checkout.
 - Backend 161 tests pass.
+## BE-22 - production account traffic cannot fall back to HTTP (2026-09-30)
+
+- Production now refuses to start without `VAWRA_TRUST_PROXY`, an explicit comma-separated list of
+  the TLS terminator's IP addresses/CIDRs; wildcard/trust-everyone values are refused.
+- Every account/API route requires HTTPS directly or a forwarded HTTPS protocol from one of those
+  trusted peers. A forged `X-Forwarded-Proto` from any other address is ignored and receives
+  `426 https_required`.
+- HTTPS responses carry one-year HSTS. Private HTTP liveness/readiness probes remain available so
+  container orchestration can still observe and drain the service without leaving the host.
+- TypeScript and production build pass with all 162 backend tests. The host still needs a real TLS
+  certificate and renewal policy; this checkpoint enforces its boundary rather than claiming one.
+
 ## BE-21 - media races close without leaks or quota bypasses (2026-09-30)
 
 - Upload grants are claimed and spent by one conditional database statement, so two server workers
