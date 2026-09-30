@@ -1,5 +1,13 @@
 # Checkpoints
 
+## BE-20b - Migrations survive Windows line endings (2026-09-30)
+
+- On a checkout with Windows line endings (Git's default on Windows) every migration failed: the
+  comment remover stopped at the carriage return, so comment text reached PostgreSQL as SQL
+  ("syntax error at or near no"). Lines now split on either ending. A new test splits the same
+  migration both ways; without the fix it fails, and so did 126 tests in such a checkout.
+- Backend 161 tests pass.
+
 ## Device - First real iOS Simulator critical flow (2026-09-30)
 
 - On the Intel Mac, installed CocoaPods 1.17.0 for the local toolchain and built Vawra with

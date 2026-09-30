@@ -48,9 +48,10 @@ export async function pendingMigrations(db: Db): Promise<string[]> {
   return migrationFiles().filter((f) => !done.has(f));
 }
 
-function splitStatements(sql: string): string[] {
+/** Splits a migration into statements. Windows line endings are handled: a checkout may have them. */
+export function splitStatements(sql: string): string[] {
   return sql
-    .split('\n')
+    .split(/\r?\n/)
     .map((line) => line.replace(/--.*$/, ''))
     .join('\n')
     .split(';')

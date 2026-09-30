@@ -149,3 +149,13 @@ describe('the running server', () => {
     running = undefined;
   });
 });
+
+describe('migration files', () => {
+  it('split the same with Windows line endings, comments and all', async () => {
+    const { splitStatements } = await import('../src/db.js');
+    const sql = '-- A comment; with a semicolon, no statement\nCREATE TABLE a (x int);\n-- another\nCREATE INDEX a_x ON a (x);\n';
+    const unix = splitStatements(sql);
+    expect(unix).toEqual(['CREATE TABLE a (x int)', 'CREATE INDEX a_x ON a (x)']);
+    expect(splitStatements(sql.replace(/\n/g, '\r\n'))).toEqual(unix);
+  });
+});
