@@ -1,6 +1,9 @@
 # Delivery roadmap
 
-## Phase 0 — foundation (current)
+Status (2026-09-30): the locally buildable work through Phase 4 is implemented and tested. Provider,
+legal, hosting and cross-platform launch gates remain explicit below; Phase 5 is on legal hold.
+
+## Phase 0 — foundation
 
 Research, product contract, threat model, privacy inventory, Flutter workspace, CI, backend architecture. Exit: Android build works; iOS project is ready for later macOS validation.
 
@@ -29,4 +32,3 @@ StoreKit 2, Play Billing, verified entitlements/notifications, transparent paywa
 Photo/liveness and optional ID vendor review, regional age assurance, policies/safety center, pen test, incident response, support/moderation staffing, closed beta, staged release.
 
 No public launch before moderation and under-age prevention work.
-
