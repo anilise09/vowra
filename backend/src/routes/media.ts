@@ -90,22 +90,43 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
     const now = clock.now();
     const token = newToken();
     const expires = new Date(now.getTime() + photoRules.uploadGrantSeconds * 1000);
-    const [existing] = await db.query<{ id: string; state: string }>(
-      'SELECT id, state FROM media WHERE owner = $1 AND client_upload_id = $2',
-      [me.id, req.client_upload_id],
-    );
-    let id: string;
-    if (existing) {
-      // Asking again for the same upload refreshes its grant; it never re-opens a finished one.
-      if (existing.state !== 'awaiting_upload') fail(409, 'already_uploaded');
-      id = existing.id;
-      await db.query('UPDATE media SET grant_hash = $2, grant_expires_at = $3 WHERE id = $1', [
-        id,
-        hashToken(token),
-        expires,
-      ]);
-    } else {
-      const [counts] = await db.query<{ kept: number; today: number }>(
+    let id = '';
+    await db.transaction(async (tx) => {
+      // One owner row serializes quota checks across every server instance and
+      // across profile and conversation uploads.
+      await tx.query('SELECT id FROM accounts WHERE id = $1 FOR UPDATE', [me.id]);
+      const [existing] = await tx.query<{
+        id: string;
+        state: string;
+        audience: string;
+        mime_type: string;
+        byte_length: number;
+        sha256: string;
+      }>(
+        `SELECT id, state, audience, mime_type, byte_length, sha256 FROM media
+         WHERE owner = $1 AND client_upload_id = $2`,
+        [me.id, req.client_upload_id],
+      );
+      if (existing) {
+        // Idempotency never changes an upload's audience or declared bytes.
+        if (
+          existing.state !== 'awaiting_upload' ||
+          existing.audience !== 'profile' ||
+          existing.mime_type !== req.mime_type ||
+          existing.byte_length !== req.byte_length ||
+          existing.sha256 !== req.sha256
+        ) {
+          fail(409, 'already_uploaded');
+        }
+        id = existing.id;
+        await tx.query('UPDATE media SET grant_hash = $2, grant_expires_at = $3 WHERE id = $1', [
+          id,
+          hashToken(token),
+          expires,
+        ]);
+        return;
+      }
+      const [counts] = await tx.query<{ kept: number; today: number }>(
         `SELECT count(*) FILTER (WHERE state <> 'rejected' AND audience = 'profile')::int AS kept,
                 count(*) FILTER (WHERE created_at > $2)::int AS today
          FROM media WHERE owner = $1`,
@@ -114,7 +135,7 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
       if ((counts?.kept ?? 0) >= photoRules.maxPhotos) fail(409, 'photo_limit');
       if ((counts?.today ?? 0) >= photoRules.uploadsPerDay) fail(429, 'upload_limit');
       id = crypto.randomUUID();
-      await db.query(
+      await tx.query(
         `INSERT INTO media (id, owner, state, client_upload_id, mime_type, byte_length, sha256,
                             grant_hash, grant_expires_at, position, created_at)
          VALUES ($1, $2, 'awaiting_upload', $3, $4, $5, $6, $7, $8,
@@ -122,7 +143,7 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
         [id, me.id, req.client_upload_id, req.mime_type, req.byte_length, req.sha256,
          hashToken(token), expires, now],
       );
-    }
+    });
     return {
       photo_id: id,
       upload_url: `/v1/uploads/${id}?grant=${token}`,
@@ -137,28 +158,64 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
     const body = uploadBody.safeParse(request.body);
     if (!body.success) fail(400, 'invalid_request');
     const req = body.data!;
-    const match = await openConversation(db, me.id, (request.params as { matchId: string }).matchId);
-    const consent = await db.query('SELECT 1 FROM photo_consent WHERE match_id = $1 AND account_id = $2', [
-      match.id,
-      match.peer,
-    ]);
-    if (consent.length === 0) fail(409, 'photos_not_allowed');
     const now = clock.now();
-    const [today] = await db.query<{ n: number }>(
-      'SELECT count(*)::int AS n FROM media WHERE owner = $1 AND created_at > $2',
-      [me.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)],
-    );
-    if ((today?.n ?? 0) >= photoRules.uploadsPerDay) fail(429, 'upload_limit');
     const token = newToken();
     const expires = new Date(now.getTime() + photoRules.uploadGrantSeconds * 1000);
-    const id = crypto.randomUUID();
-    await db.query(
-      `INSERT INTO media (id, owner, audience, match_id, state, client_upload_id, mime_type, byte_length,
-                          sha256, grant_hash, grant_expires_at, created_at)
-       VALUES ($1, $2, 'conversation', $3, 'awaiting_upload', $4, $5, $6, $7, $8, $9, $10)`,
-      [id, me.id, match.id, req.client_upload_id, req.mime_type, req.byte_length, req.sha256,
-       hashToken(token), expires, now],
-    );
+    let id = '';
+    await db.transaction(async (tx) => {
+      await tx.query('SELECT id FROM accounts WHERE id = $1 FOR UPDATE', [me.id]);
+      const match = await openConversation(tx, me.id, (request.params as { matchId: string }).matchId);
+      const consent = await tx.query(
+        'SELECT 1 FROM photo_consent WHERE match_id = $1 AND account_id = $2',
+        [match.id, match.peer],
+      );
+      if (consent.length === 0) fail(409, 'photos_not_allowed');
+      const [existing] = await tx.query<{
+        id: string;
+        state: string;
+        audience: string;
+        match_id: string | null;
+        mime_type: string;
+        byte_length: number;
+        sha256: string;
+      }>(
+        `SELECT id, state, audience, match_id, mime_type, byte_length, sha256 FROM media
+         WHERE owner = $1 AND client_upload_id = $2`,
+        [me.id, req.client_upload_id],
+      );
+      if (existing) {
+        if (
+          existing.state !== 'awaiting_upload' ||
+          existing.audience !== 'conversation' ||
+          existing.match_id !== match.id ||
+          existing.mime_type !== req.mime_type ||
+          existing.byte_length !== req.byte_length ||
+          existing.sha256 !== req.sha256
+        ) {
+          fail(409, 'already_uploaded');
+        }
+        id = existing.id;
+        await tx.query('UPDATE media SET grant_hash = $2, grant_expires_at = $3 WHERE id = $1', [
+          id,
+          hashToken(token),
+          expires,
+        ]);
+        return;
+      }
+      const [today] = await tx.query<{ n: number }>(
+        'SELECT count(*)::int AS n FROM media WHERE owner = $1 AND created_at > $2',
+        [me.id, new Date(now.getTime() - 24 * 60 * 60 * 1000)],
+      );
+      if ((today?.n ?? 0) >= photoRules.uploadsPerDay) fail(429, 'upload_limit');
+      id = crypto.randomUUID();
+      await tx.query(
+        `INSERT INTO media (id, owner, audience, match_id, state, client_upload_id, mime_type,
+                            byte_length, sha256, grant_hash, grant_expires_at, created_at)
+         VALUES ($1, $2, 'conversation', $3, 'awaiting_upload', $4, $5, $6, $7, $8, $9, $10)`,
+        [id, me.id, match.id, req.client_upload_id, req.mime_type, req.byte_length, req.sha256,
+         hashToken(token), expires, now],
+      );
+    });
     return { photo_id: id, upload_url: `/v1/uploads/${id}?grant=${token}`, expires_at: expires.toISOString() };
   });
 
@@ -171,32 +228,22 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
     const grant = (request.query as { grant?: string }).grant;
     if (!id.success || !grant) fail(403, 'invalid_grant');
     const now = clock.now();
+    // Claim and spend the grant in one statement. Two PostgreSQL workers can
+    // never both accept the same token, even when their requests arrive together.
     const [row] = await db.query<{
-      state: string;
-      grant_hash: string | null;
-      grant_expires_at: Date | null;
       mime_type: string;
       byte_length: number;
       sha256: string;
     }>(
-      `SELECT state, grant_hash, grant_expires_at, mime_type, byte_length, sha256
-       FROM media WHERE id = $1`,
-      [id.data],
+      `UPDATE media SET grant_hash = NULL
+       WHERE id = $1 AND state = 'awaiting_upload' AND grant_hash = $2
+         AND grant_expires_at >= $3
+       RETURNING mime_type, byte_length, sha256`,
+      [id.data, hashToken(grant!), now],
     );
-    if (
-      !row ||
-      row.state !== 'awaiting_upload' ||
-      !row.grant_hash ||
-      row.grant_hash !== hashToken(grant!) ||
-      !row.grant_expires_at ||
-      new Date(row.grant_expires_at) < now
-    ) {
-      fail(403, 'invalid_grant');
-    }
+    if (!row) fail(403, 'invalid_grant');
     const bytes = request.body;
     const contentType = String(request.headers['content-type'] ?? '').split(';')[0]!.trim();
-    // The grant is spent on the first attempt, whatever happens next.
-    await db.query('UPDATE media SET grant_hash = NULL WHERE id = $1', [id.data]);
     const reject = async (code: string, status = 422) => {
       await db.query("UPDATE media SET state = 'rejected', reject_reason = 'unreadable' WHERE id = $1", [
         id.data,
@@ -215,10 +262,17 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
       return reject('unreadable_image');
     }
     await services.media.put(id.data!, processed.bytes);
-    await db.query(
-      `UPDATE media SET state = 'pending_review', width = $2, height = $3 WHERE id = $1`,
+    const kept = await db.query(
+      `UPDATE media SET state = 'pending_review', width = $2, height = $3
+       WHERE id = $1 AND state = 'awaiting_upload' RETURNING id`,
       [id.data, processed.width, processed.height],
     );
+    if (kept.length === 0) {
+      // The owner (or account-deletion job) removed the row while image
+      // processing was in flight. Do not leave an object with no owner record.
+      await services.media.delete(id.data!);
+      fail(403, 'invalid_grant');
+    }
     return { state: 'pending_review' };
   });
 
@@ -366,29 +420,34 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
     const { outcome, reason } = body.data!;
     if (outcome === 'rejected' && !reason) fail(400, 'invalid_request');
     const now = clock.now();
-    const [row] = await db.query<{ owner: string; state: string; audience: string; match_id: string | null }>(
-      'SELECT owner, state, audience, match_id FROM media WHERE id = $1',
-      [id.data],
-    );
-    if (!row) fail(404, 'not_found');
-    if (row!.owner === mod.id) fail(409, 'conflict_of_interest');
-    if (row!.state !== 'pending_review') fail(409, 'already_decided');
+    let row!: { owner: string; audience: string; match_id: string | null };
     let peer: string | null = null;
     await db.transaction(async (tx) => {
-      await tx.query(
-        `UPDATE media SET state = $2, reject_reason = $3, decided_at = $4, decided_by = $5 WHERE id = $1`,
+      const [candidate] = await tx.query<{ owner: string; state: string }>(
+        'SELECT owner, state FROM media WHERE id = $1',
+        [id.data],
+      );
+      const current = candidate ?? fail(404, 'not_found');
+      if (current.owner === mod.id) fail(409, 'conflict_of_interest');
+      if (current.state !== 'pending_review') fail(409, 'already_decided');
+      const [claimed] = await tx.query<{ owner: string; audience: string; match_id: string | null }>(
+        `UPDATE media SET state = $2, reject_reason = $3, decided_at = $4, decided_by = $5
+         WHERE id = $1 AND state = 'pending_review'
+         RETURNING owner, audience, match_id`,
         [id.data, outcome, outcome === 'rejected' ? reason : null, now, mod.id],
       );
-      if (outcome === 'approved' && row!.audience === 'conversation') {
+      // Another moderator may have claimed it after our read.
+      row = claimed ?? fail(409, 'already_decided');
+      if (outcome === 'approved' && row.audience === 'conversation') {
         // Delivered only if the conversation is still open and photos still allowed.
         const [open] = await tx.query<{ peer: string }>(
           `SELECT CASE WHEN m.account_low = $2 THEN m.account_high ELSE m.account_low END AS peer
            FROM matches m WHERE m.id = $1 AND m.status = 'active'`,
-          [row!.match_id, row!.owner],
+          [row.match_id, row.owner],
         );
         const allowed = open
           ? await tx.query('SELECT 1 FROM photo_consent WHERE match_id = $1 AND account_id = $2', [
-              row!.match_id,
+              row.match_id,
               open.peer,
             ])
           : [];
@@ -396,7 +455,7 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
           await tx.query(
             `INSERT INTO messages (id, match_id, author_id, body, created_at, media_id)
              VALUES ($1, $2, $3, '', $4, $5)`,
-            [crypto.randomUUID(), row!.match_id, row!.owner, now, id.data],
+            [crypto.randomUUID(), row.match_id, row.owner, now, id.data],
           );
           peer = open.peer;
         }
@@ -404,8 +463,11 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
       await audit(tx, mod.id, `mod_photo_${outcome}`, now);
     });
     if (outcome === 'rejected') await services.media.delete(id.data!);
-    services.nudges.publish(row!.owner, { kind: row!.match_id ? 'message' : 'match', match_id: row!.match_id ?? undefined });
-    if (peer) services.nudges.publish(peer, { kind: 'message', match_id: row!.match_id! });
+    services.nudges.publish(row.owner, {
+      kind: row.match_id ? 'message' : 'match',
+      match_id: row.match_id ?? undefined,
+    });
+    if (peer) services.nudges.publish(peer, { kind: 'message', match_id: row.match_id! });
     return { state: outcome };
   });
 }

@@ -66,6 +66,11 @@ Found and fixed:
 - JSON responses had no cache or content-type protection. Every response now carries
   `X-Content-Type-Options: nosniff`, and `Cache-Control: no-store` unless a route sets its own
   (photo links use `private, max-age=300`).
+- Media grants were checked and spent in separate statements, quota checks were count-then-insert,
+  and deleting during processing could leave a file without a database owner. Grants are now spent
+  atomically, one locked account row serializes per-person quotas across servers, cross-context
+  idempotency is refused, concurrent moderation has one winner, and a deleted in-flight upload is
+  removed from storage before the request fails.
 
 ## Data protection
 

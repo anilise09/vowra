@@ -100,6 +100,13 @@ describe('profile photos', () => {
     expect((await put(reused.upload_url, bytes)).statusCode).toBe(200);
     expect((await put(reused.upload_url, bytes)).json().error).toBe('invalid_grant');
 
+    const raced = (await ask(ana, bytes)).json();
+    const racedAttempts = await Promise.all([
+      put(raced.upload_url, bytes),
+      put(raced.upload_url, bytes),
+    ]);
+    expect(racedAttempts.map((r) => r.statusCode).sort()).toEqual([200, 403]);
+
     const wrongHash = (await ask(ana, bytes, 'image/jpeg', { sha256: 'a'.repeat(64) })).json();
     expect((await put(wrongHash.upload_url, bytes)).json().error).toBe('hash_mismatch');
 
@@ -123,6 +130,30 @@ describe('profile photos', () => {
 
     const forged = late.upload_url.replace(/grant=.*/, 'grant=forged');
     expect((await put(forged, bytes)).statusCode).toBe(403);
+  });
+
+  it('does not orphan a file when its owner deletes during processing', async () => {
+    const ana = await member(h, 'Ana');
+    const bytes = await photoWithGps();
+    const grant = (await ask(ana, bytes)).json();
+    let entered!: () => void;
+    let release!: () => void;
+    const processing = new Promise<void>((resolve) => (entered = resolve));
+    const resume = new Promise<void>((resolve) => (release = resolve));
+    const store = h.media.put.bind(h.media);
+    h.media.put = async (id, processed) => {
+      entered();
+      await resume;
+      await store(id, processed);
+    };
+
+    const uploading = put(grant.upload_url, bytes);
+    await processing;
+    await call(ana, 'DELETE', `/v1/me/photos/${grant.photo_id}`);
+    release();
+    expect((await uploading).statusCode).toBe(403);
+    expect(h.media.files.has(grant.photo_id)).toBe(false);
+    expect(await h.db.query('SELECT 1 FROM media WHERE id = $1', [grant.photo_id])).toEqual([]);
   });
 
   it('refuses images too large to decode safely', async () => {
@@ -180,6 +211,18 @@ describe('profile photos', () => {
     const mine = (await call(ana, 'GET', '/v1/me/photos')).json().photos;
     expect(mine[0]).toMatchObject({ state: 'rejected', reject_reason: 'someone_else' });
     expect((await ask(ana, await photoWithGps())).statusCode).toBe(200);
+  });
+
+  it('keeps the six-photo limit when two servers create the last slot together', async () => {
+    const ana = await member(h, 'Ana');
+    const bytes = await photoWithGps();
+    for (let i = 0; i < 5; i++) expect((await ask(ana, bytes)).statusCode).toBe(200);
+
+    const attempts = await Promise.all([ask(ana, bytes), ask(ana, bytes)]);
+    expect(attempts.map((r) => r.statusCode).sort()).toEqual([200, 409]);
+    expect(
+      await h.db.query('SELECT id FROM media WHERE owner = $1 AND state <> $2', [ana.accountId, 'rejected']),
+    ).toHaveLength(6);
   });
 
   it('moderators: members get 404, never their own photos, a recent sign-in to decide', async () => {
