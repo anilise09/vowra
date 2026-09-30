@@ -22,7 +22,9 @@ The response never contains `account_exists`, account ID, provider enrollment, a
 
 ## Provider exchange
 
-`POST /v1/auth/exchange` accepts a passwordless or OIDC authorization code, PKCE verifier, and state nonce in the request body. Proofs never appear in a query string, logs, analytics, crash reports, clipboard, or local persistence. The server validates issuer, audience, redirect URI, nonce/state, PKCE, expiry, and one-time use before issuing a session.
+`POST /v1/auth/exchange` accepts a passwordless or OIDC authorization code, PKCE verifier, and state nonce in the request body. Proofs never appear in a query string, logs, analytics, crash reports, clipboard, or local persistence.
+
+Email sign-in (BE-23, 2026-09-30): the proof is a six-digit code sent by email through SMTP (TLS required). The server finds the pending request by the device's `state`, never by the code, and compares a keyed hash of the code bound to that request; the PKCE verifier must match too. A wrong try counts; the fifth spends the request, so a code allows at most five guesses and each identifier at most five requests per 15 minutes. The app accepts digits only and submits when the sixth is typed. The server validates issuer, audience, redirect URI, nonce/state, PKCE, expiry, and one-time use before issuing a session.
 
 OIDC email claims alone do not merge accounts. Linking another provider requires an authenticated, recently reauthenticated session and confirmation through the existing account channel. Provider subject identifiers are scoped to the issuer and stored encrypted where feasible.
 

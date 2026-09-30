@@ -118,11 +118,38 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('sign-in-code')),
-      'proof-that-was-never-sent',
+      '000000',
     );
     await tester.tap(find.byKey(const Key('verify-code')));
     await tester.pumpAndSettle();
     expect(find.textContaining('That code didn\'t work'), findsOneWidget);
+  });
+
+  testWidgets('the sixth digit signs in: no extra tap, numbers only', (
+    tester,
+  ) async {
+    final server = FakeVawraServer();
+    await _openSignIn(tester, server);
+    await tester.enterText(
+      find.byKey(const Key('sign-in-email')),
+      'alex@example.test',
+    );
+    await tester.tap(find.byKey(const Key('send-code')));
+    await tester.pumpAndSettle();
+    final field = find.byKey(const Key('sign-in-code'));
+    // Letters and extra digits never get in.
+    await tester.enterText(field, 'ab12');
+    expect(tester.widget<TextField>(field).controller!.text, '12');
+    final exchangesBefore = server.requests
+        .where((r) => r.url.path == '/v1/auth/exchange')
+        .length;
+    await tester.enterText(field, '${server.outbox.last}9');
+    await tester.pumpAndSettle();
+    expect(
+      server.requests.where((r) => r.url.path == '/v1/auth/exchange').length,
+      exchangesBefore + 1,
+    );
+    expect(find.byKey(const Key('onboarding-name')), findsOneWidget);
   });
 
   testWidgets('new account: profile, age check, then match and chat for real', (

@@ -75,6 +75,7 @@ class FakeVawraServer {
 
   /// One-time codes "emailed" so far, newest last.
   final outbox = <String>[];
+  int _codes = 1;
 
   bool verified = false;
   int rotations = 0;
@@ -366,7 +367,8 @@ class FakeVawraServer {
     if (method == 'POST' && path == '/v1/auth/requests') {
       _challenge = body['code_challenge'] as String;
       _state = body['state'] as String;
-      outbox.add('proof-${_id()}');
+      // Six digits, like the real server; never 000000, which tests use as a wrong code.
+      outbox.add('${100000 + outbox.length + _codes++}');
       return _json(202, {
         'message': 'If the account can continue, instructions will be sent.',
       });

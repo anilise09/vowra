@@ -79,11 +79,76 @@ describe('proof exchange', () => {
     const exchange = (payload: object) =>
       h.app.inject({ method: 'POST', url: '/v1/auth/exchange', payload });
 
-    const wrongVerifier = await exchange({ proof, code_verifier: verifier(), state: s });
-    expect(wrongVerifier.statusCode).toBe(400);
-    // A failed attempt still spends the proof: no guessing loop.
-    const afterFailure = await exchange({ proof, code_verifier: v, state: s });
-    expect(afterFailure.statusCode).toBe(400);
+    expect(proof).toMatch(/^\d{6}$/);
+    // The right code is useless without this device's verifier or state.
+    expect((await exchange({ proof, code_verifier: verifier(), state: s })).statusCode).toBe(400);
+    expect((await exchange({ proof, code_verifier: v, state: state() })).statusCode).toBe(400);
+    // A typo is forgiven: the right code and verifier still work, once.
+    const wrong = proof === '000000' ? '000001' : '000000';
+    expect((await exchange({ proof: wrong, code_verifier: v, state: s })).statusCode).toBe(400);
+    expect((await exchange({ proof, code_verifier: v, state: s })).statusCode).toBe(200);
+    expect((await exchange({ proof, code_verifier: v, state: s })).statusCode).toBe(400);
+  });
+
+  it('spends a code after five wrong tries, and never stores it in clear', async () => {
+    const v = verifier();
+    const s = state();
+    await request('guess@example.test', 'sign_in', v, s);
+    const proof = h.outbox.at(-1)!.proof;
+    const [row] = await h.db.query<{ proof_hash: string }>(
+      'SELECT proof_hash FROM auth_requests ORDER BY expires_at DESC LIMIT 1',
+    );
+    expect(row!.proof_hash).not.toContain(proof);
+    const exchange = (code: string) =>
+      h.app.inject({ method: 'POST', url: '/v1/auth/exchange', payload: { proof: code, code_verifier: v, state: s } });
+    let tries = 0;
+    for (let n = 0; tries < 5; n++) {
+      const guess = String(n).padStart(6, '0');
+      if (guess === proof) continue;
+      expect((await exchange(guess)).statusCode).toBe(400);
+      tries++;
+    }
+    // The fifth wrong try spent it: even the right code no longer works.
+    expect((await exchange(proof)).statusCode).toBe(400);
+    // Only six digits are accepted at all.
+    expect((await exchange('12345')).json().error).toBe('invalid_request');
+  });
+
+  it('a code from one request never opens another', async () => {
+    const [v1, s1, v2, s2] = [verifier(), state(), verifier(), state()];
+    await request('one@example.test', 'sign_in', v1, s1);
+    const first = h.outbox.at(-1)!.proof;
+    await request('two@example.test', 'sign_in', v2, s2);
+    const second = h.outbox.at(-1)!.proof;
+    if (first !== second) {
+      const res = await h.app.inject({
+        method: 'POST',
+        url: '/v1/auth/exchange',
+        payload: { proof: first, code_verifier: v2, state: s2 },
+      });
+      expect(res.statusCode).toBe(400);
+    }
+    const ok = await h.app.inject({
+      method: 'POST',
+      url: '/v1/auth/exchange',
+      payload: { proof: second, code_verifier: v2, state: s2 },
+    });
+    expect(ok.statusCode).toBe(200);
+  });
+
+  it('answers the same when the email cannot be sent', async () => {
+    const failing = await startHarness({ failDelivery: true });
+    try {
+      const res = await failing.app.inject({
+        method: 'POST',
+        url: '/v1/auth/requests',
+        payload: { identifier: 'down@example.test', purpose: 'sign_in', code_challenge: pkceChallenge(verifier()), state: state() },
+      });
+      expect(res.statusCode).toBe(202);
+      expect(res.json()).toEqual(initiationMessage);
+    } finally {
+      await failing.close();
+    }
   });
 
   it('rejects an expired proof', async () => {

@@ -26,7 +26,7 @@ export const testCallConfig: CallConfig = {
 };
 
 export async function startHarness(
-  options: { callConfig?: CallConfig | null } = {},
+  options: { callConfig?: CallConfig | null; failDelivery?: boolean } = {},
 ): Promise<Harness> {
   const db = await openPglite();
   await migrate(db);
@@ -45,7 +45,12 @@ export async function startHarness(
     db,
     sealer,
     clock,
-    delivery: { sendProof: async (email, proof, purpose) => void outbox.push({ email, proof, purpose }) },
+    delivery: {
+      sendProof: async (email, proof, purpose) => {
+        if (options.failDelivery) throw new Error('mail server unreachable');
+        outbox.push({ email, proof, purpose });
+      },
+    },
     accessTtlSeconds: 900,
     proofTtlSeconds: 600,
     reauthWindowSeconds: 600,

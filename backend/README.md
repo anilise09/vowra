@@ -55,7 +55,7 @@ HTTPS-only. Without `VAWRA_API` the app is the offline prototype.
 
 | Area | Endpoints |
 | --- | --- |
-| Sign-in | `POST /v1/auth/requests` (same answer for every identifier), `POST /v1/auth/exchange` (one-time proof + PKCE + state) |
+| Sign-in | `POST /v1/auth/requests` (same answer for every identifier; emails a six-digit code), `POST /v1/auth/exchange` (the code + PKCE verifier + state) |
 | Sessions | `POST /v1/session/rotate` (reuse revokes the family), `DELETE /v1/session`, `DELETE /v1/sessions` |
 | Profile | `GET`/`PATCH /v1/me/profile` (only the contract fields, including habits and prompts), `POST`/`DELETE /v1/me/pause` |
 | Discovery | `GET /v1/discovery`, `POST /v1/discovery/{id}/swipe` (like, super_like, pass; idempotent), `GET /v1/likes-you` |
@@ -77,8 +77,8 @@ Nudges (BE-4): `GET /v1/events` is a Server-Sent Events stream of content-free n
 running server.
 
 Security properties covered by tests: no account-existence oracle; emails sealed with AES-256-GCM
-and looked up by keyed hash; tokens and proofs stored only as hashes; proofs single-use even when
-the attempt fails; refresh reuse revokes the family; age gate on every dating feature; mutual
+and looked up by keyed hash; tokens stored only as hashes; six-digit sign-in codes stored only as a
+keyed hash, found by the device's state, single-use and spent after five wrong tries; refresh reuse revokes the family; age gate on every dating feature; mutual
 eligibility and either-direction blocks on discovery, swipes and chat; participant-only match
 access that looks identical to "not found"; message validation and 5-a-minute limit; block closes
 matches in one transaction; reports keep only a valid message reference; logs carry no credentials.

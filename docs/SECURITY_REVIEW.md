@@ -9,8 +9,10 @@ landed in BE-13 with tests.
 
 ## Authentication and sessions
 
-Checked: passwordless sign-in with PKCE (S256), one-time proofs stored only as SHA-256 hashes,
-10-minute proof lifetime, the same response whether or not an account exists, per-identifier (5)
+Checked: passwordless sign-in with PKCE (S256), six-digit one-time codes found by the requesting
+device's state and stored only as a keyed hash (HMAC with the lookup key, bound to the request),
+five tries per code before it is spent, the same answer when an email cannot be sent,
+10-minute code lifetime, the same response whether or not an account exists, per-identifier (5)
 and per-network (30) request limits per 15 minutes, 15-minute access tokens and single-use refresh
 tokens stored hashed, reuse of an old refresh token revoking the whole sign-in, a recent sign-in
 (10 minutes) for deletion, export and moderation decisions.

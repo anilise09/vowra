@@ -5,6 +5,7 @@ import { callConfigFrom, SignalBox } from './calls.js';
 import type { Config } from './config.js';
 import type { Delivery } from './context.js';
 import { Sealer } from './crypto.js';
+import { emailConfigFrom, SmtpDelivery } from './email.js';
 import { type Db, migrate, openPglite, openPostgres } from './db.js';
 import { runDueDeletions } from './jobs/deletions.js';
 import { runRetention } from './jobs/retention.js';
@@ -23,8 +24,10 @@ export interface Running {
   close(): Promise<void>;
 }
 
-/** No email provider is chosen yet; the development outbox writes codes to a local file. */
-function deliveryFor(config: Config): Delivery {
+/** SMTP when configured; otherwise the development outbox writes codes to a local file. */
+function deliveryFor(config: Config, env: NodeJS.ProcessEnv): Delivery {
+  const email = emailConfigFrom(env);
+  if (email) return new SmtpDelivery(email, config.proofTtlSeconds);
   if (config.devOutbox) {
     return {
       async sendProof(email, proof, purpose) {
@@ -62,7 +65,7 @@ export async function startServer(
       db,
       sealer: new Sealer(config.dataKey, config.lookupKey),
       clock: { now: () => new Date() },
-      delivery: options.delivery ?? deliveryFor(config),
+      delivery: options.delivery ?? deliveryFor(config, env),
       nudges: new MemoryNudgeBus(),
       media,
       grants: new MediaGrants(config.dataKey),

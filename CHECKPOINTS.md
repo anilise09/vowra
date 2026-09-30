@@ -1,5 +1,25 @@
 # Checkpoints
 
+## BE-23 - Sign-in codes by email: six digits, any SMTP provider (2026-09-30)
+
+- Sign-in codes are now six digits instead of a 43-character token, so people can type them. The
+  server finds the pending request by the phone's `state`, never by the code, and compares a keyed
+  hash of the code bound to that request (a leaked table cannot be brute-forced); the PKCE
+  verifier must match too. A typo is forgiven; the fifth wrong try spends the code, so at most five
+  guesses per code and five codes per email per 15 minutes.
+- Email through any SMTP provider (`VAWRA_SMTP_URL`, `VAWRA_EMAIL_FROM`): TLS always, certificates
+  verified, plain text and a simple branded HTML version, no links, marked auto-generated.
+  Production refuses to start without it. If the mail server is down, the app still gets the same
+  answer (no account-existence hint) and the failure is logged.
+- The app's code field takes digits only, at most six, with the number keypad, and signs in as the
+  sixth digit is typed; a tap right after cannot send the code twice.
+- Tests: 5 email tests against a real local SMTP server (including refusing a server that cannot
+  encrypt), 4 new sign-in tests, 1 app test. Seven planted defects (attempt limit, code stored in
+  clear, delivery failure not caught, TLS requirement, production email check, auto-submit,
+  digits-only) each fail them.
+- Backend 169 tests, app 230 (1 existing skip) pass. Phone builds made before today still ask for
+  the long code; the next build takes six digits.
+
 ## BE-20b - Migrations survive Windows line endings (2026-09-30)
 
 - On a checkout with Windows line endings (Git's default on Windows) every migration failed: the

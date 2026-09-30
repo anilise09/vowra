@@ -56,6 +56,7 @@ describe('settings', () => {
     expect(problems).toMatch(/VAWRA_CALLS_DEV_P2P/);
     expect(problems).toMatch(/VAWRA_HOST/);
     expect(problems).toMatch(/VAWRA_ACCESS_TTL must be at most 3600/);
+    expect(problems).toMatch(/Production needs VAWRA_SMTP_URL/);
     // Error messages never repeat a secret.
     expect(problems).not.toContain(base().VAWRA_DATA_KEY);
   });
@@ -66,6 +67,8 @@ describe('settings', () => {
       VAWRA_ENV: 'production',
       DATABASE_URL: 'postgres://vawra@db.internal/vawra',
       VAWRA_HOST: '0.0.0.0',
+      VAWRA_SMTP_URL: 'smtps://mailer:secret@smtp.example.com:465',
+      VAWRA_EMAIL_FROM: 'Vawra <no-reply@example.com>',
     });
     expect(config.production).toBe(true);
   });

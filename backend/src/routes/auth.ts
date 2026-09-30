@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { randomInt, timingSafeEqual } from 'node:crypto';
 import { hashToken, newToken, pkceChallenge } from '../crypto.js';
 import { audit, fail, noContent, requireAccount, type Services } from '../context.js';
 import type { Db } from '../db.js';
@@ -19,9 +20,12 @@ const requestBody = z
   })
   .strict();
 
+/** A sign-in code is six digits: short enough to type, safe because of the limits below. */
+export const signInCodeRules = { digits: 6, attempts: 5 };
+
 const exchangeBody = z
   .object({
-    proof: z.string().min(20).max(200),
+    proof: z.string().regex(/^\d{6}$/),
     code_verifier: z.string().min(43).max(128),
     state: z.string().min(16).max(128),
   })
@@ -63,6 +67,13 @@ export async function issueSession(
 
 export function authRoutes(app: FastifyInstance, services: Services) {
   const { db, sealer, clock } = services;
+  /** Keyed with the lookup key and bound to the request, so a leaked table cannot be brute-forced. */
+  const codeHash = (requestId: string, code: string) => sealer.lookup(`sign-in-code:${requestId}:${code}`);
+  const sameHash = (a: string, b: string) => {
+    const x = Buffer.from(a);
+    const y = Buffer.from(b);
+    return x.length === y.length && timingSafeEqual(x, y);
+  };
   const perIdentifier = new DbRateLimiter(db, 5, 15 * 60_000, clock);
   const perNetwork = new DbRateLimiter(db, 30, 15 * 60_000, clock);
 
@@ -79,24 +90,31 @@ export function authRoutes(app: FastifyInstance, services: Services) {
         (await db.query('SELECT 1 FROM accounts WHERE email_lookup = $1', [lookup])).length > 0;
       // Recovery only proceeds for an existing account; sign-in may create one.
       if (purpose === 'sign_in' || known) {
-        const proof = newToken();
+        const id = crypto.randomUUID();
+        const proof = String(randomInt(0, 10 ** signInCodeRules.digits)).padStart(signInCodeRules.digits, '0');
         const now = clock.now();
         await db.query(
           `INSERT INTO auth_requests (id, email_lookup, email_sealed, purpose, proof_hash,
                                       code_challenge, state_nonce, expires_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [
-            crypto.randomUUID(),
+            id,
             lookup,
             sealer.seal(identifier),
             purpose,
-            hashToken(proof),
+            codeHash(id, proof),
             code_challenge,
             state,
             new Date(now.getTime() + services.proofTtlSeconds * 1000),
           ],
         );
-        await services.delivery.sendProof(identifier, proof, purpose);
+        try {
+          await services.delivery.sendProof(identifier, proof, purpose);
+        } catch (error) {
+          // The answer stays the same, so a delivery failure reveals nothing;
+          // the person asks for a new code.
+          request.log.error({ err: { message: (error as Error).message } }, 'sign-in code not delivered');
+        }
       }
     }
     return reply.code(202).send(initiationMessage);
@@ -107,27 +125,42 @@ export function authRoutes(app: FastifyInstance, services: Services) {
     if (!body.success) fail(400, 'invalid_request');
     const { proof, code_verifier, state } = body.data!;
     const now = clock.now();
-    // Single use, committed before any check: a failed attempt still spends the
-    // proof, so it cannot be retried with guessed verifiers.
-    const [found] = await db.query<{
-      email_lookup: string;
-      email_sealed: string;
-      purpose: 'sign_in' | 'recovery';
-      code_challenge: string;
-      state_nonce: string;
-    }>(
-      `UPDATE auth_requests SET used_at = $2
-       WHERE proof_hash = $1 AND used_at IS NULL AND expires_at > $2
-       RETURNING email_lookup, email_sealed, purpose, code_challenge, state_nonce`,
-      [hashToken(proof), now],
-    );
-    if (
-      !found ||
-      found.state_nonce !== state ||
-      found.code_challenge !== pkceChallenge(code_verifier)
-    ) {
-      return fail(400, 'invalid_proof');
-    }
+    // The request is found by this device's state, never by the code. A right
+    // code needs the matching PKCE verifier too; each wrong try counts, and the
+    // fifth spends the request. Attempts are committed before any answer.
+    const found = await db.transaction(async (tx) => {
+      const [row] = await tx.query<{
+        id: string;
+        email_lookup: string;
+        email_sealed: string;
+        purpose: 'sign_in' | 'recovery';
+        proof_hash: string;
+        code_challenge: string;
+        attempts: number;
+      }>(
+        `SELECT id, email_lookup, email_sealed, purpose, proof_hash, code_challenge, attempts
+         FROM auth_requests
+         WHERE state_nonce = $1 AND used_at IS NULL AND expires_at > $2
+         ORDER BY expires_at DESC LIMIT 1 FOR UPDATE`,
+        [state, now],
+      );
+      if (!row) return null;
+      const right =
+        sameHash(codeHash(row.id, proof), row.proof_hash) &&
+        sameHash(row.code_challenge, pkceChallenge(code_verifier));
+      if (right) {
+        await tx.query('UPDATE auth_requests SET used_at = $2 WHERE id = $1', [row.id, now]);
+        return row;
+      }
+      await tx.query(
+        `UPDATE auth_requests SET attempts = attempts + 1,
+                used_at = CASE WHEN attempts + 1 >= $3 THEN $2 ELSE used_at END
+         WHERE id = $1`,
+        [row.id, now, signInCodeRules.attempts],
+      );
+      return null;
+    });
+    if (!found) return fail(400, 'invalid_proof');
     const outcome = await db.transaction(async (tx) => {
       let [account] = await tx.query<{ id: string; age_state: string }>(
         'SELECT id, age_state FROM accounts WHERE email_lookup = $1',

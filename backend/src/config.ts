@@ -1,3 +1,5 @@
+import { emailProblems } from './email.js';
+
 export interface Config {
   enabled: boolean;
   /** VAWRA_ENV=production: refuses development switches and weak settings. */
@@ -85,6 +87,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     if (!env.VAWRA_HOST) problems.push('Production needs VAWRA_HOST set explicitly (for example 0.0.0.0 in a container).');
     if (config.accessTtlSeconds > 3600) problems.push('VAWRA_ACCESS_TTL must be at most 3600 seconds in production.');
   }
+  problems.push(...emailProblems(env, production));
   if (problems.length > 0) throw new ConfigError(problems);
   return config;
 }

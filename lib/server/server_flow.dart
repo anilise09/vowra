@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/api/nudges.dart';
 import '../data/api/vawra_api.dart';
@@ -332,8 +333,11 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _verify() async {
-    if (code.text.trim().length < 20) {
-      setState(() => error = 'Paste the whole code from the email.');
+    // The field submits by itself at six digits; a tap right after must not
+    // send the same code twice.
+    if (busy) return;
+    if (code.text.trim().length != 6) {
+      setState(() => error = 'Enter the 6-digit code from the email.');
       return;
     }
     final navigator = Navigator.of(context);
@@ -401,10 +405,19 @@ class _SignInScreenState extends State<SignInScreen> {
                 autocorrect: false,
                 enableSuggestions: false,
                 autofillHints: const [AutofillHints.oneTimeCode],
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
                 textInputAction: TextInputAction.done,
+                // All six digits in: check straight away, no extra tap.
+                onChanged: (text) {
+                  if (text.length == 6 && !busy) _verify();
+                },
                 onSubmitted: (_) => busy ? null : _verify(),
                 decoration: const InputDecoration(
-                  labelText: 'Code',
+                  labelText: '6-digit code',
                   prefixIcon: Icon(Icons.key_rounded),
                 ),
               ),
