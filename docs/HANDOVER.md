@@ -71,8 +71,22 @@ one checkpoint each (details in `CHECKPOINTS.md`):
 
 Still needing the owner or a provider: a TURN relay for real calls, push notifications (incoming
 calls with the app closed), email, hosting, object storage and scanning, age assurance (legal),
-monetisation (legal hold), Mac access, and a real two-phone call test (both phones are currently
-reserved by another session).
+monetisation (legal hold), physical Apple-device access, and a real two-phone call test (both
+phones are currently reserved by another session).
+
+## Since the handover: first iOS Simulator flow (2026-09-30)
+
+- Mac access is no longer a blocker. Flutter 3.47.5, Xcode 26.6, the iOS 26.5 runtime and a
+  user-local CocoaPods 1.17.0 are installed on the Intel Mac.
+- `integration_test/ios_smoke_test.dart` plus its `test_driver/` adapter passes on a dedicated
+  iPhone 17e simulator: adult/rules gate, all offline onboarding steps, Discover, synthetic match,
+  chat send, Profile and Settings through the destructive-account row.
+- This does not replace the pending full Apple review: large-iPhone layout, larger Dynamic Type,
+  reduced motion, physical iPhone/iPad, connected accounts and real calls are not yet validated.
+- Flutter analysis is clean. All non-golden host tests pass (214 plus the export large-text case;
+  one expected live-server skip). The 14 pixel baselines were authored on Windows and show only
+  0.43-1.60% text/vector-edge rasterization differences on macOS, so they were inspected and left
+  unchanged.
 
 ## Running it
 
@@ -84,6 +98,21 @@ App checks (run all before every commit that touches the app):
 flutter analyze
 flutter test                      # device matrix, goldens, server flow, everything
 ```
+
+On this Mac, Flutter is `/Users/user/Tools/flutter/bin/flutter` and the user-local CocoaPods bin
+is `~/.gem/ruby/2.6.0/bin`. The proven iOS Simulator smoke-test path builds once for a generic
+simulator, then runs the prebuilt app (replace the device id):
+
+```
+flutter build ios --simulator --debug --target integration_test/ios_smoke_test.dart --no-pub
+flutter drive --driver=test_driver/ios_smoke_test.dart \
+  --target=integration_test/ios_smoke_test.dart -d <simulator-id> \
+  --use-application-binary=build/ios/iphonesimulator/Runner.app --no-pub
+```
+
+Use a dedicated simulator if another session has an app in front. Concurrent Xcode builds can
+leave an `actool` subprocess behind after interruption; verify the Vawra process tree is empty
+before retrying rather than deleting DerivedData or disturbing another workspace's simulator.
 
 Goldens change only on purpose: inspect `test/failures/*` before `--update-goldens`, and review
 the new image.
@@ -181,8 +210,8 @@ git push origin $NEW:refs/heads/gh-pages
    gender for each, add to `lib/main.dart` and `demo_genders.dart`, convert to WebP) or remove.
    Also untracked and of unknown origin: `.agents/`, `skills-lock.json`,
    `assets/branding/vawra_company_mark_trimmed.png`. Do not commit or delete them without asking.
-2. Mac access for iOS: Xcode on the MacBook Pro and Remote Login (SSH). Until then iOS is built
-   but not tested on Apple hardware.
+2. Physical iPhone/iPad access for Apple-hardware testing. The first real iOS Simulator critical
+   flow passes on the Intel Mac, but the full multi-size/text/reduced-motion review is still open.
 3. Providers, each needing the owner's account or money: email for sign-in codes, hosting with
    PostgreSQL, an object store plus malware scanning and automated photo classification (photos
    work today with a local disk store and human review), push notifications (Firebase and an

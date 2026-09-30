@@ -17,8 +17,9 @@ public dating-service launch.
 UI-5 uses the approved transparent company lockup and aligns Discover's primary Pass and Like
 actions with their swipe meanings. The latest audit anchors Welcome's reading panel on tall
 phones and passes 22 Android/iOS-style device-and-text-size runs plus the full Flutter suite.
-Real iOS Simulator and physical-phone review of this exact build remain pending. See
-`CHECKPOINTS.md` and `docs/UI_PLATFORM_AUDIT.md`.
+A first real iOS 26.5 Simulator critical flow now passes on an iPhone 17e. Full multi-size,
+larger-text and reduced-motion Simulator review, plus physical iPhone/iPad review, remain pending.
+See `CHECKPOINTS.md` and `docs/UI_PLATFORM_AUDIT.md`.
 
 The offline prototype has synthetic profiles, onboarding, swipe discovery, Explore, matches,
 chat and safety flows. A local-only backend adds accounts, age-gated discovery, real matches

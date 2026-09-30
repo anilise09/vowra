@@ -1,5 +1,26 @@
 # Checkpoints
 
+## Device - First real iOS Simulator critical flow (2026-09-30)
+
+- On the Intel Mac, installed CocoaPods 1.17.0 for the local toolchain and built Vawra with
+  Flutter 3.47.5 and Xcode 26.6 for the iOS 26.5 Simulator. No signing account or production
+  service was needed.
+- Added a real `integration_test` flow and its `flutter drive` adapter. On a dedicated iPhone 17e
+  simulator it accepts the adult/rules gate, completes every offline onboarding step, opens
+  Discover, likes into the synthetic match, sends a chat message, visits Profile and reaches the
+  destructive-account section in Settings.
+- The first device run found a test-only mistake: the delete row is below Settings' lazy viewport,
+  so looking for it without scrolling returned no widget. The flow now scrolls the real Settings
+  list before asserting the row; the rebuilt app then passed end to end in 60 seconds.
+- Evidence: `flutter analyze` is clean; the generic simulator debug build passes; the iPhone 17e
+  drive says `All tests passed`; 214 non-golden Flutter tests plus the export large-text case pass,
+  with the existing live-server test skipped because `VAWRA_LIVE_API` is unset.
+- The full suite's 14 Windows-authored pixel baselines differ by 0.43-1.60% on macOS. The inspected
+  isolated diff is confined to text/vector edges, while all layout and interaction assertions pass;
+  the approved goldens were not overwritten on a different rendering platform.
+- This is the first real Apple-simulator validation, not a full iOS sign-off. Large-iPhone,
+  larger-text, reduced-motion, physical iPhone/iPad, connected-server and real-call checks remain.
+
 ## BE-20 follow-up - sign-in throttling shared by every server (2026-09-30)
 
 - Replaced the per-process sign-in limiter with atomic database counters, so adding another
