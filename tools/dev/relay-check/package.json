@@ -1,0 +1,13 @@
+{
+  "name": "vawra-relay-check",
+  "private": true,
+  "description": "Development only: proves a relay-only call through a local TURN server.",
+  "type": "module",
+  "scripts": {
+    "check": "node relay_check.mjs"
+  },
+  "devDependencies": {
+    "node-turn": "0.0.6",
+    "playwright-core": "1.63.0"
+  }
+}
