@@ -119,6 +119,15 @@ class FakeVawraServer {
   String? appealState;
   bool moderator = false;
 
+  /// The moderator's authenticator: `none`, `enabled` (needs a code) or
+  /// `verified` (open). Verified by default, so older tests are unchanged.
+  String modSecondFactor = 'verified';
+  static const modSecret = 'JBSWY3DPEHPK3PXP';
+
+  /// The code the fake accepts; anything else is wrong.
+  static const modCode = '135790';
+  final modCodesTried = <String>[];
+
   /// The moderation queue and decisions made on it.
   final modReports = <Map<String, dynamic>>[];
   final modAppeals = <Map<String, dynamic>>[];
@@ -506,6 +515,25 @@ class FakeVawraServer {
     }
     if (path.startsWith('/v1/mod/')) {
       if (!moderator) return _error(404, 'not_found');
+      if (path == '/v1/mod/second-factor/setup') {
+        return _json(200, {
+          'secret': modSecret,
+          'otpauth_uri': 'otpauth://totp/Vawra?secret=$modSecret',
+        });
+      }
+      if (path == '/v1/mod/second-factor/confirm' ||
+          path == '/v1/mod/second-factor/verify') {
+        modCodesTried.add(body['code'] as String);
+        if (body['code'] != modCode) return _error(400, 'invalid_code');
+        modSecondFactor = 'verified';
+        return _json(200, {'verified_until': '2026-09-30T12:30:00.000Z'});
+      }
+      if (modSecondFactor == 'none') {
+        return _error(403, 'second_factor_setup_required');
+      }
+      if (modSecondFactor == 'enabled') {
+        return _error(403, 'second_factor_required');
+      }
       if (path == '/v1/mod/reports') return _json(200, {'reports': modReports});
       if (path == '/v1/mod/appeals') return _json(200, {'appeals': modAppeals});
       if (path == '/v1/mod/photos') return _json(200, {'photos': modPhotos});

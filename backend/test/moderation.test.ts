@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { type Harness, member, type Person, signIn, startHarness, swipe } from './harness.js';
+import { type Harness, member, type Person, signIn, startHarness, swipe, makeModerator } from './harness.js';
 
 let h: Harness;
 beforeEach(async () => (h = await startHarness()));
@@ -12,7 +12,7 @@ const call = (p: Person, method: 'GET' | 'POST' | 'DELETE', url: string, payload
 
 async function moderator(name: string): Promise<Person> {
   const p = await member(h, name);
-  await h.db.query("UPDATE accounts SET role = 'moderator' WHERE id = $1", [p.accountId]);
+  await makeModerator(h, p);
   return p;
 }
 

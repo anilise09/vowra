@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/api/server_photo.dart';
 import '../data/api/vawra_api.dart';
@@ -281,6 +282,22 @@ class _ModerationPageState extends State<ModerationPage> {
   List<ModPhoto>? photos;
   String? loadError;
 
+  /// `setup` or `verify` while moderation waits for the authenticator code.
+  String? gate;
+
+  /// Moderation needs the authenticator: on first use, and every half hour.
+  bool _gateFor(Object error) {
+    if (error is! ApiException) return false;
+    final next = switch (error.code) {
+      'second_factor_setup_required' => 'setup',
+      'second_factor_required' => 'verify',
+      _ => null,
+    };
+    if (next == null) return false;
+    if (mounted) setState(() => gate = next);
+    return true;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -300,6 +317,7 @@ class _ModerationPageState extends State<ModerationPage> {
         loadError = null;
       });
     } catch (e) {
+      if (_gateFor(e)) return;
       if (mounted) setState(() => loadError = describeApiError(e));
     }
   }
@@ -342,6 +360,7 @@ class _ModerationPageState extends State<ModerationPage> {
         then: (nav) async => nav.popUntil((route) => route == here),
       );
     } catch (e) {
+      if (_gateFor(e)) return;
       messenger.showSnackBar(SnackBar(content: Text(_moderationError(e))));
     }
     await _load();
@@ -391,7 +410,17 @@ class _ModerationPageState extends State<ModerationPage> {
           ],
         ),
       ),
-      body: loadError != null
+      body: gate != null
+          ? _SecondFactorGate(
+              key: Key('mod-gate-$gate'),
+              api: widget.api,
+              setup: gate == 'setup',
+              onOpened: () {
+                setState(() => gate = null);
+                _load();
+              },
+            )
+          : loadError != null
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(28),
@@ -702,4 +731,198 @@ class _DecisionDialogState extends State<_DecisionDialog> {
       ),
     ],
   );
+}
+
+/// Moderation is opened with an authenticator app (Google Authenticator,
+/// Microsoft Authenticator, 1Password and the like): set up once, then a
+/// six-digit code every half hour. The secret is shown once, during setup.
+class _SecondFactorGate extends StatefulWidget {
+  const _SecondFactorGate({
+    super.key,
+    required this.api,
+    required this.setup,
+    required this.onOpened,
+  });
+
+  final VawraApi api;
+  final bool setup;
+  final VoidCallback onOpened;
+
+  @override
+  State<_SecondFactorGate> createState() => _SecondFactorGateState();
+}
+
+class _SecondFactorGateState extends State<_SecondFactorGate> {
+  final code = TextEditingController();
+  String? secret;
+  String? error;
+  bool busy = false;
+
+  @override
+  void dispose() {
+    code.dispose();
+    super.dispose();
+  }
+
+  /// Setup needs a recent sign-in; an old one is asked to sign in again first.
+  Future<void> _start() async {
+    final navigator = Navigator.of(context);
+    Route<dynamic>? here;
+    navigator.popUntil((route) {
+      here = route;
+      return true;
+    });
+    setState(() => error = null);
+    try {
+      await withFreshSignIn(
+        navigator,
+        widget.api,
+        reason: 'set up moderation sign-in',
+        action: () async {
+          final result = await widget.api.setupModeratorSecondFactor();
+          if (mounted) setState(() => secret = result.secret);
+        },
+        then: (nav) async => nav.popUntil((route) => route == here),
+      );
+    } catch (e) {
+      if (mounted) setState(() => error = describeApiError(e));
+    }
+  }
+
+  Future<void> _submit() async {
+    if (busy || code.text.length != 6) return;
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      if (widget.setup) {
+        await widget.api.confirmModeratorSecondFactor(code.text);
+      } else {
+        await widget.api.verifyModeratorSecondFactor(code.text);
+      }
+      widget.onOpened();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      code.clear();
+      setState(
+        () => error = switch (e.code) {
+          'invalid_code' =>
+            'That code didn\'t work. Wait for the next one and try again.',
+          'slow_down' => 'Too many tries. Wait 15 minutes, then try again.',
+          _ => describeApiError(e),
+        },
+      );
+    } catch (e) {
+      if (mounted) setState(() => error = describeApiError(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  String get _grouped => (secret ?? '')
+      .replaceAllMapped(RegExp(r'.{4}'), (m) => '${m.group(0)} ')
+      .trim();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final needsSecret = widget.setup && secret == null;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Icon(Icons.verified_user_outlined, size: 40),
+          const SizedBox(height: 16),
+          Text(
+            widget.setup ? 'Protect moderation' : 'Enter your code',
+            style: theme.textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            widget.setup
+                ? 'Moderators see reports and photos people trust us with, so moderation needs an authenticator app as well as your email code.'
+                : 'Open your authenticator app and enter the 6-digit code for Vawra Moderation. It keeps moderation open for half an hour.',
+          ),
+          const SizedBox(height: 20),
+          if (needsSecret)
+            FilledButton(
+              key: const Key('mod-2fa-start'),
+              onPressed: _start,
+              child: const Text('Set up an authenticator app'),
+            )
+          else ...[
+            if (widget.setup) ...[
+              const Text(
+                'In your authenticator app, add an account by setup key and enter this key. It is shown only now.',
+              ),
+              const SizedBox(height: 12),
+              Material(
+                color: VawraColors.blush,
+                borderRadius: BorderRadius.circular(16),
+                child: ListTile(
+                  title: SelectableText(
+                    _grouped,
+                    key: const Key('mod-2fa-secret'),
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    key: const Key('mod-2fa-copy'),
+                    tooltip: 'Copy the key',
+                    icon: const Icon(Icons.copy_rounded),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: secret!));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Key copied.')),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Then enter the 6-digit code it shows:'),
+              const SizedBox(height: 8),
+            ],
+            TextField(
+              key: const Key('mod-2fa-code'),
+              controller: code,
+              autofocus: !widget.setup,
+              keyboardType: TextInputType.number,
+              autofillHints: const [AutofillHints.oneTimeCode],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(6),
+              ],
+              onChanged: (text) {
+                if (text.length == 6) _submit();
+              },
+              decoration: const InputDecoration(
+                labelText: '6-digit code',
+                prefixIcon: Icon(Icons.password_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              key: const Key('mod-2fa-submit'),
+              onPressed: busy ? null : _submit,
+              child: Text(widget.setup ? 'Turn on' : 'Open moderation'),
+            ),
+          ],
+          if (error case final text?) ...[
+            const SizedBox(height: 12),
+            Text(
+              text,
+              key: const Key('mod-2fa-error'),
+              style: const TextStyle(color: VawraColors.coralDark),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

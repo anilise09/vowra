@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runDueDeletions } from '../src/jobs/deletions.js';
-import { type Harness, member, type Person, signIn, startHarness } from './harness.js';
+import { type Harness, member, type Person, signIn, startHarness, makeModerator } from './harness.js';
 
 let h: Harness;
 beforeEach(async () => (h = await startHarness()));
@@ -48,7 +48,7 @@ async function upload(p: Person, bytes?: Buffer) {
 
 async function moderator(name: string) {
   const p = await member(h, name);
-  await h.db.query("UPDATE accounts SET role = 'moderator' WHERE id = $1", [p.accountId]);
+  await makeModerator(h, p);
   return p;
 }
 

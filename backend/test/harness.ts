@@ -5,6 +5,7 @@ import { pkceChallenge, Sealer } from '../src/crypto.js';
 import { migrate, openPglite, type Db } from '../src/db.js';
 import { type CallConfig, SignalBox } from '../src/calls.js';
 import { MemoryNudgeBus } from '../src/nudges.js';
+import { stepAt, totpCode } from '../src/totp.js';
 import { Notifier, type PushSender } from '../src/push.js';
 import { MediaGrants, MemoryMediaStore } from '../src/media.js';
 
@@ -145,4 +146,23 @@ export async function swipe(h: Harness, from: Person, to: Person, kind = 'like')
     headers: from.auth,
     payload: { kind },
   });
+}
+
+/**
+ * Makes someone a moderator the way production does it: the role, then the
+ * authenticator set up and confirmed through the real routes, so this sign-in
+ * is verified for the next half hour.
+ */
+export async function makeModerator(h: Harness, p: Person) {
+  await h.db.query("UPDATE accounts SET role = 'moderator' WHERE id = $1", [p.accountId]);
+  const setup = await h.app.inject({ method: 'POST', url: '/v1/mod/second-factor/setup', headers: p.auth });
+  if (setup.statusCode !== 200) throw new Error(`second-factor setup failed: ${setup.body}`);
+  const code = totpCode(setup.json().secret, stepAt(h.clock.now()));
+  const confirm = await h.app.inject({
+    method: 'POST',
+    url: '/v1/mod/second-factor/confirm',
+    headers: p.auth,
+    payload: { code },
+  });
+  if (confirm.statusCode !== 200) throw new Error(`second-factor confirm failed: ${confirm.body}`);
 }

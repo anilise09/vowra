@@ -67,6 +67,13 @@ Optional:
   the database. A stop that takes longer than the drain plus 20 seconds is forced.
 - **Hourly job**: scheduled deletions and the retention schedule run at start and every hour.
 
+## Moderators
+
+Only an operator on the host can make or remove a moderator, or reset a lost authenticator:
+`npm run admin:moderator -- grant|revoke|reset-2fa <email> --confirm` (the person signs in to the
+app once first). Each change is an audit event. A new moderator then sets up an authenticator app
+in the app's Moderation page before any moderation action.
+
 ## Build and run
 
 ```sh

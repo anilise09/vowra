@@ -207,6 +207,58 @@ void main() {
       expect(find.text('No reports waiting.'), findsOneWidget);
     });
 
+    testWidgets('first use: an authenticator is set up, then the queue opens', (
+      tester,
+    ) async {
+      final server = withQueue()..modSecondFactor = 'none';
+      await _signIn(tester, server);
+      await _openModeration(tester);
+      expect(find.byKey(const Key('mod-gate-setup')), findsOneWidget);
+      expect(find.textContaining('Send me money'), findsNothing);
+      await tester.tap(find.byKey(const Key('mod-2fa-start')));
+      await _settle(tester);
+      // The key is shown in groups of four, to type into an authenticator.
+      expect(find.text('JBSW Y3DP EHPK 3PXP'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('mod-2fa-code')), '000000');
+      await _settle(tester);
+      expect(find.textContaining('That code didn\'t work'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('mod-2fa-code')),
+        FakeVawraServer.modCode,
+      );
+      await _settle(tester);
+      expect(find.byKey(const Key('mod-gate-setup')), findsNothing);
+      expect(find.text('Reports (1)'), findsOneWidget);
+      expect(server.modCodesTried, ['000000', FakeVawraServer.modCode]);
+    });
+
+    testWidgets(
+      'after half an hour a code reopens moderation, even mid-decision',
+      (tester) async {
+        final server = withQueue()..modSecondFactor = 'enabled';
+        await _signIn(tester, server);
+        await _openModeration(tester);
+        expect(find.byKey(const Key('mod-gate-verify')), findsOneWidget);
+        await tester.enterText(
+          find.byKey(const Key('mod-2fa-code')),
+          FakeVawraServer.modCode,
+        );
+        await _settle(tester);
+        expect(find.text('Reports (1)'), findsOneWidget);
+
+        // The half hour runs out while a decision is being made.
+        server.modSecondFactor = 'enabled';
+        await tester.tap(find.byKey(const Key('mod-suspend-r1')));
+        await _settle(tester);
+        await tester.tap(find.byKey(const Key('mod-confirm')));
+        await _settle(tester);
+        expect(server.decisions, isEmpty);
+        expect(find.byKey(const Key('mod-gate-verify')), findsOneWidget);
+        // Straight to the code: no error message on the way.
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
     testWidgets('an old sign-in confirms with a code, then comes back', (
       tester,
     ) async {

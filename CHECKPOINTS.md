@@ -1,5 +1,27 @@
 # Checkpoints
 
+## BE-25 - Moderators need an authenticator app (2026-09-30)
+
+- Every moderation route (`/v1/mod/*`, today and any added later) now needs a second factor: an
+  authenticator app's six-digit code (RFC 6238), checked in one hook so no route can forget it.
+  Setup needs a recent sign-in and shows the secret once; a code opens moderation for 30 minutes on
+  that sign-in (through token refresh, ended by sign-out); a code works only once; five tries per
+  15 minutes; setups, verifications and failures are audit events. People who are not moderators
+  still get "not found".
+- Only an operator on the host grants or removes the role or resets a lost authenticator
+  (`npm run admin:moderator -- ... --confirm`); never over HTTP.
+- App: the Moderation page shows "Protect moderation" (the key in groups of four, a copy button,
+  the code) on first use and "Enter your code" every half hour, including when the half hour runs
+  out in the middle of a decision, with no error message on the way.
+- Tests: the RFC's published values, 7 server tests, 2 app tests; existing tests now make
+  moderators through the real setup. Eight planted defects each fail them; the mid-decision one
+  passed at first because the reload showed the code screen anyway, so the test now also checks
+  that no error message appears.
+- Found by the tests: the code screen was a lazily built list, so on a small screen the "wrong
+  code" message was never built; it is now a plain scrolling column.
+- The Asus build from this morning predates this: moderation there shows an error until the next
+  build. Backend 190 tests pass.
+
 ## BE-24 - Push notifications, server side (2026-09-30)
 
 - Phones register a push token (`POST /v1/me/devices`) tied to their sign-in, so signing out,

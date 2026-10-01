@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { callConfigFrom, callRules } from '../src/calls.js';
-import { type Harness, member, type Person, startHarness, swipe } from './harness.js';
+import { type Harness, member, type Person, startHarness, swipe, makeModerator } from './harness.js';
 
 let h: Harness;
 let open = false;
@@ -174,7 +174,7 @@ describe('calls', () => {
     await start();
     const { ana, ben, matchId } = await ready();
     const mod = await member(h, 'Mo');
-    await h.db.query("UPDATE accounts SET role = 'moderator' WHERE id = $1", [mod.accountId]);
+    await makeModerator(h, mod);
     const id = (await ring(ana, matchId)).json().call_id;
     await call(ben, 'POST', '/v1/reports', { account_id: ana.accountId, reason: 'harassment' });
     const [report] = await h.db.query<{ id: string }>('SELECT id FROM reports');

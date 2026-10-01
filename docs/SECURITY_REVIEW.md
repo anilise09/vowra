@@ -137,4 +137,6 @@ Open:
 
 An independent penetration test, a threat-model review with the chosen providers (email, storage,
 scanning, push, calls), the device-attestation decision, a multi-host rate-limit test, production
-HTTPS and backups, and a staff sign-in for moderators separate from member accounts.
+HTTPS and backups, and a staff console separate from the member app (moderators already need an
+authenticator app for every moderation action since BE-25; a separate console and two-person
+access to sensitive evidence are the next step).

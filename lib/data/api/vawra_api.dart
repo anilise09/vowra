@@ -907,6 +907,23 @@ class VawraApi {
   Future<void> orderPhotos(List<String> ids) =>
       _send('PUT', '/v1/me/photos/order', body: {'photo_ids': ids});
 
+  /// Starts authenticator setup for a moderator: the secret, shown once.
+  Future<({String secret, String uri})> setupModeratorSecondFactor() async {
+    final json = await _send('POST', '/v1/mod/second-factor/setup');
+    return (
+      secret: json['secret'] as String,
+      uri: json['otpauth_uri'] as String,
+    );
+  }
+
+  /// Proves the authenticator works and turns the second factor on.
+  Future<void> confirmModeratorSecondFactor(String code) =>
+      _send('POST', '/v1/mod/second-factor/confirm', body: {'code': code});
+
+  /// Opens moderation on this sign-in for the next half hour.
+  Future<void> verifyModeratorSecondFactor(String code) =>
+      _send('POST', '/v1/mod/second-factor/verify', body: {'code': code});
+
   Future<List<ModPhoto>> moderationPhotos() async {
     final json = await _send('GET', '/v1/mod/photos');
     return [

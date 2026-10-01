@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { type Harness, member, type Person, startHarness, swipe } from './harness.js';
+import { type Harness, member, type Person, startHarness, swipe, makeModerator } from './harness.js';
 
 let h: Harness;
 beforeEach(async () => (h = await startHarness()));
@@ -40,7 +40,7 @@ async function send(from: Person, matchId: string) {
 
 async function moderator() {
   const mod = await member(h, 'Mo');
-  await h.db.query("UPDATE accounts SET role = 'moderator' WHERE id = $1", [mod.accountId]);
+  await makeModerator(h, mod);
   return mod;
 }
 

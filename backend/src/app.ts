@@ -14,6 +14,7 @@ import { mediaRoutes } from './routes/media.js';
 import { moderationRoutes } from './routes/moderation.js';
 import { profileRoutes } from './routes/profile.js';
 import { safetyRoutes } from './routes/safety.js';
+import { staffRoutes } from './routes/staff.js';
 
 export interface AppOptions {
   logger?: boolean;
@@ -118,6 +119,8 @@ export function buildApp(services: Services, options: AppOptions = {}): FastifyI
     }
     return { ready: true };
   });
+  // First, so its second-factor check covers every moderation route below.
+  staffRoutes(app, services);
   authRoutes(app, services);
   profileRoutes(app, services);
   discoveryRoutes(app, services);

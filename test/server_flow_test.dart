@@ -116,10 +116,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('send-code')));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('sign-in-code')),
-      '000000',
-    );
+    await tester.enterText(find.byKey(const Key('sign-in-code')), '000000');
     await tester.tap(find.byKey(const Key('verify-code')));
     await tester.pumpAndSettle();
     expect(find.textContaining('That code didn\'t work'), findsOneWidget);
