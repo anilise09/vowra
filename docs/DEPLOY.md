@@ -9,8 +9,9 @@ laptop). Providers still to choose are listed at the end.
 One Node 22 process per instance (`backend/Dockerfile`), stateless apart from:
 
 - **PostgreSQL** (`DATABASE_URL`): all account, profile, match, chat, moderation and call data.
-- **Media**: processed photos. Today a directory (`VAWRA_MEDIA_DIR`, the `/data` volume in the
-  image); an S3-compatible object store replaces it before more than one instance runs.
+- **Media**: processed photos, in any S3-compatible object store (`VAWRA_S3_*`: Amazon S3,
+  Cloudflare R2, Backblaze B2, MinIO), which more than one instance needs; without it, a directory
+  (`VAWRA_MEDIA_DIR`, the `/data` volume in the image) for a single instance.
 - **In-memory state** that must become shared before running more than one instance: the
   live-update nudge bus and call setup messages (see `docs/SECURITY_REVIEW.md`). Sign-in
   throttling is already shared through PostgreSQL. Until the remaining state moves, run exactly
@@ -39,7 +40,9 @@ Optional:
 | Variable | Default | Meaning |
 |---|---|---|
 | `VAWRA_PORT` | 8797 | Listen port. |
-| `VAWRA_MEDIA_DIR` | `.data/media` (`/data/media` in the image) | Photo files. |
+| `VAWRA_MEDIA_DIR` | `.data/media` (`/data/media` in the image) | Photo files, when no object store is set. |
+| `VAWRA_S3_ENDPOINT`, `VAWRA_S3_BUCKET`, `VAWRA_S3_REGION`, `VAWRA_S3_ACCESS_KEY_ID`, `VAWRA_S3_SECRET_ACCESS_KEY` | none | Photo storage in an S3-compatible store, all or none: the service address (`https://s3.ca-central-1.amazonaws.com`, `https://<account>.r2.cloudflarestorage.com`), the bucket, its region (`auto` for R2) and a key that can only read, write and delete in that bucket. Objects stay private; the server checks access and streams them. |
+| `VAWRA_S3_PREFIX`, `VAWRA_S3_VIRTUAL_HOST`, `VAWRA_S3_SSE` | none, automatic, none | A key prefix such as `photos/`; `1`/`0` to force the bucket into the host name or the path (Amazon defaults to the host name); `AES256` to ask the store to encrypt at rest. |
 | `VAWRA_ACCESS_TTL` | 900 | Access token lifetime, seconds. |
 | `VAWRA_PROOF_TTL` | 600 | Sign-in code lifetime, seconds. |
 | `VAWRA_REAUTH_WINDOW` | 600 | How recent a sign-in must be for deletion, export and moderation. |

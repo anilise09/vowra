@@ -1,5 +1,23 @@
 # Checkpoints
 
+## BE-26 - Photos in any S3-compatible object store (2026-09-30)
+
+- Photos can live in Amazon S3, Cloudflare R2, Backblaze B2, MinIO or any S3-compatible store
+  (`VAWRA_S3_*`, all or none, https in production), which running more than one server needs;
+  without it they stay in a local directory as before. Objects are private and marked
+  `private, no-store`; the server checks access and streams them, so no public photo link ever
+  exists. One retry on a network error or a 5xx; a missing photo is "not found", not an error.
+- Request signing (AWS Signature Version 4) is written out in 90 lines instead of adding the AWS
+  SDK, and checked against Amazon's own published example signatures (GET Object, a bare query
+  key, sorted query parameters). Those examples caught a real bug first: a regex meant to match
+  nothing matched the empty start of the path, so every request would have been refused.
+- An end-to-end test starts the real server with an object store, uploads a photo through the
+  normal routes and finds it in the store, with nothing on the server's disk.
+- Seven planted defects (signing-key order, query sorting, the retry, store selection, the key
+  prefix, private caching, missing photos) each fail the tests; the sorting one passed at first
+  because Amazon's example is already sorted, so a test now signs the same request in another
+  order. Backend 199 tests pass.
+
 ## BE-25 - Moderators need an authenticator app (2026-09-30)
 
 - Every moderation route (`/v1/mod/*`, today and any added later) now needs a second factor: an

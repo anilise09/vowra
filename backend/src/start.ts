@@ -12,6 +12,7 @@ import { runRetention } from './jobs/retention.js';
 import { DiskMediaStore, MediaGrants } from './media.js';
 import { MemoryNudgeBus } from './nudges.js';
 import { Notifier, pushSendersFrom } from './push.js';
+import { S3MediaStore, s3ConfigFrom } from './s3.js';
 
 export interface Running {
   app: FastifyInstance;
@@ -58,8 +59,10 @@ export async function startServer(
   const db = config.databaseUrl ? await openPostgres(config.databaseUrl) : await openPglite(config.dataDir);
   await migrate(db);
 
-  // Local disk until a reviewed object store is chosen.
-  const media = new DiskMediaStore(config.mediaDir);
+  // An S3-compatible store when configured (needed for more than one server);
+  // otherwise a local directory.
+  const s3 = s3ConfigFrom(env);
+  const media = s3 ? new S3MediaStore(s3) : new DiskMediaStore(config.mediaDir);
   let draining = false;
   const sealer = new Sealer(config.dataKey, config.lookupKey);
   const nudges = new MemoryNudgeBus();
