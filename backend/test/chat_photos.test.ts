@@ -98,7 +98,7 @@ describe('photos in a conversation', () => {
     await send(ana, matchId);
     const first = await moderator();
     const second = await member(h, 'Mi');
-    await h.db.query("UPDATE accounts SET role = 'moderator' WHERE id = $1", [second.accountId]);
+    await makeModerator(h, second);
     const [queued] = (await call(first, 'GET', '/v1/mod/photos')).json().photos;
 
     const decisions = await Promise.all([
