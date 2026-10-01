@@ -9,6 +9,10 @@
   `iceTransportPolicy: relay`. Both sides connect relay to relay, offer only relay candidates (no
   device address is ever shared), and decode about 170 video frames and audio each way in 8 s;
   the relay carries about 1.08 MB. With `--wrong-secret` the call cannot connect.
+- Not yet explained: 3 of the first 6 runs (while the laptop was busy with the app suite and just
+  after) received audio but no video on either side, over the same relay connection. The check
+  now prints each sender's encoded frames and camera state to tell the two apart; the 7 runs
+  since then all passed. Worth watching on the first hosted relay.
 - The same call with Alex on one server and Maya on another, both on one new PostgreSQL 18.4
   database (BE-27's shared live updates and call setup) passes too.
 - Every backend test can run on real PostgreSQL (`VAWRA_TEST_DATABASE_URL`, a new database per
