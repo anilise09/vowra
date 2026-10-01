@@ -1,5 +1,19 @@
 # Checkpoints
 
+## BE-29 - A checked API reference; age checks in the data download; load re-run (2026-10-01)
+
+- `docs/API_REFERENCE.md` lists every route (65) with who may call it and what it does. A test
+  compares it with the routes the server actually has, both ways, and checks the access column for
+  every route: each non-public route refuses a request without a sign-in, each adult route refuses
+  an account whose age is not confirmed, each moderation route looks absent to a member. Four
+  planted defects (a route missing from the page, a wrong access label, a weakened guard in the
+  code, a moderation route opened to members) each fail it.
+- The data download now lists age checks (outcome, confirmed age, dates; never the reference).
+- Load re-run with the production features, in memory and shared through the database: 3000
+  requests, no server errors, about 240 a second either way (`docs/LOAD_TEST.md`).
+- Built on Codex's integration branch (CI, media upload races, HTTPS boundary), which passes all
+  217 backend tests; backend 221 tests pass.
+
 ## Integration - production backend checkpoints combined (2026-09-30)
 
 - Rebased the CI, concurrent-media safety and production-HTTPS checkpoints onto the provider and

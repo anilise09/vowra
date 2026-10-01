@@ -151,6 +151,10 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
       'SELECT platform, created_at, last_seen_at FROM devices WHERE account_id = $1 ORDER BY created_at',
       [me],
     );
+    const ageCheckRows = await db.query<{ status: string; verified_age: number | null; created_at: Date; decided_at: Date | null }>(
+      'SELECT status, verified_age, created_at, decided_at FROM age_checks WHERE account_id = $1 ORDER BY created_at',
+      [me],
+    );
     const now = clock.now();
     await audit(db, me, 'data_exported', now);
     reply.header('cache-control', 'no-store');
@@ -195,6 +199,12 @@ export function lifecycleRoutes(app: FastifyInstance, services: Services) {
         ended_at: iso(c.ended_at),
       })),
       notifications: prefs ?? { matches: true, messages: true, likes: true, calls: true },
+      age_checks: ageCheckRows.map((c) => ({
+        outcome: c.status,
+        confirmed_age: c.verified_age,
+        started_at: iso(c.created_at),
+        decided_at: iso(c.decided_at),
+      })),
       push_devices: deviceRows.map((d) => ({
         platform: d.platform,
         registered_at: iso(d.created_at),

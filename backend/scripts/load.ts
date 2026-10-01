@@ -3,12 +3,15 @@
 // server's own work (routing, rules, SQL on PGlite), not the network.
 //   npm run load                 100 members, 3000 requests, 25 at a time
 //   npm run load -- 200 6000 50  members, requests, concurrency
+//   npm run load -- --shared     the same, sharing state through the database
 import { performance } from 'node:perf_hooks';
 import { pkceChallenge } from '../src/crypto.js';
 import { makeProfile, markAdult, type Person, startHarness, state, swipe, verifier } from '../test/harness.js';
 
-const [members = 100, total = 3000, concurrency = 25] = process.argv.slice(2).map(Number);
-const h = await startHarness();
+const [members = 100, total = 3000, concurrency = 25] = process.argv.slice(2).filter((a) => !a.startsWith('--')).map(Number);
+// --shared: live updates, presence and call setup through the database, as several servers run.
+const shared = process.argv.includes('--shared');
+const h = await startHarness({ shared });
 
 let seed = 1;
 const random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);

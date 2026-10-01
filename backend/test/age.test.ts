@@ -53,6 +53,10 @@ describe('age checks', () => {
     );
     expect(JSON.stringify(row)).not.toContain(reference);
     expect((await call(p, 'POST', '/v1/me/age-check')).json().error).toBe('already_verified');
+    // The person's own copy of their data lists the check, without the reference.
+    const exported = (await call(p, 'GET', '/v1/me/export')).json();
+    expect(exported.age_checks).toEqual([expect.objectContaining({ outcome: 'passed', confirmed_age: 29 })]);
+    expect(JSON.stringify(exported)).not.toContain(reference);
   });
 
   it('refuses anything not signed with the secret, or signed too long ago', async () => {

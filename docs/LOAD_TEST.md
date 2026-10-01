@@ -34,6 +34,22 @@ development database, not of the service code: production uses PostgreSQL with a
 The few 404 and 429 answers are expected: liking yourself-adjacent or ineligible people in a random
 mix, and the per-minute message limit.
 
+## Re-run with the production features (2026-09-30, BE-29)
+
+Same mix, after six-digit codes, push, the moderator second factor, object storage and shared
+state were added. `npm run load -- --shared` sends live updates, presence and call setup through
+the database, as several servers do.
+
+| Run | Requests | Throughput | Reads (p50 / p95) | Likes and messages (p50 / p95) | Server errors |
+|---|---|---|---|---|---|
+| One server (memory) | 3000, 25 at a time | 244 per second | 2-8 ms / 3-10 ms | 296-299 ms / 376-381 ms | 0 |
+| Shared through the database | 3000, 25 at a time | 240 per second | 2-8 ms / 3-10 ms | 300-302 ms / 373-379 ms | 0 |
+
+Sharing state through the database costs about 2% here. Writes still queue behind the
+development database's single process (about 0.3 s at 25 at once); production PostgreSQL runs
+them in parallel. The 404 and 429 answers are the expected ones (ineligible likes, the message
+limit).
+
 ## Before launch
 
 - Run the same mix against PostgreSQL on the chosen host, over the network, with a target of p95
