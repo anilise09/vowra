@@ -402,13 +402,16 @@ class _ModerationPageState extends State<ModerationPage> {
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
-        bottom: TabBar(
-          tabs: [
-            Tab(text: 'Reports (${reports?.length ?? '…'})'),
-            Tab(text: 'Appeals (${appeals?.length ?? '…'})'),
-            Tab(text: 'Photos (${photos?.length ?? '…'})'),
-          ],
-        ),
+        // No queue tabs until the authenticator code opens moderation.
+        bottom: gate != null
+            ? null
+            : TabBar(
+                tabs: [
+                  Tab(text: 'Reports (${reports?.length ?? '…'})'),
+                  Tab(text: 'Appeals (${appeals?.length ?? '…'})'),
+                  Tab(text: 'Photos (${photos?.length ?? '…'})'),
+                ],
+              ),
       ),
       body: gate != null
           ? _SecondFactorGate(

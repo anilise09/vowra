@@ -1,5 +1,20 @@
 # Checkpoints
 
+## Device - Six-digit codes and the moderator authenticator on the Asus (2026-10-01)
+
+- A build from this branch (checksum checked after install) on the Asus, signed in as the test
+  member Alex (a local moderator), against the local server built from the same branch.
+- Moderation showed "Protect moderation" instead of the queues. Setting up needed a fresh
+  sign-in: the server emailed (to the development outbox) a six-digit code, and typing it signed
+  in by itself on the sixth digit and came straight back with the setup key in groups of four.
+  The code the key produced (computed on the laptop, standing in for an authenticator app) opened
+  moderation and the queues loaded.
+- Found on the phone: the queue tabs showed with unknown counts while the code was asked for; they
+  now appear only once moderation is open (test added; it fails without the fix).
+- Afterwards the test authenticator was reset with `npm run admin:moderator -- reset-2fa`, so
+  moderation there asks for a new setup. QuietWall was left in front as found; both port links
+  (QuietWall's 8787, Vawra's 8797) are in place. App 232 tests pass (1 existing skip).
+
 ## BE-29 - A checked API reference; age checks in the data download; load re-run (2026-10-01)
 
 - `docs/API_REFERENCE.md` lists every route (65) with who may call it and what it does. A test

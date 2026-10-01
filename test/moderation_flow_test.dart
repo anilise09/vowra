@@ -215,6 +215,8 @@ void main() {
       await _openModeration(tester);
       expect(find.byKey(const Key('mod-gate-setup')), findsOneWidget);
       expect(find.textContaining('Send me money'), findsNothing);
+      // No queue tabs with unknown counts while the code is asked for.
+      expect(find.textContaining('Reports ('), findsNothing);
       await tester.tap(find.byKey(const Key('mod-2fa-start')));
       await _settle(tester);
       // The key is shown in groups of four, to type into an authenticator.
