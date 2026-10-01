@@ -88,6 +88,28 @@ phones are currently reserved by another session).
   0.43-1.60% text/vector-edge rasterization differences on macOS, so they were inspected and left
   unchanged.
 
+## Since the handover: the backend made ready for production (2026-09-30)
+
+The owner asked for the full backend by the end of the week. Built and tested on 30 September,
+each a checkpoint in `CHECKPOINTS.md`, published to `main`:
+
+- BE-20 strict production settings, `/v1/ready`, clean shutdown, `backend/Dockerfile`,
+  `docs/DEPLOY.md`; BE-20b migrations on Windows line endings.
+- BE-23 six-digit email sign-in codes through any SMTP provider (the app takes digits only).
+- BE-24 push notifications, server side (Firebase and Apple; generic text, opt-outs).
+- BE-25 moderators need an authenticator app; `npm run admin:moderator` on the host.
+- BE-26 photos in any S3-compatible store (signing checked against Amazon's examples).
+- BE-27 several servers at once, sharing live updates, presence and call setup through PostgreSQL.
+- BE-28 a provider-neutral age-check slot (signed webhook; only the outcome and age kept).
+
+Work happens in a separate worktree (`D:/Projects/dating-app-wt-claude`, branch
+`claude/backend-providers`, commits signed "Claude") because Codex works in the main checkout on
+its own branches. What only the owner can provide: the providers (hosting with PostgreSQL, SMTP,
+an object store, Firebase and an Apple push key, a TURN relay, an age-check provider with legal
+review) and a yes to install PostgreSQL and Docker on this laptop to prove the backend on the real
+database and build the image. App sides still waiting on providers: push registration (needs
+Firebase) and the "check my age" button (needs the provider).
+
 ## Running it
 
 Flutter is not on PATH: `export PATH="/c/Users/anili/Tools/flutter/bin:$PATH"` (Git Bash).
