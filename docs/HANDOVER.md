@@ -81,9 +81,11 @@ phones are currently reserved by another session).
 - `integration_test/ios_smoke_test.dart` plus its `test_driver/` adapter passes on a dedicated
   iPhone 17e simulator: adult/rules gate, all offline onboarding steps, Discover, synthetic match,
   chat send, Profile and Settings through the destructive-account row.
-- This does not replace the pending full Apple review: large-iPhone layout, larger Dynamic Type,
-  reduced motion, physical iPhone/iPad, connected accounts and real calls are not yet validated.
-- Flutter analysis is clean. All non-golden host tests pass (214 plus the export large-text case;
+- The same full flow also passes on an iPhone 17 Pro Max simulator at Apple's maximum accessibility
+  text size with Reduce Motion enabled. The test explicitly proves the text scale reached Flutter
+  and checks UIKit's Reduce Motion state through a simulator-only channel. Physical iPhone/iPad,
+  connected accounts and real calls are still not validated on Apple hardware.
+- Flutter analysis is clean. All non-golden host tests pass (218;
   one expected live-server skip). The 14 pixel baselines were authored on Windows and show only
   0.43-1.60% text/vector-edge rasterization differences on macOS, so they were inspected and left
   unchanged.
@@ -131,6 +133,12 @@ flutter drive --driver=test_driver/ios_smoke_test.dart \
   --target=integration_test/ios_smoke_test.dart -d <simulator-id> \
   --use-application-binary=build/ios/iphonesimulator/Runner.app --no-pub
 ```
+
+For the Pro Max accessibility gate, configure that simulator to maximum Dynamic Type and Reduce
+Motion first, then add both
+`--dart-define=VAWRA_EXPECT_LARGE_TEXT=true` and
+`--dart-define=VAWRA_EXPECT_REDUCED_MOTION=true` to the build command. The Reduce Motion probe is
+available only in a simulator build; it is compiled out for physical devices and production.
 
 Use a dedicated simulator if another session has an app in front. Concurrent Xcode builds can
 leave an `actool` subprocess behind after interruption; verify the Vawra process tree is empty
@@ -232,8 +240,9 @@ git push origin $NEW:refs/heads/gh-pages
    gender for each, add to `lib/main.dart` and `demo_genders.dart`, convert to WebP) or remove.
    Also untracked and of unknown origin: `.agents/`, `skills-lock.json`,
    `assets/branding/vawra_company_mark_trimmed.png`. Do not commit or delete them without asking.
-2. Physical iPhone/iPad access for Apple-hardware testing. The first real iOS Simulator critical
-   flow passes on the Intel Mac, but the full multi-size/text/reduced-motion review is still open.
+2. Physical iPhone/iPad access for Apple-hardware testing. The iPhone 17e critical flow and the
+   iPhone 17 Pro Max maximum-text/Reduce-Motion flow pass in the simulator; physical Apple hardware
+   remains open.
 3. Providers, each needing the owner's account or money: email for sign-in codes, hosting with
    PostgreSQL, an object store plus malware scanning and automated photo classification (photos
    work today with a local disk store and human review), push notifications (Firebase and an
@@ -244,8 +253,9 @@ git push origin $NEW:refs/heads/gh-pages
 
 ## Next work that needs nobody
 
-- Phone test of BE-10 (distance): needs the owner's yes before granting location on their phone,
-  or an emulator with a mock location. Privacy zones (home/work) are still design only.
+- No roadmap feature is currently both unblocked and validation-ready without an owner/provider
+  decision. Distance and private places have passed on the owner's Asus; the remaining Apple step
+  needs physical iPhone/iPad access.
 - Moderation is built (BE-11) but moderators are made with a local dev command; a real staff
   sign-in (separate from member accounts, with two-person access for sensitive evidence) comes
   with hosting.
