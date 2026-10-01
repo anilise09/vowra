@@ -1,8 +1,17 @@
 import 'package:ember_app/main.dart' as app;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+
+const _expectLargeText = bool.fromEnvironment('VAWRA_EXPECT_LARGE_TEXT');
+const _expectReducedMotion = bool.fromEnvironment(
+  'VAWRA_EXPECT_REDUCED_MOTION',
+);
+const _accessibilityDebugChannel = MethodChannel(
+  'com.projectember.emberApp/debug-accessibility',
+);
 
 Future<void> _settle(WidgetTester tester, {int frames = 10}) async {
   for (var frame = 0; frame < frames; frame += 1) {
@@ -33,6 +42,25 @@ void main() {
 
     expect(find.byKey(const Key('adult-checkbox')), findsOneWidget);
     expect(find.byKey(const Key('rules-checkbox')), findsOneWidget);
+    final mediaQuery = MediaQuery.of(
+      tester.element(find.byKey(const Key('adult-checkbox'))),
+    );
+    if (_expectLargeText) {
+      expect(
+        mediaQuery.textScaler.scale(16),
+        greaterThan(19.2),
+        reason: 'the iOS accessibility text size must reach Flutter',
+      );
+    }
+    if (_expectReducedMotion) {
+      final reduceMotionEnabled = await _accessibilityDebugChannel
+          .invokeMethod<bool>('isReduceMotionEnabled');
+      expect(
+        reduceMotionEnabled,
+        isTrue,
+        reason: 'iOS Reduce Motion must be enabled for this validation run',
+      );
+    }
     await _tapShown(tester, find.byKey(const Key('adult-checkbox')));
     await _tapShown(tester, find.byKey(const Key('rules-checkbox')));
     await _tapShown(tester, find.byKey(const Key('continue-button')));

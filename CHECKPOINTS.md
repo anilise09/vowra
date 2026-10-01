@@ -1,5 +1,23 @@
 # Checkpoints
 
+## Device - Large iPhone, maximum text and Reduce Motion (2026-10-01)
+
+- Re-ran the real iOS critical flow on an iPhone 17 Pro Max simulator with Dynamic Type set to
+  `accessibility-extra-extra-extra-large` and iOS Reduce Motion enabled. It passed the adult/rules
+  gate, every offline onboarding step, Discover, a synthetic match, chat send, Profile and Settings
+  through the destructive-account section in 70 seconds.
+- The smoke test can now require those two accessibility conditions explicitly. It proves the
+  maximum text scale reached Flutter and asks UIKit for `UIAccessibility.isReduceMotionEnabled`
+  through a simulator-only method channel. Flutter's integration-test binding masks the normal
+  `MediaQuery.disableAnimations` signal, so checking UIKit prevents a false reduced-motion claim;
+  the channel is compiled out of physical-device and production builds.
+- Evidence: `flutter analyze` is clean; the instrumented iOS Simulator build passes; the Pro Max
+  drive reports `All tests passed`. The host suite has 218 passes and one expected live-server
+  skip; its only 14 failures are the known Windows-authored golden diffs on macOS (0.43-1.60%),
+  which were not overwritten.
+- Apple Simulator coverage now includes the iPhone 17e standard flow and this Pro Max maximum-text
+  and reduced-motion flow. Physical iPhone/iPad, connected-account and real-call checks remain.
+
 ## BE-28 - Age checks through any provider (2026-09-30)
 
 - A provider-neutral slot for the age-check provider still to be chosen (with legal review):
