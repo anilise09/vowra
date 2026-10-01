@@ -46,6 +46,12 @@ Typing an adult age in the app is user input, not age assurance. Dating features
 
 Photo or optional ID verification can establish limited claims such as likeness or document checks. It must never be presented as proof that a person is safe. Raw provider artifacts, secrets, and signing keys stay out of the client.
 
+## Age checks through a provider (added 2026-09-30, BE-28)
+
+- `POST /v1/me/age-check` returns `{url, expires_at}`: the chosen provider's hosted check with a one-time reference (`VAWRA_AGE_CHECK_URL` with `{reference}`). `409 already_verified`, `409 age_check_failed`, `503 age_check_unavailable` without a provider, at most 5 starts a day (`429 slow_down`).
+- `POST /v1/webhooks/age-check` receives the outcome from the provider or a small adapter in front of it: body `{reference, outcome: passed|failed|review, age?}`, header `vawra-signature: t=<unix seconds>,v1=<hex HMAC-SHA256 of "t.body">` with `VAWRA_AGE_WEBHOOK_SECRET`, at most 5 minutes old. A pass needs an age of 18 or over (under 18 is a fail; no age goes to review). A passed or failed check stays decided; repeats are accepted and change nothing. A pass sets `age_state = adult_verified` and the profile's `public_age` (also when the profile is created later).
+- Vawra keeps the outcome and the confirmed age, never documents, photos or a date of birth; the reference is stored as a keyed hash.
+
 ## Location
 
 Profile mutation contains no location. Added 2026-09-28 (BE-10): `PUT /v1/me/location` takes `{lat, lng}` (a cell centre from the app's 2 km grid; the server rounds again and seals it) and returns `{updated_at, cell_km}`, never the coordinates; `DELETE /v1/me/location` removes it. `GET /v1/me/profile` adds `location_updated_at` (null when off). Discovery and likes-you add `distance_band` (a string such as `"5–10 km away"`, or null). Limits: one new area per 15 minutes (`429 slow_down`), no moves over 1000 km/h (`422 implausible_move`). Details in `DATA_LIFECYCLE_CONTRACT.md`. A later dedicated location endpoint may accept a short-lived encrypted update after explicit permission. Exact coordinates remain encrypted at rest, are never returned to another client, and are converted server-side to coarse distance bands with privacy zones and anti-triangulation controls.

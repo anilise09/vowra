@@ -5,6 +5,7 @@ import { ApiError, type Account, type Services } from './context.js';
 import { authRoutes } from './routes/auth.js';
 import { callRoutes } from './routes/calls.js';
 import { deviceRoutes } from './routes/devices.js';
+import { ageRoutes } from './routes/age.js';
 import { chatRoutes } from './routes/chat.js';
 import { discoveryRoutes } from './routes/discovery.js';
 import { eventRoutes } from './routes/events.js';
@@ -132,6 +133,7 @@ export function buildApp(services: Services, options: AppOptions = {}): FastifyI
   mediaRoutes(app, services);
   callRoutes(app, services);
   deviceRoutes(app, services);
+  ageRoutes(app, services);
   eventRoutes(app, services);
   return app;
 }

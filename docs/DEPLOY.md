@@ -54,6 +54,7 @@ Optional:
 | `VAWRA_TURN_URLS`, `VAWRA_TURN_SECRET` | none | TURN relay for calls; without them calls stay off. |
 | `VAWRA_FCM_CREDENTIALS_B64` | none | Android push: the Firebase service-account JSON, base64. |
 | `VAWRA_APNS_KEY_B64`, `VAWRA_APNS_KEY_ID`, `VAWRA_APNS_TEAM_ID`, `VAWRA_APNS_TOPIC`, `VAWRA_APNS_PRODUCTION` | none | iPhone push: the .p8 key (base64), its id, the team id, the app's bundle id, and `1` for the production gateway. All or none. |
+| `VAWRA_AGE_CHECK_URL`, `VAWRA_AGE_WEBHOOK_SECRET` | none | The age-check provider's hosted check (with `{reference}`) and the webhook secret (32+ characters), both or neither. Without them nobody's age can be confirmed, so dating stays closed; choosing the provider needs legal review. |
 | `VAWRA_SMTP_URL`, `VAWRA_EMAIL_FROM` | none (required in production) | Sign-in codes by email through any SMTP provider: `smtps://user:password@smtp.example.com:465` (or `smtp://...:587`, which must upgrade with STARTTLS) and `Vawra <no-reply@example.com>`. TLS is always required and certificates are verified. |
 
 ## Health

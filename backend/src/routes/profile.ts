@@ -149,8 +149,11 @@ export function profileRoutes(app: FastifyInstance, services: Services) {
       await db.query(
         `INSERT INTO profiles (account_id, display_name, relationship_intent, bio, interests,
                                show_distance_band, call_ready_by_default, updated_at,
-                               lifestyle, prompts, gender, show_me, show_gender)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11, $12, $13)`,
+                               lifestyle, prompts, gender, show_me, show_gender, public_age)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11, $12, $13,
+                 -- An age check that finished before the profile existed.
+                 (SELECT verified_age FROM age_checks WHERE account_id = $1 AND status = 'passed'
+                  ORDER BY decided_at DESC LIMIT 1))`,
         [
           account.id,
           patch.display_name,

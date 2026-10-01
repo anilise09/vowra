@@ -5,6 +5,7 @@ import type { NudgeBus } from './nudges.js';
 import type { CallConfig, SignalBox } from './calls.js';
 import type { Notifier } from './push.js';
 import type { Presence } from './shared.js';
+import type { AgeCheckConfig } from './routes/age.js';
 import type { MediaGrants, MediaStore } from './media.js';
 
 export interface Clock {
@@ -31,6 +32,8 @@ export interface Services {
   notifier: Notifier;
   /** Who has the app open, on any server. */
   presence: Presence;
+  /** The age-check provider; null until one is chosen. */
+  ageCheck: AgeCheckConfig | null;
   /** How phones reach each other in a call; null keeps calls switched off. */
   callConfig: CallConfig | null;
   accessTtlSeconds: number;

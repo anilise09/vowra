@@ -8,6 +8,7 @@ import { MemoryNudgeBus, type NudgeBus } from '../src/nudges.js';
 import { stepAt, totpCode } from '../src/totp.js';
 import { Notifier, type PushSender } from '../src/push.js';
 import { DbPresence, LocalPresence, PgNudgeBus, type Presence } from '../src/shared.js';
+import type { AgeCheckConfig } from '../src/routes/age.js';
 import { MediaGrants, MemoryMediaStore } from '../src/media.js';
 
 export interface Harness {
@@ -42,6 +43,7 @@ export async function startHarness(
      */
     shared?: boolean;
     join?: Harness;
+    ageCheck?: AgeCheckConfig;
   } = {},
 ): Promise<Harness> {
   const db = options.join?.db ?? (await openPglite());
@@ -65,6 +67,7 @@ export async function startHarness(
     signals: shared ? new DbSignalBox(db) : new MemorySignalBox(),
     notifier,
     presence,
+    ageCheck: options.ageCheck ?? null,
     callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
     db,
     sealer,

@@ -13,6 +13,7 @@ import { DiskMediaStore, MediaGrants } from './media.js';
 import { MemoryNudgeBus } from './nudges.js';
 import { Notifier, pushSendersFrom } from './push.js';
 import { DbPresence, LocalPresence, PgNudgeBus } from './shared.js';
+import { ageCheckConfigFrom } from './routes/age.js';
 import { S3MediaStore, s3ConfigFrom } from './s3.js';
 
 export interface Running {
@@ -88,6 +89,7 @@ export async function startServer(
       nudges,
       notifier,
       presence,
+      ageCheck: ageCheckConfigFrom(env),
       media,
       grants: new MediaGrants(config.dataKey),
       signals,

@@ -1,5 +1,20 @@
 # Checkpoints
 
+## BE-28 - Age checks through any provider (2026-09-30)
+
+- A provider-neutral slot for the age-check provider still to be chosen (with legal review):
+  `POST /v1/me/age-check` gives a one-time link to the provider's hosted check;
+  `POST /v1/webhooks/age-check` takes the outcome, signed with a shared secret over the exact
+  bytes and the time (at most 5 minutes old). Under 18 is a fail; a pass without an age goes to a
+  person to review; decided checks stay decided. A pass opens dating and sets the age shown on the
+  profile, also when the profile is created afterwards.
+- Only the outcome and confirmed age are kept: never documents, photos or a date of birth; the
+  reference is stored as a keyed hash. Five starts a day per account.
+- 6 tests; seven planted defects (signature, freshness, under 18, decided stays decided, the age
+  reaching a later profile, the start limit, the hashed reference) each fail them.
+- Not yet in the app: its "check my age" button waits for a provider, so it can be tried end to
+  end. Backend 210 tests pass.
+
 ## BE-27 - More than one server: shared through PostgreSQL (2026-09-30)
 
 - Any number of servers can now run behind a load balancer. On PostgreSQL they share, through the

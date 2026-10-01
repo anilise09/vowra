@@ -1,6 +1,7 @@
 import { emailProblems } from './email.js';
 import { pushProblems } from './push.js';
 import { s3Problems } from './s3.js';
+import { ageCheckProblems } from './routes/age.js';
 
 export interface Config {
   enabled: boolean;
@@ -92,6 +93,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   problems.push(...emailProblems(env, production));
   problems.push(...pushProblems(env));
   problems.push(...s3Problems(env, production));
+  problems.push(...ageCheckProblems(env, production));
   if (problems.length > 0) throw new ConfigError(problems);
   return config;
 }
