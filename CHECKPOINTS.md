@@ -1,5 +1,17 @@
 # Checkpoints
 
+## Integration - production backend checkpoints combined (2026-09-30)
+
+- Rebased the CI, concurrent-media safety and production-HTTPS checkpoints onto the provider and
+  multi-server work through BE-28, preserving the newer SMTP, push, S3, moderator MFA, shared
+  PostgreSQL and age-assurance paths.
+- The merge exposed one stale race test that granted a second moderator role directly. It now uses
+  the real authenticator setup, so the race still proves one approval and one chat-photo message
+  under the same security boundary production moderators use.
+- Before BE-28 landed, the combined backend passed all 211 tests serially. After the final rebase,
+  the overlap-sensitive age, startup/HTTPS and chat-photo groups pass all 27 tests; TypeScript and
+  the production build pass. Protected untracked profile and branding assets were not changed.
+
 ## BE-28 - Age checks through any provider (2026-09-30)
 
 - A provider-neutral slot for the age-check provider still to be chosen (with legal review):
