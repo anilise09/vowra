@@ -1079,6 +1079,20 @@ class VawraApi {
           ))['share_read_receipts']
           as bool;
 
+  /// A one-time link to the independent age-check service.
+  Future<Uri> startAgeCheck() async =>
+      Uri.parse((await _send('POST', '/v1/me/age-check'))['url'] as String);
+
+  /// What you're told about while the app is closed: matches, messages,
+  /// likes and calls, each on or off.
+  Future<Map<String, bool>> notificationPrefs() async =>
+      Map<String, bool>.from(await _send('GET', '/v1/me/notifications'));
+
+  Future<Map<String, bool>> setNotificationPref(String kind, bool on) async =>
+      Map<String, bool>.from(
+        await _send('PUT', '/v1/me/notifications', body: {kind: on}),
+      );
+
   Future<void> unmatch(String matchId) =>
       _send('DELETE', '/v1/matches/$matchId');
 

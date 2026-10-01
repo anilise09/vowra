@@ -78,6 +78,21 @@ class FakeVawraServer {
   int _codes = 1;
 
   bool verified = false;
+
+  /// Where an unconfirmed account's age check stands.
+  String unverifiedAgeState = 'assurance_required';
+
+  /// The provider link handed out; null means no age-check service.
+  String? ageCheckUrl = 'https://checks.example.test/start?ref=r1';
+  int ageChecksStarted = 0;
+
+  /// What the account is told about while the app is closed.
+  final notificationPrefs = <String, bool>{
+    'matches': true,
+    'messages': true,
+    'likes': true,
+    'calls': true,
+  };
   int rotations = 0;
 
   /// Read receipts and typing: this person, and every peer.
@@ -404,7 +419,7 @@ class FakeVawraServer {
             .toIso8601String(),
         'refresh_token': 'refresh-token-00000000000',
         'account_id': me,
-        'age_state': verified ? 'adult_verified' : 'assurance_required',
+        'age_state': verified ? 'adult_verified' : unverifiedAgeState,
       });
     }
     if (method == 'POST' && path == '/v1/session/rotate') {
@@ -455,7 +470,7 @@ class FakeVawraServer {
         profile = {...?profile, ...body, 'public_age': null};
       }
       return _json(200, {
-        'age_state': verified ? 'adult_verified' : 'assurance_required',
+        'age_state': verified ? 'adult_verified' : unverifiedAgeState,
         'lifecycle': deletionAt != null
             ? 'deletion_scheduled'
             : suspension != null
@@ -576,7 +591,7 @@ class FakeVawraServer {
         'account': {
           'email': 'alex@example.test',
           'created_at': '2026-09-20T12:00:00.000Z',
-          'age_state': verified ? 'adult_verified' : 'assurance_required',
+          'age_state': verified ? 'adult_verified' : unverifiedAgeState,
           'lifecycle': deletionAt != null ? 'deletion_scheduled' : 'active',
           'deletion_effective_at': deletionAt?.toIso8601String(),
           'share_read_receipts': shareReceipts,
@@ -627,6 +642,20 @@ class FakeVawraServer {
         shareReceipts = body['share_read_receipts'] as bool;
       }
       return _json(200, {'share_read_receipts': shareReceipts});
+    }
+    if (path == '/v1/me/age-check' && method == 'POST') {
+      if (verified) return _error(409, 'already_verified');
+      if (unverifiedAgeState == 'rejected') {
+        return _error(409, 'age_check_failed');
+      }
+      final url = ageCheckUrl;
+      if (url == null) return _error(503, 'age_check_unavailable');
+      ageChecksStarted++;
+      return _json(200, {'url': url});
+    }
+    if (path == '/v1/me/notifications') {
+      if (method == 'PUT') notificationPrefs.addAll(body.cast<String, bool>());
+      return _json(200, notificationPrefs);
     }
     if (path == '/v1/me/pause') {
       paused = method == 'POST';

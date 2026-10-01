@@ -260,3 +260,20 @@ git push origin $NEW:refs/heads/gh-pages
   approximate location allowed and distance on, camera and microphone allowed, and the port link
   to 8797. Calls and distance were tested there on 2026-09-30 (see CHECKPOINTS.md).
 - The 260 sample people are seeded around Alex's approximate area (`dev:seed-demo --near`).
+
+## In progress: phases 2-4 without provider accounts (2026-10-01, Claude)
+
+Done and committed on `claude/backend-providers`:
+- App age check: "Confirm my age" opens the provider link (url_launcher, Custom Tab); coming back to the
+  app checks quietly; review and rejected screens (rejected offers account deletion). Tests + 6 break checks.
+- Settings notification switches load from and save to `/v1/me/notifications` (Calls replaces Safety tips).
+- `npm run dev:age-provider`: local stand-in provider (dev only, refuses VAWRA_ENV=production).
+- Backend tests run on real PostgreSQL with `VAWRA_TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5433/postgres`
+  (portable PostgreSQL 18.4 in D:\Tools\pgsql, no install/admin; start with pg_ctl -o "-p 5433").
+  221/222 passed; the one failure was the PGlite-only backup test, now skipped on PostgreSQL.
+
+Asus (1 Oct): notification switch on -> off -> still off after restart -> on; age check opened the stand-in in a
+Custom Tab, "Needs a closer look" -> app showed "being reviewed" on return.
+
+Next: send "passed" for that reference and confirm Vawra opens; full app + backend suites; relay-only call through
+a local TURN server; emulator-to-Asus call; status page; fast-forward main.

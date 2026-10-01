@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../data/api/nudges.dart';
 import '../data/api/vawra_api.dart';
@@ -88,7 +89,7 @@ Future<void> openSignedIn(NavigatorState navigator, VawraApi api) async {
   } else if (me.profile == null) {
     next = _NewProfile(api: api);
   } else if (!me.canDate) {
-    next = AgeCheckScreen(api: api);
+    next = AgeCheckScreen(api: api, ageState: me.ageState);
   } else {
     next = ServerHome(api: api, me: me);
   }
@@ -619,23 +620,94 @@ class _NewProfile extends StatelessWidget {
   );
 }
 
+/// Opens a link outside the app: the age-check service runs in the browser,
+/// which can use the camera and keeps its pages out of Vawra. Tests replace it.
+Future<bool> Function(Uri url) openOutsideLink = (url) =>
+    launchUrl(url, mode: LaunchMode.inAppBrowserView);
+
 /// Dating stays closed until an independent age check passes.
 class AgeCheckScreen extends StatefulWidget {
-  const AgeCheckScreen({super.key, required this.api});
+  const AgeCheckScreen({
+    super.key,
+    required this.api,
+    this.ageState = 'assurance_required',
+  });
 
   final VawraApi api;
+
+  /// Where the check stands: not started, waiting for review, or failed.
+  final String ageState;
 
   @override
   State<AgeCheckScreen> createState() => _AgeCheckScreenState();
 }
 
 class _AgeCheckScreenState extends State<AgeCheckScreen> {
-  bool checking = false;
+  bool busy = false;
+  late String ageState = widget.ageState;
 
-  Future<void> _checkAgain() async {
+  /// The service is not connected on this server yet.
+  bool unavailable = false;
+
+  /// A check was opened: coming back to the app looks for its outcome.
+  bool started = false;
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(
+      onResume: () {
+        if (started && !busy) _checkAgain(quiet: true);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  Future<void> _start() async {
+    setState(() => busy = true);
+    try {
+      final url = await widget.api.startAgeCheck();
+      final opened = await openOutsideLink(url);
+      if (!mounted) return;
+      if (opened) {
+        setState(() => started = true);
+      } else {
+        _toast(context, 'Couldn\'t open the age check. Try again.');
+      }
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      switch (e.code) {
+        case 'age_check_unavailable':
+          setState(() => unavailable = true);
+        case 'already_verified':
+          await _checkAgain(quiet: true);
+        case 'age_check_failed':
+          setState(() => ageState = 'rejected');
+        case 'slow_down':
+          _toast(
+            context,
+            'You\'ve started several checks today. Try again tomorrow.',
+          );
+        default:
+          _toast(context, describeApiError(e));
+      }
+    } catch (e) {
+      if (mounted) _toast(context, describeApiError(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> _checkAgain({bool quiet = false}) async {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => checking = true);
+    setState(() => busy = true);
     try {
       final me = await widget.api.me();
       if (me.canDate) {
@@ -643,48 +715,127 @@ class _AgeCheckScreenState extends State<AgeCheckScreen> {
         await openSignedIn(navigator, widget.api);
         return;
       }
-      if (mounted) _toast(context, 'Not confirmed yet.');
+      if (!mounted) return;
+      final changed = me.ageState != ageState;
+      setState(() => ageState = me.ageState);
+      if (!quiet && !changed) _toast(context, 'Not confirmed yet.');
+    } catch (e) {
+      if (mounted && !quiet) _toast(context, describeApiError(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> _delete(NavigatorState navigator) async {
+    late DateTime effectiveAt;
+    try {
+      await withFreshSignIn(
+        navigator,
+        widget.api,
+        reason: 'delete your account',
+        action: () async => effectiveAt = await widget.api.scheduleDeletion(),
+        then: (nav) async => nav.pushAndRemoveUntil(
+          MaterialPageRoute<void>(
+            builder: (_) => DeletionScheduledScreen(
+              api: widget.api,
+              effectiveAt: effectiveAt,
+              signedIn: false,
+            ),
+          ),
+          (_) => false,
+        ),
+      );
     } catch (e) {
       if (mounted) _toast(context, describeApiError(e));
-    } finally {
-      if (mounted) setState(() => checking = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final rejected = ageState == 'rejected';
+    final reviewing = ageState == 'pending_review';
+    final (icon, title, body) = rejected
+        ? (
+            Icons.block_rounded,
+            'Vawra is for adults only',
+            'The age check didn\'t confirm that you\'re 18 or older, so '
+                'dating stays closed on this account. You can delete the '
+                'account and everything Vawra keeps about it.',
+          )
+        : reviewing
+        ? (
+            Icons.hourglass_top_rounded,
+            'Your age check is being reviewed',
+            'The age-check service couldn\'t decide straight away and is '
+                'taking a closer look. Vawra opens as soon as your age is '
+                'confirmed.',
+          )
+        : (
+            Icons.verified_user_outlined,
+            'One more step: confirming you\'re 18+',
+            'Your profile is saved. Before Discover, matches and chat open, '
+                'an independent age-check service confirms you\'re an adult. '
+                'It opens in your browser and takes a few minutes. Vawra keeps '
+                'only the outcome and your age, never your documents or '
+                'photos from the check.',
+          );
     return Scaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(28, 48, 28, 24),
           children: [
-            const Icon(
-              Icons.verified_user_outlined,
-              size: 64,
-              color: VawraColors.coral,
-            ),
+            Icon(icon, size: 64, color: VawraColors.coral),
             const SizedBox(height: 20),
             Text(
-              'One more step: confirming you\'re 18+',
+              title,
+              key: const Key('age-check-title'),
               textAlign: TextAlign.center,
               style: theme.textTheme.headlineSmall,
             ),
             const SizedBox(height: 12),
             Text(
-              'Your profile is saved. Before Discover, matches and chat open, '
-              'Vawra confirms every member\'s age with an independent '
-              'age-check service. That service is not connected yet, so '
-              'this step cannot be completed today.',
+              body,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
+            if (unavailable) ...[
+              const SizedBox(height: 12),
+              Text(
+                'The age-check service isn\'t connected yet, so this step '
+                'can\'t be completed today.',
+                key: const Key('age-check-unavailable'),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
             const SizedBox(height: 28),
-            FilledButton(
-              key: const Key('age-check-again'),
-              onPressed: checking ? null : _checkAgain,
-              child: const Text('Check again'),
-            ),
+            if (rejected)
+              FilledButton(
+                key: const Key('age-delete'),
+                onPressed: busy ? null : () => _delete(Navigator.of(context)),
+                child: const Text('Delete my account'),
+              )
+            else if (!reviewing) ...[
+              FilledButton(
+                key: const Key('age-check-start'),
+                onPressed: busy ? null : _start,
+                child: const Text('Confirm my age'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                key: const Key('age-check-again'),
+                onPressed: busy ? null : _checkAgain,
+                child: Text(started ? 'I\'ve finished' : 'Check again'),
+              ),
+            ] else
+              FilledButton(
+                key: const Key('age-check-again'),
+                onPressed: busy ? null : _checkAgain,
+                child: const Text('Check again'),
+              ),
             const SizedBox(height: 8),
             TextButton(
               key: const Key('age-sign-out'),
@@ -783,11 +934,15 @@ class _ServerHomeState extends State<ServerHome> {
   int superLikesLeft = 3;
   bool tutorialSeen = false;
   bool safetyGuideSeen = false;
-  final notificationPrefs = <String, bool>{
-    'New matches': true,
-    'Messages': true,
-    'Likes you': true,
-    'Safety tips': true,
+  /// What you're told about while the app is closed, kept on the server.
+  static const notificationKinds = {
+    'New matches': 'matches',
+    'Messages': 'messages',
+    'Likes you': 'likes',
+    'Calls': 'calls',
+  };
+  final notificationPrefs = {
+    for (final label in notificationKinds.keys) label: true,
   };
   Timer? check;
 
@@ -824,6 +979,10 @@ class _ServerHomeState extends State<ServerHome> {
         .then((on) {
           if (mounted) setState(() => shareReceipts = on);
         })
+        .catchError((Object _) {});
+    api
+        .notificationPrefs()
+        .then(_showNotificationPrefs)
         .catchError((Object _) {});
     link.start();
     check = Timer.periodic(widget.checkEvery, (_) => _safetyCheck());
@@ -1200,6 +1359,29 @@ class _ServerHomeState extends State<ServerHome> {
     return (distanceWanted, hiddenHere);
   }
 
+  void _showNotificationPrefs(Map<String, bool> saved) {
+    if (!mounted) return;
+    setState(() {
+      for (final MapEntry(key: label, value: kind)
+          in notificationKinds.entries) {
+        notificationPrefs[label] = saved[kind] ?? true;
+      }
+    });
+  }
+
+  Future<void> _setNotification(String label, bool on) async {
+    final kind = notificationKinds[label];
+    if (kind == null) return;
+    setState(() => notificationPrefs[label] = on);
+    try {
+      _showNotificationPrefs(await api.setNotificationPref(kind, on));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => notificationPrefs[label] = !on);
+      if (!_signedOutBy(e)) _toast(context, describeApiError(e));
+    }
+  }
+
   Future<void> _setShareReceipts(bool on) async {
     try {
       final saved = await api.setShareReadReceipts(on);
@@ -1331,8 +1513,7 @@ class _ServerHomeState extends State<ServerHome> {
           paused: paused,
           onPausedChanged: _setPaused,
           notifications: notificationPrefs,
-          onNotificationChanged: (kind, on) =>
-              setState(() => notificationPrefs[kind] = on),
+          onNotificationChanged: _setNotification,
           onOpenSafetyGuide: () => DateSafelyGuide.show(context),
           onOpenSafetyCenter: () => _openSafety(context),
           onDeleteProfile: () => _deleteAccount(navigator),

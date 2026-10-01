@@ -6,7 +6,8 @@ import 'package:ember_app/features/calls/call_flow.dart';
 import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
 import 'package:ember_app/server/photos_editor.dart';
-import 'package:ember_app/server/server_flow.dart' show describeExportError;
+import 'package:ember_app/server/server_flow.dart'
+    show describeExportError, openOutsideLink;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -208,6 +209,95 @@ void main() {
     await closeSafetyGuideIfShown(tester);
     await _settle(tester);
     expect(find.byKey(const Key('conversation-Maya')), findsOneWidget);
+  });
+
+  group('the age check', () {
+    final opened = <Uri>[];
+    setUp(() {
+      opened.clear();
+      openOutsideLink = (url) async {
+        opened.add(url);
+        return true;
+      };
+    });
+
+    void background(WidgetTester tester) {
+      for (final state in [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
+    }
+
+    void resume(WidgetTester tester) {
+      for (final state in [
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
+    }
+
+    testWidgets('opens the service, and Vawra opens on coming back', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()..addPerson('Maya');
+      await _signIn(tester, server);
+      await _completeOnboarding(tester);
+      await tester.tap(find.byKey(const Key('age-check-start')));
+      await tester.pumpAndSettle();
+      expect(opened, [Uri.parse(server.ageCheckUrl!)]);
+      expect(server.ageChecksStarted, 1);
+      expect(find.text('I\'ve finished'), findsOneWidget);
+
+      // Back from the browser before the outcome: nothing changes, quietly.
+      background(tester);
+      resume(tester);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('age-check-start')), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+
+      // The outcome arrives while away: coming back opens Vawra.
+      background(tester);
+      server.verified = true;
+      resume(tester);
+      await _settle(tester);
+      await dismissSwipeTutorial(tester);
+      expect(find.text('1 person to meet'), findsOneWidget);
+    });
+
+    testWidgets('says so when the service is not connected', (tester) async {
+      final server = FakeVawraServer()..ageCheckUrl = null;
+      await _signIn(tester, server);
+      await _completeOnboarding(tester);
+      expect(find.byKey(const Key('age-check-unavailable')), findsNothing);
+      await tester.tap(find.byKey(const Key('age-check-start')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('age-check-unavailable')), findsOneWidget);
+      expect(opened, isEmpty);
+    });
+
+    testWidgets('a check under review waits; a failed one offers deletion', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()..unverifiedAgeState = 'pending_review';
+      await _signIn(tester, server);
+      await _completeOnboarding(tester);
+      expect(find.text('Your age check is being reviewed'), findsOneWidget);
+      expect(find.byKey(const Key('age-check-start')), findsNothing);
+
+      server.unverifiedAgeState = 'rejected';
+      await tester.tap(find.byKey(const Key('age-check-again')));
+      await tester.pumpAndSettle();
+      expect(find.text('Vawra is for adults only'), findsOneWidget);
+      expect(find.byKey(const Key('age-check-again')), findsNothing);
+      await tester.tap(find.byKey(const Key('age-delete')));
+      await tester.pumpAndSettle();
+      expect(server.deletionAt, isNotNull);
+    });
   });
 
   testWidgets('a restart with a saved session goes straight back in', (
@@ -891,6 +981,51 @@ void main() {
       await tester.tap(find.byKey(const Key('settings-read-receipts')));
       await _settle(tester);
       expect(server.shareReceipts, isTrue);
+    });
+
+    testWidgets('notification choices come from and save to the account', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..verified = true
+        ..notificationPrefs['messages'] = false
+        ..profile = {
+          'display_name': 'Alex',
+          'relationship_intent': 'casual',
+          'bio': '',
+          'interests': <String>[],
+          'show_distance_band': true,
+          'call_ready_by_default': false,
+          'public_age': 28,
+        };
+      await _signIn(tester, server);
+      await _settle(tester);
+      await dismissSwipeTutorial(tester);
+      await tester.tap(find.byKey(const Key('profile-tab')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('open-settings')));
+      await _settle(tester);
+      final calls = find.byKey(const Key('notify-Calls'));
+      await tester.scrollUntilVisible(
+        calls,
+        200,
+        scrollable: find.descendant(
+          of: find.byKey(const Key('settings-scroll')),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.ensureVisible(calls);
+      await _settle(tester);
+      bool on(String label) => tester
+          .widget<SwitchListTile>(find.byKey(Key('notify-$label')))
+          .value;
+      expect(on('Messages'), isFalse);
+      expect(on('New matches'), isTrue);
+      expect(find.byKey(const Key('notify-Safety tips')), findsNothing);
+      await tester.tap(calls);
+      await _settle(tester);
+      expect(server.notificationPrefs['calls'], isFalse);
+      expect(on('Calls'), isFalse);
     });
   });
 

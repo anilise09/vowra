@@ -122,7 +122,8 @@ describe('backup and restore', () => {
   beforeEach(() => (dir = mkdtempSync(join(tmpdir(), 'vawra-backup-'))));
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
-  it('a backup restores to the same data, photos included', async () => {
+  // The backup command is for the PGlite development database; on PostgreSQL the host backs up.
+  it.skipIf(process.env.VAWRA_TEST_DATABASE_URL)('a backup restores to the same data, photos included', async () => {
     const ana = await member(h, 'Ana');
     const ben = await member(h, 'Ben');
     await swipe(h, ana, ben);

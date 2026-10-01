@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { buildApp, type AppOptions } from '../src/app.js';
 import { pkceChallenge, Sealer } from '../src/crypto.js';
-import { migrate, openPglite, type Db } from '../src/db.js';
+import { migrate, openPglite, openPostgres, type Db } from '../src/db.js';
 import { type CallConfig, DbSignalBox, MemorySignalBox } from '../src/calls.js';
 import { MemoryNudgeBus, type NudgeBus } from '../src/nudges.js';
 import { stepAt, totpCode } from '../src/totp.js';
@@ -31,6 +31,32 @@ export const testCallConfig: CallConfig = {
   turn: { urls: ['turn:turn.example.test:3478?transport=udp'], secret: Buffer.from('test-turn-secret') },
 };
 
+/**
+ * Every test runs on PGlite, or on a real PostgreSQL server when
+ * VAWRA_TEST_DATABASE_URL names one (a superuser URL such as
+ * postgres://postgres@127.0.0.1:5433/postgres): each harness then gets a new
+ * database of its own, dropped when it closes.
+ */
+async function openTestDb(): Promise<{ db: Db; drop(): Promise<void> }> {
+  const admin = process.env.VAWRA_TEST_DATABASE_URL;
+  if (!admin) return { db: await openPglite(), drop: async () => {} };
+  const { default: pg } = await import('pg');
+  const run = async (sql: string) => {
+    const client = new pg.Client({ connectionString: admin });
+    await client.connect();
+    try {
+      await client.query(sql);
+    } finally {
+      await client.end();
+    }
+  };
+  const name = `vawra_test_${randomBytes(8).toString('hex')}`;
+  await run(`CREATE DATABASE ${name}`);
+  const url = new URL(admin);
+  url.pathname = `/${name}`;
+  return { db: await openPostgres(url.toString()), drop: () => run(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`) };
+}
+
 export async function startHarness(
   options: {
     callConfig?: CallConfig | null;
@@ -47,7 +73,8 @@ export async function startHarness(
     ageCheck?: AgeCheckConfig;
   } = {},
 ): Promise<Harness> {
-  const db = options.join?.db ?? (await openPglite());
+  const own = options.join ? undefined : await openTestDb();
+  const db = options.join?.db ?? own!.db;
   await migrate(db);
   let now = new Date('2026-09-27T12:00:00Z').getTime();
   const clock = options.join?.clock ?? { now: () => new Date(now), advance: (ms: number) => void (now += ms) };
@@ -102,7 +129,10 @@ export async function startHarness(
       await app.close();
       await notifier.idle();
       await bus?.close();
-      if (!options.join) await db.close();
+      if (own) {
+        await db.close();
+        await own.drop();
+      }
     },
   };
 }

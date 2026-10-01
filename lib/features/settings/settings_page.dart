@@ -50,7 +50,8 @@ class SettingsPage extends StatefulWidget {
   final VoidCallback? onSignOut;
   bool get live => onSignOut != null;
 
-  /// Notification kinds and whether each is on. Nothing is sent yet.
+  /// Notification kinds and whether each is on. Nothing is sent yet; a
+  /// signed-in account keeps its choices on the server.
   final Map<String, bool> notifications;
   final void Function(String kind, bool on)? onNotificationChanged;
 
@@ -283,9 +284,13 @@ class _SettingsPageState extends State<SettingsPage> {
               leading: const Icon(Icons.info_outline_rounded),
               title: const Text('Nothing is sent yet'),
               subtitle: Text(
-                '${widget.live ? 'Vawra has no notification service yet' : 'This prototype has no notification service'}. '
-                'Your choices are kept and will '
-                'apply when notifications arrive.',
+                widget.live
+                    ? 'Vawra\'s notifications aren\'t switched on yet. Your '
+                          'choices are saved to your account and apply as '
+                          'soon as they are.'
+                    : 'This prototype has no notification service. Your '
+                          'choices are kept and will apply when '
+                          'notifications arrive.',
               ),
             ),
           ],
