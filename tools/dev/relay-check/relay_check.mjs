@@ -19,12 +19,13 @@ import { spawn } from 'node:child_process';
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { networkInterfaces, tmpdir } from 'node:os';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { startRelay } from './relay.mjs';
+
 const require = createRequire(import.meta.url);
-const Turn = require('node-turn');
 const { chromium } = require('playwright-core');
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -33,60 +34,15 @@ const args = process.argv.slice(2);
 const postgres = args.includes('--postgres') ? args[args.indexOf('--postgres') + 1] : undefined;
 const wrongSecret = args.includes('--wrong-secret');
 const turnPort = 3479;
-// Chrome sends from the computer's network address, never loopback, so the relay listens there.
-const turnIp =
-  process.env.RELAY_IP ??
-  Object.values(networkInterfaces())
-    .flat()
-    .find((a) => a.family === 'IPv4' && !a.internal)?.address;
-if (!turnIp) throw new Error('No network address for the relay; set RELAY_IP.');
 const turnSecret = randomBytes(24).toString('base64url');
 const ageSecret = randomBytes(32).toString('base64url');
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // --- The relay -------------------------------------------------------------
-// Vawra hands each person "expiry:accountId" and base64(HMAC-SHA1(secret, it)).
-// The relay works the password out from the name and refuses expired names.
-const relaySecret = wrongSecret ? 'not-the-secret' : turnSecret;
-let turnAuths = 0;
-const credentials = new Proxy(
-  {},
-  {
-    get(_, username) {
-      if (typeof username !== 'string') return undefined;
-      const expiry = Number(username.split(':')[0]);
-      if (!Number.isInteger(expiry) || expiry < Date.now() / 1000) return undefined;
-      turnAuths++;
-      return createHmac('sha1', relaySecret).update(username).digest('base64');
-    },
-  },
-);
-const turn = new Turn({
-  listeningPort: turnPort,
-  listeningIps: [turnIp],
-  relayIps: [turnIp],
-  minPort: 49200,
-  maxPort: 49400,
-  authMech: 'long-term',
-  realm: 'vawra.local',
-  credentials,
-  debugLevel: 'OFF',
-});
-// Count what arrives on the relay's own ports (49200-49400): that is media relayed between the two.
-let relayedBytes = 0;
-const dgram = require('node:dgram');
-const emit = dgram.Socket.prototype.emit;
-dgram.Socket.prototype.emit = function (event, ...rest) {
-  if (event === 'message') {
-    try {
-      const { port } = this.address();
-      if (port >= 49200 && port <= 49400) relayedBytes += rest[0]?.length ?? 0;
-    } catch {}
-  }
-  return emit.call(this, event, ...rest);
-};
-turn.start();
+// With --wrong-secret the relay checks against a different secret, so every
+// credential Vawra hands out is refused.
+const relay = startRelay({ secret: wrongSecret ? 'not-the-secret' : turnSecret, port: turnPort });
 
 // --- Vawra servers ---------------------------------------------------------
 const work = mkdtempSync(join(tmpdir(), 'vawra-relay-'));
@@ -111,7 +67,7 @@ function startServer(port) {
     VAWRA_ENV: 'development',
     VAWRA_PORT: String(port),
     VAWRA_DEV_OUTBOX: '1',
-    VAWRA_TURN_URLS: `turn:${turnIp}:${turnPort}?transport=udp`,
+    VAWRA_TURN_URLS: relay.url,
     VAWRA_TURN_SECRET: turnSecret,
     VAWRA_AGE_CHECK_URL: 'https://age.example.test/start?ref={reference}',
     VAWRA_AGE_WEBHOOK_SECRET: ageSecret,
@@ -281,6 +237,8 @@ try {
         const pair = report.find((r) => r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded');
         const video = report.find((r) => r.type === 'inbound-rtp' && r.kind === 'video');
         const audio = report.find((r) => r.type === 'inbound-rtp' && r.kind === 'audio');
+        const sent = report.find((r) => r.type === 'outbound-rtp' && r.kind === 'video');
+        const track = window.pc.getSenders().find((x) => x.track?.kind === 'video')?.track;
         return {
           local: pair && byId[pair.localCandidateId]?.candidateType,
           remote: pair && byId[pair.remoteCandidateId]?.candidateType,
@@ -288,28 +246,33 @@ try {
           videoBytes: video?.bytesReceived ?? 0,
           audioBytes: audio?.bytesReceived ?? 0,
           offered: [...new Set(window.candidateTypes)],
+          sent: sent
+            ? `${sent.framesEncoded ?? 0} encoded, ${sent.bytesSent ?? 0} B sent, limited by ${sent.qualityLimitationReason}`
+            : 'no video sender stats',
+          track: track ? `${track.readyState}${track.muted ? ', muted' : ''}` : 'no video track',
         };
       });
     for (const side of sides) {
       const s = await stats(side.page);
       log(`${side.who.name}: path ${s.local} -> ${s.remote}; ${s.frames} frames, ${s.videoBytes} B video, ${s.audioBytes} B audio; offered ${s.offered}`);
+      log(`${side.who.name} sending: ${s.sent}; camera ${s.track}`);
       check(s.local === 'relay' && s.remote === 'relay', `${side.who.name}'s call runs relay to relay`);
       check(s.offered.length === 1 && s.offered[0] === 'relay', `${side.who.name} offered only relay candidates (no device address)`);
       check(s.frames > 50 && s.audioBytes > 5000, `${side.who.name} receives video and audio`);
     }
-    check(relayedBytes > 100_000, `the relay carried the media (${relayedBytes} bytes)`);
+    check(relay.stats.relayedBytes > 100_000, `the relay carried the media (${relay.stats.relayedBytes} bytes)`);
   }
   await api(alex.base, 'POST', `/v1/calls/${call.call_id}/end`, undefined, alex.token);
   const ended = await api(maya.base, 'GET', `/v1/calls/${call.call_id}`, undefined, maya.token);
   check(ended.state === 'ended' && !('ice' in ended), 'hanging up ends it for both, and the relay details stop');
-  check(turnAuths > 0, 'the relay checked Vawra credentials');
+  check(relay.stats.auths > 0, 'the relay checked Vawra credentials');
 } catch (error) {
   failures.push(String(error?.stack ?? error));
   log(error);
 } finally {
   await browser?.close();
   for (const s of servers) s.child.kill();
-  turn.stop();
+  relay.stop();
   await sleep(500);
   if (dbName) {
     const pg = require(join(backend, 'node_modules', 'pg'));
@@ -325,3 +288,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('\nRELAY CHECK PASSED');
+process.exit(0); // the relay's sockets would otherwise keep the process alive

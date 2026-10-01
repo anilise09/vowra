@@ -261,19 +261,22 @@ git push origin $NEW:refs/heads/gh-pages
   to 8797. Calls and distance were tested there on 2026-09-30 (see CHECKPOINTS.md).
 - The 260 sample people are seeded around Alex's approximate area (`dev:seed-demo --near`).
 
-## In progress: phases 2-4 without provider accounts (2026-10-01, Claude)
+## Phases 2-4 without provider accounts (2026-10-01, Claude)
 
-Done and committed on `claude/backend-providers`:
-- App age check: "Confirm my age" opens the provider link (url_launcher, Custom Tab); coming back to the
-  app checks quietly; review and rejected screens (rejected offers account deletion). Tests + 6 break checks.
-- Settings notification switches load from and save to `/v1/me/notifications` (Calls replaces Safety tips).
-- `npm run dev:age-provider`: local stand-in provider (dev only, refuses VAWRA_ENV=production).
-- Backend tests run on real PostgreSQL with `VAWRA_TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5433/postgres`
-  (portable PostgreSQL 18.4 in D:\Tools\pgsql, no install/admin; start with pg_ctl -o "-p 5433").
-  221/222 passed; the one failure was the PGlite-only backup test, now skipped on PostgreSQL.
+On `claude/backend-providers` (details in CHECKPOINTS.md, BE-30 and "App - Age check"):
+- App: the age check ("Confirm my age" opens the provider; review and refusal screens) and
+  notification choices saved to the account. `npm run dev:age-provider` is a dev stand-in.
+- Relay-only calls proven with `tools/dev/relay-check` (local TURN relay, two headless browsers),
+  also across two servers sharing PostgreSQL. `node relay.mjs` runs the relay alone for a phone.
+- Backend tests on real PostgreSQL: `VAWRA_TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5433/postgres`.
+  Portable PostgreSQL 18.4 in D:\Tools\pgsql (start: `pg_ctl -D D:/Tools/pgsql/data -o "-p 5433
+  -c listen_addresses=127.0.0.1"`). Found and fixed a migration race between servers starting together.
+- Asus: notification choices checked across a restart; age check opened in a Custom Tab and "under
+  review" shown. Account agecheck1@example.test (synthetic) is left in review: its one-time
+  reference was not logged then (the stand-in logs it now).
 
-Asus (1 Oct): notification switch on -> off -> still off after restart -> on; age check opened the stand-in in a
-Custom Tab, "Needs a closer look" -> app showed "being reviewed" on return.
-
-Next: send "passed" for that reference and confirm Vawra opens; full app + backend suites; relay-only call through
-a local TURN server; emulator-to-Asus call; status page; fast-forward main.
+Next, when the Asus is plugged in again: a new account through to an age-check pass; photos and
+moderation on the phone; a relay-only call between the Asus app and a headless browser (relay on
+the laptop's Wi-Fi address; node.exe may already accept incoming connections). The Samsung is
+QuietWall's (Rook install), not for Vawra. Owner decisions still open: publishing this branch to
+main, Docker Desktop (needs admin), provider accounts.

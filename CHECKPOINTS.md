@@ -1,5 +1,45 @@
 # Checkpoints
 
+## BE-30 - Relay-only calls proven; backend on real PostgreSQL; a start-up race fixed (2026-10-01)
+
+- `tools/dev/relay-check` proves calls work the way production runs them, with no outside
+  service: its own TURN relay accepting Vawra's time-limited credentials (the coturn
+  shared-secret scheme), a throwaway Vawra server, two synthetic members whose ages are confirmed
+  through the signed age-check webhook, and a video call between two headless Chromium pages with
+  `iceTransportPolicy: relay`. Both sides connect relay to relay, offer only relay candidates (no
+  device address is ever shared), and decode about 170 video frames and audio each way in 8 s;
+  the relay carries about 1.08 MB. With `--wrong-secret` the call cannot connect.
+- The same call with Alex on one server and Maya on another, both on one new PostgreSQL 18.4
+  database (BE-27's shared live updates and call setup) passes too.
+- Every backend test can run on real PostgreSQL (`VAWRA_TEST_DATABASE_URL`, a new database per
+  test, dropped afterwards; a test proves the run really used PostgreSQL). PostgreSQL 18.4 runs
+  portably from D:\Tools\pgsql: no install, no service, no administrator rights. 222 pass there
+  (the PGlite-only backup command is skipped); 221 pass on PGlite.
+- Found by the two-server call: servers starting together on an empty PostgreSQL database raced
+  on `CREATE TABLE IF NOT EXISTS schema_migrations`, which ran outside the advisory lock, and one
+  crashed. The lock is now taken first. A PostgreSQL test (5 rounds of 8 servers migrating at
+  once) failed 2 of 2 before the fix and passes 3 of 3 after.
+- `docs/DEPLOY.md`: the relay's coturn settings (shared secret, TLS, no relaying into private
+  networks, quotas) and how to run these checks.
+
+## App - Age check and notification choices (2026-10-01)
+
+- "Confirm my age" opens the provider's one-time link in the browser (a Custom Tab on Android);
+  coming back to Vawra checks quietly and opens dating once the age is confirmed. A check waiting
+  for review says so; a failed one explains that Vawra is for adults and offers account deletion.
+  Without a provider it says the service is not connected yet.
+- Settings' notification switches (matches, messages, likes, calls) load from and save to the
+  account; they apply once push is switched on.
+- `npm run dev:age-provider`: a clearly labelled stand-in provider for development (refuses
+  production) that sends the same signed webhook a provider adapter would.
+- Tests for each path; six planted defects (choices not loaded or not saved, no check on return,
+  a silent "not connected", a rejection ignored, noisy checks on return) each fail a test.
+- On the Asus: a notification switch turned off stayed off after Vawra was force-stopped and
+  reopened (read back from the server), then on again. A new account went through the 9-step
+  onboarding to the age screen; "Confirm my age" opened the stand-in in a Chrome Custom Tab;
+  "Needs a closer look" and back to Vawra showed "Your age check is being reviewed". The pass on
+  the phone waits for the Asus to be reconnected.
+
 ## Device - Six-digit codes and the moderator authenticator on the Asus (2026-10-01)
 
 - A build from this branch (checksum checked after install) on the Asus, signed in as the test
