@@ -1,5 +1,24 @@
 # Checkpoints
 
+## BE-27 - More than one server: shared through PostgreSQL (2026-09-30)
+
+- Any number of servers can now run behind a load balancer. On PostgreSQL they share, through the
+  database they already use: live updates (LISTEN/NOTIFY, so a message sent through one server
+  nudges an app connected to another), who has the app open (a heartbeat table, so a push is not
+  sent to someone in the app on another server), and call setup messages (an unlogged table,
+  deleted when the call ends). With the development database everything stays in memory.
+- The PostgreSQL listener uses its own connection and reconnects with back-off; nudges carry no
+  private content, so nothing private travels through the notification channel.
+- The hourly job removes presence left by a server that stopped abruptly and call setup left by
+  a call that ended mid-way.
+- Tests run two complete servers on one database: a message through one reaches the other, no
+  push while the app is open on the other, a call rung on one is answered and set up through the
+  other and cleared after, the clean-up, and the real live-update route recording and forgetting
+  an open app. Seven planted defects (relay from other servers, sharing out, presence end, push
+  presence, clearing call setup, retention, own setup hidden) each fail them.
+- Not yet run on a real PostgreSQL server (none installed here); PGlite exercises the same SQL,
+  LISTEN/NOTIFY and unlogged table. Backend 204 tests pass.
+
 ## BE-26 - Photos in any S3-compatible object store (2026-09-30)
 
 - Photos can live in Amazon S3, Cloudflare R2, Backblaze B2, MinIO or any S3-compatible store

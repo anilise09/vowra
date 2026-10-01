@@ -21,6 +21,8 @@ export function eventRoutes(app: FastifyInstance, services: Services) {
   app.get('/v1/events', async (request, reply) => {
     const me = requireDatingAccess(request, { allowPaused: true });
     if (services.nudges.listeners(me.id) >= maxStreamsPerAccount) fail(429, 'too_many_streams');
+    // Shared with every server, so a push is not sent to someone who has the app open.
+    const presence = await services.presence.track(me.id);
 
     reply.hijack();
     const res = reply.raw;
@@ -35,15 +37,22 @@ export function eventRoutes(app: FastifyInstance, services: Services) {
     const unsubscribe = services.nudges.subscribe(me.id, (nudge) => {
       res.write(`event: nudge\ndata: ${JSON.stringify(nudge)}\n\n`);
     });
-    const heartbeat = setInterval(() => res.write(': ping\n\n'), heartbeatMs);
+    const heartbeat = setInterval(() => {
+      res.write(': ping\n\n');
+      presence.beat().catch(() => {});
+    }, heartbeatMs);
     const untilExpiry = Math.max(0, me.accessExpiresAt.getTime() - services.clock.now().getTime());
     const expiry = setTimeout(() => res.end(), untilExpiry);
 
+    let closed = false;
     const close = () => {
+      if (closed) return;
+      closed = true;
       clearInterval(heartbeat);
       clearTimeout(expiry);
       unsubscribe();
       open.delete(end);
+      presence.end().catch(() => {});
     };
     const end = () => {
       close();

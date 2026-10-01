@@ -2,7 +2,7 @@ import { createSign, createPrivateKey } from 'node:crypto';
 import { connect } from 'node:http2';
 import type { Sealer } from './crypto.js';
 import type { Db } from './db.js';
-import type { NudgeBus } from './nudges.js';
+import type { Presence } from './shared.js';
 
 /**
  * Push notifications for when the app is closed. The text never names anyone
@@ -262,7 +262,7 @@ export class Notifier {
   constructor(
     private readonly db: Db,
     private readonly sealer: Sealer,
-    private readonly nudges: NudgeBus,
+    private readonly presence: Presence,
     private readonly senders: { android?: PushSender; ios?: PushSender },
     private readonly now: () => Date,
     private readonly log: (message: string, detail?: object) => void = () => {},
@@ -283,7 +283,7 @@ export class Notifier {
   }
 
   private async deliver(accountId: string, event: PushEvent, data: Record<string, string>) {
-    if (this.nudges.listeners(accountId) > 0) return;
+    if (await this.presence.connected(accountId)) return;
     if (event === 'message') {
       const key = `${accountId}:${data.match_id ?? ''}`;
       const last = this.lastMessagePush.get(key) ?? 0;

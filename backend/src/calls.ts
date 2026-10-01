@@ -55,27 +55,73 @@ export function iceFor(config: CallConfig, accountId: string, now: Date) {
 
 type Signal = { seq: number; from: string; type: string; data: string };
 
-/** Setup messages, in memory only, removed when the call ends. */
-export class SignalBox {
+/** Call setup messages, kept only while the call lasts. */
+export interface SignalBox {
+  push(callId: string, from: string, type: string, data: string): Promise<void>;
+  countFrom(callId: string, from: string): Promise<number>;
+  /** The other person's messages after [after], oldest first. */
+  for(callId: string, reader: string, after: number): Promise<Signal[]>;
+  clear(callId: string): Promise<void>;
+}
+
+/** One server: setup messages in memory only. */
+export class MemorySignalBox implements SignalBox {
   private readonly byCall = new Map<string, Signal[]>();
   private seq = 0;
 
-  push(callId: string, from: string, type: string, data: string) {
+  async push(callId: string, from: string, type: string, data: string) {
     const list = this.byCall.get(callId) ?? [];
     list.push({ seq: ++this.seq, from, type, data });
     this.byCall.set(callId, list);
   }
 
-  countFrom(callId: string, from: string) {
+  async countFrom(callId: string, from: string) {
     return (this.byCall.get(callId) ?? []).filter((s) => s.from === from).length;
   }
 
-  for(callId: string, reader: string, after: number) {
+  async for(callId: string, reader: string, after: number) {
     return (this.byCall.get(callId) ?? []).filter((s) => s.from !== reader && s.seq > after);
   }
 
-  clear(callId: string) {
+  async clear(callId: string) {
     this.byCall.delete(callId);
+  }
+}
+
+/**
+ * Several servers: setup messages in an unlogged table (not written to the
+ * database's crash log, emptied if the database restarts), deleted when the
+ * call ends and by the hourly job for any call that outlived its phones.
+ */
+export class DbSignalBox implements SignalBox {
+  constructor(private readonly db: Db) {}
+
+  async push(callId: string, from: string, type: string, data: string) {
+    await this.db.query(
+      'INSERT INTO call_signals (call_id, sender, type, data, created_at) VALUES ($1, $2, $3, $4, now())',
+      [callId, from, type, data],
+    );
+  }
+
+  async countFrom(callId: string, from: string) {
+    const [row] = await this.db.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM call_signals WHERE call_id = $1 AND sender = $2',
+      [callId, from],
+    );
+    return row?.n ?? 0;
+  }
+
+  async for(callId: string, reader: string, after: number) {
+    const rows = await this.db.query<{ seq: string; sender: string; type: string; data: string }>(
+      `SELECT seq, sender, type, data FROM call_signals
+       WHERE call_id = $1 AND sender <> $2 AND seq > $3 ORDER BY seq`,
+      [callId, reader, after],
+    );
+    return rows.map((r) => ({ seq: Number(r.seq), from: r.sender, type: r.type, data: r.data }));
+  }
+
+  async clear(callId: string) {
+    await this.db.query('DELETE FROM call_signals WHERE call_id = $1', [callId]);
   }
 }
 
@@ -111,7 +157,7 @@ export async function endCalls(
     [now, reason, ...params],
   );
   for (const row of rows) {
-    signals.clear(row.id);
+    await signals.clear(row.id);
     nudges.publish(row.caller, { kind: 'call', call_id: row.id });
     nudges.publish(row.callee, { kind: 'call', call_id: row.id });
   }

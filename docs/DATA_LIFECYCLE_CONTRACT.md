@@ -53,7 +53,8 @@ An hourly job (`backend/src/jobs/retention.ts`) removes what is no longer needed
 | Rejected photo records (files deleted at once) | 90 days | answering a question about the rejection |
 | Push tokens of a sign-in that ended | removed within the hour | nothing needs them afterwards |
 | Call records (the two people, kind, times, outcome; never content) | 90 days | answering a report about a call |
-| Call setup messages | until the call ends, in memory only | connecting the call |
+| Call setup messages | until the call ends: in memory with one server; with several, in an unlogged table (not in the crash log) deleted at the end of the call, leftovers removed hourly | connecting the call |
+| Who has the app open (one row per open live-update stream) | while the app is open; leftovers removed after 10 minutes | not pushing to someone already in the app |
 | Security audit events (kind and time only) | 365 days | investigating abuse |
 | Decided reports and appeals, with notes | 730 days | repeat-abuse history |
 

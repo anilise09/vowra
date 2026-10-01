@@ -11,7 +11,18 @@ export interface Db {
   close(): Promise<void>;
   /** PGlite only: the whole database as a gzipped tarball, for backups. */
   dump?(): Promise<Buffer>;
+  /**
+   * Receives NOTIFY messages on [channel], from every server using this
+   * database. Returns the function that stops listening.
+   */
+  listen?(channel: string, onMessage: (payload: string) => void): Promise<() => Promise<void>>;
 }
+
+/** NOTIFY channels are identifiers; only plain names are accepted. */
+const channelName = (channel: string) => {
+  if (!/^[a-z_][a-z0-9_]{0,62}$/.test(channel)) throw new Error('bad channel name');
+  return channel;
+};
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), 'migrations');
 
@@ -77,6 +88,12 @@ export async function openPglite(dataDir?: string, restoreFrom?: Buffer): Promis
   return {
     ...wrap(pg),
     dump: async () => Buffer.from(await (await pg.dumpDataDir('gzip')).arrayBuffer()),
+    async listen(channel, onMessage) {
+      const stop = await pg.listen(channelName(channel), onMessage);
+      return async () => {
+        await stop();
+      };
+    },
   };
 }
 
@@ -104,5 +121,47 @@ export async function openPostgres(url: string): Promise<Db> {
     },
     close: () => pool.end(),
   });
-  return fromClient(pool);
+  return {
+    ...fromClient(pool),
+    /**
+     * A dedicated connection per channel (LISTEN belongs to one connection).
+     * If it drops, it reconnects with back-off and listens again; messages sent
+     * while it was down are missed, which the app's own refreshes cover.
+     */
+    async listen(channel, onMessage) {
+      const name = channelName(channel);
+      let stopped = false;
+      let client: PoolClient | undefined;
+      let attempt = 0;
+      const connect = async (): Promise<void> => {
+        if (stopped) return;
+        try {
+          const next = await pool.connect();
+          client = next;
+          next.on('notification', (message) => {
+            if (message.channel === name) onMessage(message.payload ?? '');
+          });
+          next.on('error', () => {
+            next.release(true);
+            if (client === next) client = undefined;
+            setTimeout(() => void connect(), Math.min(30_000, 500 * 2 ** attempt++)).unref();
+          });
+          await next.query(`LISTEN ${name}`);
+          attempt = 0;
+        } catch {
+          setTimeout(() => void connect(), Math.min(30_000, 500 * 2 ** attempt++)).unref();
+        }
+      };
+      await connect();
+      return async () => {
+        stopped = true;
+        const current = client;
+        client = undefined;
+        if (current) {
+          await current.query(`UNLISTEN ${name}`).catch(() => {});
+          current.release();
+        }
+      };
+    },
+  };
 }

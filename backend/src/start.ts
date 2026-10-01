@@ -1,7 +1,7 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from './app.js';
-import { callConfigFrom, SignalBox } from './calls.js';
+import { callConfigFrom, DbSignalBox, MemorySignalBox } from './calls.js';
 import type { Config } from './config.js';
 import type { Delivery } from './context.js';
 import { Sealer } from './crypto.js';
@@ -12,6 +12,7 @@ import { runRetention } from './jobs/retention.js';
 import { DiskMediaStore, MediaGrants } from './media.js';
 import { MemoryNudgeBus } from './nudges.js';
 import { Notifier, pushSendersFrom } from './push.js';
+import { DbPresence, LocalPresence, PgNudgeBus } from './shared.js';
 import { S3MediaStore, s3ConfigFrom } from './s3.js';
 
 export interface Running {
@@ -54,6 +55,8 @@ export async function startServer(
     sweepEveryMs?: number;
     /** How long readiness fails before the server stops listening, so traffic moves away first. */
     drainMs?: number;
+    /** Share live updates, presence and call setup through the database even on the development one (tests). */
+    sharedState?: boolean;
   } = {},
 ): Promise<Running> {
   const db = config.databaseUrl ? await openPostgres(config.databaseUrl) : await openPglite(config.dataDir);
@@ -65,9 +68,17 @@ export async function startServer(
   const media = s3 ? new S3MediaStore(s3) : new DiskMediaStore(config.mediaDir);
   let draining = false;
   const sealer = new Sealer(config.dataKey, config.lookupKey);
-  const nudges = new MemoryNudgeBus();
   let log: (message: string, detail?: object) => void = () => {};
-  const notifier = new Notifier(db, sealer, nudges, pushSendersFrom(env), () => new Date(), (m, d) => log(m, d));
+  // On PostgreSQL several servers may run, so live updates, presence and call
+  // setup are shared through it; the development database is one process.
+  const instanceId = crypto.randomUUID();
+  const shared = config.databaseUrl !== undefined || options.sharedState === true;
+  const bus = shared ? new PgNudgeBus(db, instanceId, (m) => log(m)) : undefined;
+  if (bus) await bus.start();
+  const nudges = bus ?? new MemoryNudgeBus();
+  const presence = shared ? new DbPresence(db, instanceId) : new LocalPresence(nudges);
+  const signals = shared ? new DbSignalBox(db) : new MemorySignalBox();
+  const notifier = new Notifier(db, sealer, presence, pushSendersFrom(env), () => new Date(), (m, d) => log(m, d));
   const app = buildApp(
     {
       db,
@@ -76,9 +87,10 @@ export async function startServer(
       delivery: options.delivery ?? deliveryFor(config, env),
       nudges,
       notifier,
+      presence,
       media,
       grants: new MediaGrants(config.dataKey),
-      signals: new SignalBox(),
+      signals,
       callConfig: callConfigFrom(env),
       accessTtlSeconds: config.accessTtlSeconds,
       proofTtlSeconds: config.proofTtlSeconds,
@@ -120,6 +132,7 @@ export async function startServer(
         await app.close();
         await notifier.idle();
         await sweeping;
+        await bus?.close();
         await db.close();
       })();
       return closing;

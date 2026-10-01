@@ -12,10 +12,13 @@ One Node 22 process per instance (`backend/Dockerfile`), stateless apart from:
 - **Media**: processed photos, in any S3-compatible object store (`VAWRA_S3_*`: Amazon S3,
   Cloudflare R2, Backblaze B2, MinIO), which more than one instance needs; without it, a directory
   (`VAWRA_MEDIA_DIR`, the `/data` volume in the image) for a single instance.
-- **In-memory state** that must become shared before running more than one instance: the
-  live-update nudge bus and call setup messages (see `docs/SECURITY_REVIEW.md`). Sign-in
-  throttling is already shared through PostgreSQL. Until the remaining state moves, run exactly
-  one instance.
+- **Shared state, through PostgreSQL** (BE-27), so any number of instances can run behind a load
+  balancer: live-update nudges (LISTEN/NOTIFY on `vawra_nudges`), who has the app open (a
+  heartbeat table, so pushes skip people connected to any instance), call setup messages (an
+  unlogged table, deleted when the call ends) and sign-in throttling. Photos need the object
+  store for more than one instance. Two harmless limits stay per instance: the typing-indicator
+  throttle and the one-push-a-minute message limit (so two instances can push twice in a minute).
+- **Database connections**: each instance keeps a pool of 10 plus one listening connection.
 
 ## Settings
 

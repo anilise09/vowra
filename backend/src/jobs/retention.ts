@@ -56,6 +56,18 @@ export async function runRetention(db: Db, clock: Clock): Promise<Record<string,
        RETURNING 1`,
       [before(retention.idleSignInDays)],
     ),
+    // Live-stream records left by a server that stopped without saying.
+    stalePresence: await count(
+      // The database's own clock, the one the rows were stamped with.
+      "DELETE FROM stream_presence WHERE seen_at < now() - interval '10 minutes' RETURNING 1",
+      [],
+    ),
+    // Call setup messages are kept only while a call lasts.
+    endedCallSignals: await count(
+      `DELETE FROM call_signals s USING calls c
+       WHERE c.id = s.call_id AND c.state NOT IN ('ringing','active') RETURNING 1`,
+      [],
+    ),
     // Push tokens of sign-ins that ended: removed within the hour, not kept with the sign-in record.
     signedOutDevices: await count(
       `DELETE FROM devices d USING session_families f

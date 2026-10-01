@@ -3,10 +3,11 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
 import { pkceChallenge, Sealer } from '../src/crypto.js';
 import { migrate, openPglite, type Db } from '../src/db.js';
-import { type CallConfig, SignalBox } from '../src/calls.js';
-import { MemoryNudgeBus } from '../src/nudges.js';
+import { type CallConfig, DbSignalBox, MemorySignalBox } from '../src/calls.js';
+import { MemoryNudgeBus, type NudgeBus } from '../src/nudges.js';
 import { stepAt, totpCode } from '../src/totp.js';
 import { Notifier, type PushSender } from '../src/push.js';
+import { DbPresence, LocalPresence, PgNudgeBus, type Presence } from '../src/shared.js';
 import { MediaGrants, MemoryMediaStore } from '../src/media.js';
 
 export interface Harness {
@@ -15,9 +16,10 @@ export interface Harness {
   sealer: Sealer;
   clock: { now(): Date; advance(ms: number): void };
   outbox: { email: string; proof: string; purpose: string }[];
-  nudges: MemoryNudgeBus;
+  nudges: NudgeBus;
   media: MemoryMediaStore;
   notifier: Notifier;
+  presence: Presence;
   close(): Promise<void>;
 }
 
@@ -33,23 +35,36 @@ export async function startHarness(
     callConfig?: CallConfig | null;
     failDelivery?: boolean;
     push?: { android?: PushSender; ios?: PushSender };
+    /**
+     * Share live updates, presence and call setup through the database, as
+     * servers on PostgreSQL do. With [join], this is a second server on the
+     * other harness's database, keys and clock.
+     */
+    shared?: boolean;
+    join?: Harness;
   } = {},
 ): Promise<Harness> {
-  const db = await openPglite();
+  const db = options.join?.db ?? (await openPglite());
   await migrate(db);
   let now = new Date('2026-09-27T12:00:00Z').getTime();
-  const clock = { now: () => new Date(now), advance: (ms: number) => void (now += ms) };
-  const outbox: Harness['outbox'] = [];
-  const sealer = new Sealer(randomBytes(32), randomBytes(32));
-  const nudges = new MemoryNudgeBus();
-  const notifier = new Notifier(db, sealer, nudges, options.push ?? {}, () => clock.now());
+  const clock = options.join?.clock ?? { now: () => new Date(now), advance: (ms: number) => void (now += ms) };
+  const outbox: Harness['outbox'] = options.join?.outbox ?? [];
+  const sealer = options.join?.sealer ?? new Sealer(randomBytes(32), randomBytes(32));
+  const instanceId = randomBytes(8).toString('hex');
+  const shared = options.shared === true || options.join !== undefined;
+  const bus = shared ? new PgNudgeBus(db, instanceId) : undefined;
+  if (bus) await bus.start();
+  const nudges: NudgeBus = bus ?? new MemoryNudgeBus();
+  const presence = shared ? new DbPresence(db, instanceId) : new LocalPresence(nudges);
+  const notifier = new Notifier(db, sealer, presence, options.push ?? {}, () => clock.now());
   const media = new MemoryMediaStore();
   const app = buildApp({
     nudges,
     media,
     grants: new MediaGrants(randomBytes(32)),
-    signals: new SignalBox(),
+    signals: shared ? new DbSignalBox(db) : new MemorySignalBox(),
     notifier,
+    presence,
     callConfig: options.callConfig === undefined ? testCallConfig : options.callConfig,
     db,
     sealer,
@@ -75,7 +90,13 @@ export async function startHarness(
     nudges,
     media,
     notifier,
-    close: async () => (await app.close(), await notifier.idle(), await db.close()),
+    presence,
+    close: async () => {
+      await app.close();
+      await notifier.idle();
+      await bus?.close();
+      if (!options.join) await db.close();
+    },
   };
 }
 

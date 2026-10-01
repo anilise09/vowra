@@ -44,7 +44,7 @@ export function callRoutes(app: FastifyInstance, services: Services) {
     ]);
     if (!row) return fail(404, 'not_found');
     if (row.state !== 'ringing' && row.state !== 'active') {
-      signals.clear(row.id);
+      await signals.clear(row.id);
       return row;
     }
     // A block, unmatch, suspension or deletion ends the call at the next step
@@ -160,7 +160,7 @@ export function callRoutes(app: FastifyInstance, services: Services) {
       "UPDATE calls SET state = 'declined', ended_at = $2, end_reason = 'declined' WHERE id = $1",
       [row.id, clock.now()],
     );
-    signals.clear(row.id);
+    await signals.clear(row.id);
     nudges.publish(row.caller, { kind: 'call', call_id: row.id });
     return noContent(reply);
   });
@@ -176,7 +176,7 @@ export function callRoutes(app: FastifyInstance, services: Services) {
                 ended_at = $2, end_reason = 'hung_up' WHERE id = $1`,
         [row.id, now],
       );
-      signals.clear(row.id);
+      await signals.clear(row.id);
       nudges.publish(row.caller === me.id ? row.callee : row.caller, { kind: 'call', call_id: row.id });
     }
     return noContent(reply);
@@ -189,8 +189,8 @@ export function callRoutes(app: FastifyInstance, services: Services) {
     const body = signalBody.safeParse(request.body);
     if (!body.success) fail(400, 'invalid_request');
     if (row.state !== 'ringing' && row.state !== 'active') fail(409, 'call_over');
-    if (signals.countFrom(row.id, me.id) >= callRules.signalsPerCall) fail(429, 'slow_down');
-    signals.push(row.id, me.id, body.data!.type, body.data!.data);
+    if ((await signals.countFrom(row.id, me.id)) >= callRules.signalsPerCall) fail(429, 'slow_down');
+    await signals.push(row.id, me.id, body.data!.type, body.data!.data);
     nudges.publish(row.caller === me.id ? row.callee : row.caller, { kind: 'call', call_id: row.id });
     return reply.code(202).send({ ok: true });
   });
@@ -201,7 +201,7 @@ export function callRoutes(app: FastifyInstance, services: Services) {
     const after = Number((request.query as { after?: string }).after ?? 0) || 0;
     return {
       state: row.state,
-      signals: signals.for(row.id, me.id, after).map(({ seq, type, data }) => ({ seq, type, data })),
+      signals: (await signals.for(row.id, me.id, after)).map(({ seq, type, data }) => ({ seq, type, data })),
     };
   });
 }
