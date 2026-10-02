@@ -201,6 +201,11 @@ git push origin $NEW:refs/heads/gh-pages
 
 ## Owner rules and preferences
 
+- The owner's phones lock after 30 seconds (company policy) and the owner cannot keep touching
+  them during tests. Before any test on a phone, keep it awake with
+  `python C:\Users\anili\Tools\phone-awake\phone_awake.py hold <serial> --minutes N` (or `on`,
+  then `off` when done); it raises the screen timeout and restores 30 s afterwards. Run `status`
+  first and `off` any phone left raised. It never unlocks a phone: ask the owner for that.
 - `AGENTS.md` first: synthetic fixtures only, never fake users, likes, matches, messages or
   "Active" status; block, report, messaging and matching stay free; calls need a match and
   acceptance; client claims are untrusted; age assurance is a launch gate.
