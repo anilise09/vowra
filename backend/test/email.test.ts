@@ -96,3 +96,32 @@ describe('sending over SMTP', () => {
     expect(received).toHaveLength(0);
   });
 });
+
+describe('development with real email set up', () => {
+  it('real addresses get email; synthetic test members stay in the outbox', async () => {
+    const { deliveryFor, isReservedAddress } = await import('../src/start.js');
+    const { loadConfig } = await import('../src/config.js');
+    const { mkdtempSync, readFileSync, rmSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    for (const synthetic of ['maya@example.test', 'alex.test@vawra.test', 'a@example.com', 'b@mail.example', 'c@x.invalid']) {
+      expect(isReservedAddress(synthetic), synthetic).toBe(true);
+    }
+    for (const real of ['someone@gmail.com', 'person@test.ca', 'x@examples.com', 'y@mytest.org']) {
+      expect(isReservedAddress(real), real).toBe(false);
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'vawra-outbox-'));
+    try {
+      const keys = { VAWRA_DATA_KEY: Buffer.alloc(32, 1).toString('base64'), VAWRA_LOOKUP_KEY: Buffer.alloc(32, 2).toString('base64') };
+      // An SMTP address nothing listens on: a real address fails there, which shows it was emailed.
+      const env = { ...keys, VAWRA_DEV_OUTBOX: '1', VAWRA_SMTP_URL: 'smtps://u:p@127.0.0.1:1', VAWRA_EMAIL_FROM: 'Vawra <no-reply@vawra.test>' };
+      const delivery = deliveryFor(loadConfig(env), env, join(dir, 'outbox.log'));
+      await delivery.sendProof('maya@example.test', '123456', 'sign_in');
+      expect(readFileSync(join(dir, 'outbox.log'), 'utf8')).toContain('maya@example.test 123456');
+      await expect(delivery.sendProof('someone@gmail.com', '654321', 'sign_in')).rejects.toThrow();
+      expect(readFileSync(join(dir, 'outbox.log'), 'utf8')).not.toContain('someone@gmail.com');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30_000);
+});

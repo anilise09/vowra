@@ -1,4 +1,5 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from './app.js';
 import { callConfigFrom, DbSignalBox, MemorySignalBox } from './calls.js';
@@ -28,18 +29,34 @@ export interface Running {
   close(): Promise<void>;
 }
 
-/** SMTP when configured; otherwise the development outbox writes codes to a local file. */
-function deliveryFor(config: Config, env: NodeJS.ProcessEnv): Delivery {
+/** Reserved names (RFC 2606 and 6761) are never real mailboxes: synthetic test members use them. */
+export const isReservedAddress = (email: string) =>
+  /@(?:[^@]+\.)?(?:test|example|invalid|localhost)$|@(?:[^@]+\.)?example\.(?:com|net|org)$/i.test(email.trim());
+
+/**
+ * SMTP when configured; otherwise the development outbox writes codes to a
+ * local file. In development with both, real addresses get real email and
+ * synthetic test members' reserved addresses stay in the outbox.
+ */
+export function deliveryFor(config: Config, env: NodeJS.ProcessEnv, outboxFile = '.data/outbox.log'): Delivery {
   const email = emailConfigFrom(env);
-  if (email) return new SmtpDelivery(email, config.proofTtlSeconds);
-  if (config.devOutbox) {
+  const outbox: Delivery | null = config.devOutbox
+    ? {
+        async sendProof(email, proof, purpose) {
+          mkdirSync(dirname(outboxFile), { recursive: true });
+          appendFileSync(outboxFile, `${new Date().toISOString()} ${purpose} ${email} ${proof}\n`);
+        },
+      }
+    : null;
+  if (email) {
+    const smtp = new SmtpDelivery(email, config.proofTtlSeconds);
+    if (!outbox) return smtp;
     return {
-      async sendProof(email, proof, purpose) {
-        mkdirSync('.data', { recursive: true });
-        appendFileSync('.data/outbox.log', `${new Date().toISOString()} ${purpose} ${email} ${proof}\n`);
-      },
+      sendProof: (address, proof, purpose) =>
+        (isReservedAddress(address) ? outbox : smtp).sendProof(address, proof, purpose),
     };
   }
+  if (outbox) return outbox;
   return {
     async sendProof() {
       throw new Error('No sign-in delivery provider is configured.');
