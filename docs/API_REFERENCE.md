@@ -29,8 +29,8 @@ Details of each area are in `BACKEND_API_CONTRACT.md`, `SESSION_CONTRACT.md` and
 
 | Method | Path | Access | What it does |
 |---|---|---|---|
-| POST | `/v1/auth/requests` | public | Emails a six-digit code; the same answer for every address. |
-| POST | `/v1/auth/exchange` | public | Code + PKCE verifier + state for a session (five tries per code). |
+| POST | `/v1/auth/requests` | public | Emails a six-digit code; the same answer, and timing, for every address. |
+| POST | `/v1/auth/exchange` | public | Code + PKCE verifier + state for a session (five tries per code; ten wrong codes a day pause the address). |
 | POST | `/v1/session/rotate` | public | A single-use refresh token for new tokens; reuse ends the sign-in. |
 | DELETE | `/v1/session` | signed-in | Signs out this device (the whole sign-in chain). |
 | DELETE | `/v1/sessions` | signed-in | Signs out every device. |

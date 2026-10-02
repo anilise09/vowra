@@ -29,6 +29,10 @@ foreach ($page in $pages) {
     if (-not (Test-Path -LiteralPath (Join-Path $site $relative))) { throw "$page is missing an asset: $relative" }
   }
   if ($text -match '<form\b|https?://') { throw "$page has a form or an external request" }
+  # Only the site's own files may load, and nothing inline that the policy would block.
+  $policy = '<meta http-equiv="Content-Security-Policy" content="default-src ''none''; script-src ''self''; style-src ''self''; img-src ''self''; font-src ''self''; base-uri ''none''; form-action ''none''">'
+  if (-not $text.Contains($policy)) { throw "$page lacks the content security policy" }
+  if ($text -match '\sstyle="|\son[a-z]+="|<script>') { throw "$page has inline code the policy would block" }
   # Every page says plainly that Vawra is not launched.
   if ($text -notmatch 'Not a live dating service') { throw "$page lacks the launch disclosure" }
   # Things the header menu script needs on every page.

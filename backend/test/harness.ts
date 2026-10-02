@@ -61,6 +61,8 @@ export async function startHarness(
   options: {
     callConfig?: CallConfig | null;
     failDelivery?: boolean;
+    /** Runs before each email is recorded, for example to hold it back. */
+    beforeDelivery?: () => Promise<void>;
     push?: { android?: PushSender; ios?: PushSender };
     appOptions?: AppOptions;
     /**
@@ -104,6 +106,7 @@ export async function startHarness(
       delivery: {
         sendProof: async (email, proof, purpose) => {
           if (options.failDelivery) throw new Error('mail server unreachable');
+          await options.beforeDelivery?.();
           outbox.push({ email, proof, purpose });
         },
       },

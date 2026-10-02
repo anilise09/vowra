@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { pkceChallenge } from '../src/crypto.js';
-import { initiationMessage } from '../src/routes/auth.js';
+import { initiationMessage, signInCodeRules } from '../src/routes/auth.js';
 import { DbRateLimiter } from '../src/rate_limit.js';
 import { type Harness, signIn, startHarness, state, verifier } from './harness.js';
 
@@ -53,6 +53,59 @@ describe('sign-in requests', () => {
     // Recovery for an unknown account sends nothing; throttling stops delivery.
     expect(h.outbox.filter((m) => m.email === 'nobody@example.test' && m.purpose === 'recovery')).toHaveLength(0);
     expect(h.outbox.filter((m) => m.email === 'flood@example.test')).toHaveLength(5);
+  });
+
+  it('sign-in and recovery share one budget per address: 5 a quarter hour, 10 a day', async () => {
+    await signIn(h, 'busy@example.test');
+    const sent = () => h.outbox.filter((m) => m.email === 'busy@example.test').length;
+    const before = sent();
+    for (const purpose of ['recovery', 'sign_in', 'recovery', 'sign_in', 'recovery', 'sign_in']) {
+      await request('busy@example.test', purpose);
+    }
+    // signIn above used one of the five.
+    expect(sent() - before).toBe(4);
+    for (let quarter = 0; quarter < 3; quarter++) {
+      h.clock.advance(15 * 60_000);
+      for (let i = 0; i < 5; i++) await request('busy@example.test');
+    }
+    expect(sent()).toBe(signInCodeRules.requestsPerDay);
+    // A new day, new codes.
+    h.clock.advance(24 * 60 * 60_000);
+    await request('busy@example.test');
+    expect(sent()).toBe(signInCodeRules.requestsPerDay + 1);
+  });
+
+  it('answers without waiting for the email, and does the same work for unknown recovery', async () => {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let hold = false;
+    const slow = await startHarness({ beforeDelivery: () => (hold ? held : Promise.resolve()) });
+    try {
+      await signIn(slow, 'known@example.test');
+      hold = true;
+      const ask = (identifier: string, purpose: string) =>
+        slow.app.inject({
+          method: 'POST',
+          url: '/v1/auth/requests',
+          payload: { identifier, purpose, code_challenge: pkceChallenge(verifier()), state: state() },
+        });
+      const answered = await Promise.race([
+        Promise.all([ask('known@example.test', 'recovery'), ask('nobody@example.test', 'recovery')]),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
+      expect(answered?.map((r) => r.statusCode)).toEqual([202, 202]);
+      // Both stored a request: the same database work whether or not the account exists.
+      const rows = await slow.db.query<{ n: number }>(
+        "SELECT count(*)::int AS n FROM auth_requests WHERE purpose = 'recovery'",
+      );
+      expect(rows[0]!.n).toBe(2);
+    } finally {
+      release();
+      await slow.close();
+    }
+    // Once released, the known address got its recovery code; the unknown one got nothing.
+    expect(slow.outbox.filter((m) => m.email === 'known@example.test' && m.purpose === 'recovery')).toHaveLength(1);
+    expect(slow.outbox.filter((m) => m.email === 'nobody@example.test')).toHaveLength(0);
   });
 
   it('never stores the email, network address or tokens in clear', async () => {
@@ -112,6 +165,37 @@ describe('proof exchange', () => {
     expect((await exchange(proof)).statusCode).toBe(400);
     // Only six digits are accepted at all.
     expect((await exchange('12345')).json().error).toBe('invalid_request');
+  });
+
+  it('ten wrong codes in a day pause sign-in for that address, even with the right code', async () => {
+    const exchange = (code: string, v: string, s: string) =>
+      h.app.inject({ method: 'POST', url: '/v1/auth/exchange', payload: { proof: code, code_verifier: v, state: s } });
+    const fresh = async (email: string) => {
+      const [v, s] = [verifier(), state()];
+      await request(email, 'sign_in', v, s);
+      return { v, s, proof: h.outbox.at(-1)!.proof };
+    };
+    const wrongFor = (proof: string, n: number) => String((Number(proof) + 1 + n) % 1_000_000).padStart(6, '0');
+    let wrong = 0;
+    while (wrong < signInCodeRules.wrongCodesPerDay) {
+      const r = await fresh('target@example.test');
+      for (let i = 0; i < signInCodeRules.attempts && wrong < signInCodeRules.wrongCodesPerDay; i++, wrong++) {
+        expect((await exchange(wrongFor(r.proof, i), r.v, r.s)).statusCode).toBe(400);
+      }
+    }
+    const right = await fresh('target@example.test');
+    const paused = await exchange(right.proof, right.v, right.s);
+    expect(paused.statusCode).toBe(429);
+    expect(paused.json().error).toBe('sign_in_paused');
+    // The request is spent too.
+    expect((await exchange(right.proof, right.v, right.s)).statusCode).toBe(400);
+    // Other addresses are not affected.
+    const other = await fresh('bystander@example.test');
+    expect((await exchange(other.proof, other.v, other.s)).statusCode).toBe(200);
+    // The next day the right code works again.
+    h.clock.advance(24 * 60 * 60_000);
+    const later = await fresh('target@example.test');
+    expect((await exchange(later.proof, later.v, later.s)).statusCode).toBe(200);
   });
 
   it('a code from one request never opens another', async () => {

@@ -4,6 +4,7 @@ import { randomInt, timingSafeEqual } from 'node:crypto';
 import { hashToken, newToken, pkceChallenge } from '../crypto.js';
 import { audit, fail, noContent, requireAccount, type Services } from '../context.js';
 import type { Db } from '../db.js';
+import { deliveryFailure } from '../email.js';
 import { DbRateLimiter } from '../rate_limit.js';
 
 /** Identical for known, unknown, throttled and recovery requests: no existence oracle. */
@@ -20,8 +21,21 @@ const requestBody = z
   })
   .strict();
 
-/** A sign-in code is six digits: short enough to type, safe because of the limits below. */
-export const signInCodeRules = { digits: 6, attempts: 5 };
+/**
+ * A sign-in code is six digits: short enough to type, safe because of these
+ * limits. Per email address, sign-in and recovery together: 5 codes a quarter
+ * hour and 10 a day; 5 tries per code; and 10 wrong codes a day, after which
+ * no code works for that address until the day is over. Someone guessing at
+ * another person's address gets 10 guesses a day in a million.
+ */
+export const signInCodeRules = {
+  digits: 6,
+  attempts: 5,
+  requestsPer15Minutes: 5,
+  requestsPerDay: 10,
+  wrongCodesPerDay: 10,
+};
+const dayMs = 24 * 60 * 60_000;
 
 const exchangeBody = z
   .object({
@@ -74,22 +88,36 @@ export function authRoutes(app: FastifyInstance, services: Services) {
     const y = Buffer.from(b);
     return x.length === y.length && timingSafeEqual(x, y);
   };
-  const perIdentifier = new DbRateLimiter(db, 5, 15 * 60_000, clock);
+  const perIdentifier = new DbRateLimiter(db, signInCodeRules.requestsPer15Minutes, 15 * 60_000, clock);
+  const perIdentifierDaily = new DbRateLimiter(db, signInCodeRules.requestsPerDay, dayMs, clock);
   const perNetwork = new DbRateLimiter(db, 30, 15 * 60_000, clock);
+  const wrongCodes = new DbRateLimiter(db, signInCodeRules.wrongCodesPerDay, dayMs, clock);
+  const wrongKey = (emailLookup: string) => sealer.lookup(`auth-wrong:${emailLookup}`);
+
+  // Emails are sent without holding up the answer; shutdown waits for them.
+  const sending = new Set<Promise<void>>();
+  app.addHook('onClose', async () => {
+    await Promise.allSettled([...sending]);
+  });
 
   app.post('/v1/auth/requests', async (request, reply) => {
     const body = requestBody.safeParse(request.body);
     if (!body.success) fail(400, 'invalid_request');
     const { identifier, purpose, code_challenge, state } = body.data!;
     const lookup = sealer.lookup(identifier);
+    // Sign-in and recovery share one budget per address.
     const allowed =
-      (await perIdentifier.take(sealer.lookup(`auth:${purpose}:${lookup}`))) &&
+      (await perIdentifier.take(sealer.lookup(`auth:${lookup}`))) &&
+      (await perIdentifierDaily.take(sealer.lookup(`auth-day:${lookup}`))) &&
       (await perNetwork.take(sealer.lookup(`network:${request.ip}`)));
     if (allowed) {
       const known =
         (await db.query('SELECT 1 FROM accounts WHERE email_lookup = $1', [lookup])).length > 0;
-      // Recovery only proceeds for an existing account; sign-in may create one.
-      if (purpose === 'sign_in' || known) {
+      // Every allowed request does the same work and never waits for the
+      // email, so neither the answer nor its timing tells whether an account
+      // exists. Recovery for an unknown address sends nothing, and its request
+      // can never open a session.
+      {
         const id = crypto.randomUUID();
         const proof = String(randomInt(0, 10 ** signInCodeRules.digits)).padStart(signInCodeRules.digits, '0');
         const now = clock.now();
@@ -108,12 +136,13 @@ export function authRoutes(app: FastifyInstance, services: Services) {
             new Date(now.getTime() + services.proofTtlSeconds * 1000),
           ],
         );
-        try {
-          await services.delivery.sendProof(identifier, proof, purpose);
-        } catch (error) {
-          // The answer stays the same, so a delivery failure reveals nothing;
-          // the person asks for a new code.
-          request.log.error({ err: { message: (error as Error).message } }, 'sign-in code not delivered');
+        if (purpose === 'sign_in' || known) {
+          // A failed delivery changes nothing in the answer; the person asks for a new code.
+          const delivery: Promise<void> = Promise.resolve()
+            .then(() => services.delivery.sendProof(identifier, proof, purpose))
+            .catch((error: unknown) => request.log.error({ err: deliveryFailure(error) }, 'sign-in code not delivered'))
+            .finally(() => sending.delete(delivery));
+          sending.add(delivery);
         }
       }
     }
@@ -125,10 +154,26 @@ export function authRoutes(app: FastifyInstance, services: Services) {
     if (!body.success) fail(400, 'invalid_request');
     const { proof, code_verifier, state } = body.data!;
     const now = clock.now();
+    // Too many wrong codes for this address today: no code works, and this
+    // request is spent, so guessing cannot continue through it.
+    const [pending] = await db.query<{ email_lookup: string }>(
+      `SELECT email_lookup FROM auth_requests
+       WHERE state_nonce = $1 AND used_at IS NULL AND expires_at > $2
+       ORDER BY expires_at DESC LIMIT 1`,
+      [state, now],
+    );
+    if (!pending) return fail(400, 'invalid_proof');
+    if (await wrongCodes.exhausted(wrongKey(pending.email_lookup))) {
+      await db.query('UPDATE auth_requests SET used_at = $2 WHERE state_nonce = $1 AND used_at IS NULL', [
+        state,
+        now,
+      ]);
+      return fail(429, 'sign_in_paused');
+    }
     // The request is found by this device's state, never by the code. A right
     // code needs the matching PKCE verifier too; each wrong try counts, and the
     // fifth spends the request. Attempts are committed before any answer.
-    const found = await db.transaction(async (tx) => {
+    const checked = await db.transaction(async (tx) => {
       const [row] = await tx.query<{
         id: string;
         email_lookup: string;
@@ -144,13 +189,13 @@ export function authRoutes(app: FastifyInstance, services: Services) {
          ORDER BY expires_at DESC LIMIT 1 FOR UPDATE`,
         [state, now],
       );
-      if (!row) return null;
+      if (!row) return { row: null, right: false };
       const right =
         sameHash(codeHash(row.id, proof), row.proof_hash) &&
         sameHash(row.code_challenge, pkceChallenge(code_verifier));
       if (right) {
         await tx.query('UPDATE auth_requests SET used_at = $2 WHERE id = $1', [row.id, now]);
-        return row;
+        return { row, right: true };
       }
       await tx.query(
         `UPDATE auth_requests SET attempts = attempts + 1,
@@ -158,9 +203,11 @@ export function authRoutes(app: FastifyInstance, services: Services) {
          WHERE id = $1`,
         [row.id, now, signInCodeRules.attempts],
       );
-      return null;
+      return { row, right: false };
     });
-    if (!found) return fail(400, 'invalid_proof');
+    if (checked.row && !checked.right) await wrongCodes.take(wrongKey(checked.row.email_lookup));
+    if (!checked.right) return fail(400, 'invalid_proof');
+    const found = checked.row!;
     const outcome = await db.transaction(async (tx) => {
       let [account] = await tx.query<{ id: string; age_state: string }>(
         'SELECT id, age_state FROM accounts WHERE email_lookup = $1',

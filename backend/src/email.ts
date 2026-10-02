@@ -13,6 +13,19 @@ export interface EmailConfig {
 }
 
 /** Problems with the email settings; production needs them, development may leave them out. */
+/**
+ * What may be logged about a failed delivery. Never the message: SMTP
+ * rejections usually quote the recipient's address.
+ */
+export function deliveryFailure(error: unknown): { name: string; code?: string; response_code?: number } {
+  const e = (error ?? {}) as { name?: unknown; code?: unknown; responseCode?: unknown };
+  return {
+    name: typeof e.name === 'string' ? e.name : 'Error',
+    ...(typeof e.code === 'string' ? { code: e.code } : {}),
+    ...(typeof e.responseCode === 'number' ? { response_code: e.responseCode } : {}),
+  };
+}
+
 export function emailProblems(env: NodeJS.ProcessEnv, production: boolean): string[] {
   const problems: string[] = [];
   const url = env.VAWRA_SMTP_URL;

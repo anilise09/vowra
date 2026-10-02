@@ -106,7 +106,7 @@ export function buildApp(services: Services, options: AppOptions = {}): FastifyI
     if (error instanceof ApiError) {
       return reply.code(error.status).send({ error: error.code, request_id: request.id });
     }
-    const status = error.statusCode;
+    const status = error.statusCode ?? (error.name === 'ZodError' ? 400 : undefined);
     if (status && status >= 400 && status < 500) {
       return reply.code(status).send({ error: 'invalid_request', request_id: request.id });
     }

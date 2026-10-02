@@ -62,6 +62,9 @@ String describeApiError(Object error) {
     'message_empty' => 'Write a message first.',
     'message_too_long' => 'Messages are limited to 1000 characters.',
     'rate_limited' => 'Too many tries. Wait a few minutes and try again.',
+    'sign_in_paused' =>
+      'Too many wrong codes were tried for this email today, so signing in '
+          'is paused until tomorrow to keep the account safe.',
     'reauthentication_required' => 'Please confirm it\'s you first.',
     'deletion_scheduled' =>
       'Your account is scheduled for deletion. Keep it to use Vawra again.',
@@ -625,6 +628,12 @@ class _NewProfile extends StatelessWidget {
 Future<bool> Function(Uri url) openOutsideLink = (url) =>
     launchUrl(url, mode: LaunchMode.inAppBrowserView);
 
+/// Only web pages over HTTPS leave the app; a development build may also open
+/// plain HTTP (the laptop's stand-in services). Never another app's scheme.
+bool isSafeOutsideLink(Uri url, {bool release = kReleaseMode}) =>
+    url.hasAuthority &&
+    (url.scheme == 'https' || (!release && url.scheme == 'http'));
+
 /// Dating stays closed until an independent age check passes.
 class AgeCheckScreen extends StatefulWidget {
   const AgeCheckScreen({
@@ -673,7 +682,7 @@ class _AgeCheckScreenState extends State<AgeCheckScreen> {
     setState(() => busy = true);
     try {
       final url = await widget.api.startAgeCheck();
-      final opened = await openOutsideLink(url);
+      final opened = isSafeOutsideLink(url) && await openOutsideLink(url);
       if (!mounted) return;
       if (opened) {
         setState(() => started = true);

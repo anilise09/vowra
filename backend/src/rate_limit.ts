@@ -29,4 +29,14 @@ export class DbRateLimiter {
     );
     return rows.length === 1;
   }
+
+  /** Whether the current window is used up, without counting anything. */
+  async exhausted(keyHash: string): Promise<boolean> {
+    const now = this.clock.now();
+    const [row] = await this.db.query<{ hits: number }>(
+      'SELECT hits FROM auth_rate_limit_windows WHERE key_hash = $1 AND window_start > $2',
+      [keyHash, new Date(now.getTime() - this.windowMs)],
+    );
+    return (row?.hits ?? 0) >= this.limit;
+  }
 }

@@ -1,6 +1,6 @@
 # Security review
 
-Review 1: 2026-09-29, by the Claude Code session that built the server (BE-1 to BE-13), against the
+Review 1: 2026-09-29 (Review 2, 2026-10-02, is near the end), by the Claude Code session that built the server (BE-1 to BE-13), against the
 code at that date. This is an internal engineering review, not an independent audit or pen test;
 both remain launch gates (`docs/ROADMAP.md`, Phase 6).
 
@@ -145,6 +145,51 @@ Found and fixed:
   Flutter packages, Android Gradle dependencies and pinned GitHub Actions every week. CI also runs
   the production-dependency npm audit on every change. Dependency updates still require review and
   the complete relevant test suite before merging.
+
+## Review 2 (2026-10-02)
+
+The whole repository at `claude/backend-providers` (app, backend, website, dev tools), by a Claude
+Code session using the installed security-review checklist. Still an internal engineering review,
+not an independent audit or pen test.
+
+Checked: secrets in the tree and the full git history (only Amazon's published example key, used as
+a signing test vector), git-ignored local keys and dev data; `npm audit` (backend 0) and every
+Flutter package against the OSV database (107 packages, 0); every SQL string built with
+interpolation (all fixed fragments, every value a parameter); ownership checks on every route that
+takes an ID (matches, calls, photos, uploads, media links, reports, devices, moderation); request
+logs (no query strings, no authorization headers); error answers (no internals); upload limits and
+decompression bombs; token, refresh-token and authenticator-secret storage; live-update stream
+limits; report evidence; the app's transport security (HTTPS only in release, no cloud backup) and
+the website (no forms, scripts or third-party requests).
+
+Found and fixed, each with a test that fails when the fix is undone:
+- **Medium. Sign-in codes could be guessed against a chosen address over days.** Each address had
+  5 codes a quarter hour for sign-in and another 5 for recovery, 5 tries each: about 4,800 guesses
+  a day, roughly a 13% chance of taking an account in a month, from rotating networks. Now sign-in
+  and recovery share one budget per address (5 a quarter hour, 10 a day, which also stops email
+  floods) and an address allows 10 wrong codes a day; after that no code works for it until the
+  day is over (`sign_in_paused`; the app says why). A guesser gets 10 tries a day in a million.
+  The trade-off: someone can pause new sign-ins for an address for a day; existing sessions keep
+  working.
+- **Medium (privacy). Recovery answered more slowly for addresses with an account**, because it
+  stored a request and waited for the email only for them, so the timing could tell whether
+  someone is on Vawra. Every allowed request now stores a request and no answer waits for email
+  (shutdown still waits for emails in flight).
+- **Low. A failed sign-in email was logged with the mail server's message**, which usually quotes
+  the recipient's address. Only the error name and SMTP codes are logged now.
+- **Low. A malformed query value (`?limit=abc`) was answered as a server error** and logged as one,
+  so anyone could fill the error log and trip alerts. It is now `400 invalid_request`.
+- **Low (hardening). The app opened any link the server sent for the age check.** Only HTTPS pages
+  open now (plain HTTP only in development builds); other apps' schemes, files and scripts never.
+- **Hardening. The website had no content security policy.** Each page now allows only its own
+  files and nothing inline; the site check requires it. GitHub Pages cannot send headers, so
+  `frame-ancestors` waits for a host that can.
+- The development relay tool pulled in old, unreachable libraries through its TURN package (only its
+  unused command-line starter loads them); patched versions are pinned and its audit is clean.
+
+Not assessed: the gstack CSO audit (its launcher is not installed here), automated SAST or secret
+scanners (none installed), a runtime pen test, physical-device attacks, and the providers that are
+not chosen yet.
 
 ## Still to do before launch
 

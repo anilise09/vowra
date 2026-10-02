@@ -271,7 +271,18 @@ try {
   log(error);
 } finally {
   await browser?.close();
-  for (const s of servers) s.child.kill();
+  // Wait for the servers to exit: Windows keeps their files open until then.
+  await Promise.all(
+    servers.map(
+      (s) =>
+        new Promise((resolve) => {
+          if (s.child.exitCode !== null) return resolve();
+          s.child.once('exit', resolve);
+          s.child.kill();
+          setTimeout(resolve, 10_000);
+        }),
+    ),
+  );
   relay.stop();
   await sleep(500);
   if (dbName) {
@@ -281,7 +292,11 @@ try {
     await c.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
     await c.end();
   }
-  rmSync(work, { recursive: true, force: true });
+  try {
+    rmSync(work, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
+  } catch (error) {
+    log(`could not remove ${work} (${error.code}); it holds only throwaway test data`);
+  }
 }
 if (failures.length) {
   console.log(`\nRELAY CHECK FAILED (${failures.length})`);

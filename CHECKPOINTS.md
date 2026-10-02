@@ -1,5 +1,29 @@
 # Checkpoints
 
+## SEC-2 - Security review 2: sign-in guessing, an account-existence leak, logs, links (2026-10-02)
+
+- A full review of app, backend, website and dev tools (details in `docs/SECURITY_REVIEW.md`,
+  "Review 2"). No secrets in the tree or history; no vulnerable npm or Flutter packages (OSV);
+  SQL all parameterised; ownership checked on every route that takes an ID.
+- Fixed, each with a test that fails when the fix is undone (8 backend and 2 app break checks):
+  - Sign-in codes could be guessed against a chosen address over days (about 4,800 guesses a
+    day). Now one budget per address for sign-in and recovery (5 a quarter hour, 10 a day) and
+    10 wrong codes a day, after which sign-in for that address pauses until the next day; the app
+    explains it.
+  - Recovery answered more slowly for addresses with an account. Every request now does the same
+    work and none waits for the email.
+  - Failed sign-in emails were logged with the mail server's message (often the address).
+  - A malformed query value was a server error (500) instead of `400 invalid_request`.
+  - The app opened any link scheme for the age check; now HTTPS only (HTTP in development).
+  - The website gained a strict content security policy, required by its check script; the three
+    pages load under it with no blocked resources.
+  - The dev relay tool's old transitive libraries are pinned to patched versions.
+- Checks: backend 226 pass on PGlite (2 PostgreSQL-only skipped) and 227 on PostgreSQL (1
+  PGlite-only skipped); analyze clean. During the first full run the laptop ran short of memory
+  (emulators and other tools) and five unrelated tests timed out; they pass when rerun, and
+  PostgreSQL needed a restart after Windows refused its shared memory.
+- The gstack CSO audit could not run: its launcher is not installed here.
+
 ## BE-30 - Relay-only calls proven; backend on real PostgreSQL; a start-up race fixed (2026-10-01)
 
 - `tools/dev/relay-check` proves calls work the way production runs them, with no outside

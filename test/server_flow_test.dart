@@ -7,7 +7,7 @@ import 'package:ember_app/features/shared/profile_image.dart';
 import 'package:ember_app/main.dart';
 import 'package:ember_app/server/photos_editor.dart';
 import 'package:ember_app/server/server_flow.dart'
-    show describeExportError, openOutsideLink;
+    show describeExportError, isSafeOutsideLink, openOutsideLink;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -267,6 +267,36 @@ void main() {
       await _settle(tester);
       await dismissSwipeTutorial(tester);
       expect(find.text('1 person to meet'), findsOneWidget);
+    });
+
+    test('only HTTPS pages leave the app; HTTP only in development', () {
+      bool safe(String url, {bool release = true}) =>
+          isSafeOutsideLink(Uri.parse(url), release: release);
+      expect(safe('https://checks.example.test/start?ref=r1'), isTrue);
+      expect(safe('http://127.0.0.1:8798/start?ref=r1'), isFalse);
+      expect(safe('http://127.0.0.1:8798/start?ref=r1', release: false), isTrue);
+      for (final other in [
+        'intent://scan/#Intent;scheme=zxing;end',
+        'file:///data/data/com.projectember.ember_app/shared_prefs/x.xml',
+        'javascript:alert(1)',
+        'tel:+15555550100',
+        'https:no-host',
+      ]) {
+        expect(safe(other, release: false), isFalse, reason: other);
+      }
+    });
+
+    testWidgets('an unsafe link from the server is never opened', (
+      tester,
+    ) async {
+      final server = FakeVawraServer()
+        ..ageCheckUrl = 'intent://check#Intent;scheme=evil;end';
+      await _signIn(tester, server);
+      await _completeOnboarding(tester);
+      await tester.tap(find.byKey(const Key('age-check-start')));
+      await tester.pumpAndSettle();
+      expect(opened, isEmpty);
+      expect(find.text('Couldn\'t open the age check. Try again.'), findsOneWidget);
     });
 
     testWidgets('says so when the service is not connected', (tester) async {
