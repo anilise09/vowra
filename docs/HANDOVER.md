@@ -290,3 +290,21 @@ moderation on the phone; a relay-only call between the Asus app and a headless b
 the laptop's Wi-Fi address; node.exe may already accept incoming connections). The Samsung is
 QuietWall's (Rook install), not for Vawra. Owner decisions still open: publishing this branch to
 main, Docker Desktop (needs admin), provider accounts.
+
+## Resume here (2026-10-02, Claude)
+
+- main = fc556b6 (everything to SEC-2) plus, on `claude/backend-providers`, ffaa144 and 80ebde1:
+  in development, real addresses get real email once SMTP is set (test members' reserved
+  addresses stay in the outbox), and `backend/scripts/dev-email.ps1` for the owner's Gmail.
+- The owner's login fix: the laptop test server had stopped, and codes only went to the outbox.
+  Gmail SMTP (the owner's app password) is now in the git-ignored backend/.data/dev.env and Gmail
+  accepted it. The owner should revoke that app password and make a new one with the script,
+  because it was typed into chat. The owner's phone must be on USB (adb reverse 8797/8798) for the
+  test build; the owner has not yet confirmed a successful sign-in.
+- Start the test server from D:\Projects\dating-appackend: source .data/dev.env, then
+  VAWRA_SERVER_ENABLED=1 VAWRA_DEV_OUTBOX=1 VAWRA_PORT=8797 VAWRA_CALLS_DEV_P2P=1
+  VAWRA_AGE_CHECK_URL=http://127.0.0.1:8798/start?ref={reference} VAWRA_AGE_WEBHOOK_SECRET=<local>
+  node D:/Projects/dating-app-wt-claude/backend/dist/src/server.js; the stand-in age check is
+  `npm run dev:age-provider` with the same secret. Portable PostgreSQL: D:\Tools\pgsql (port 5433).
+- Next: confirm the owner can sign in; Asus tests (age-check pass, photos and moderation,
+  relay-only call with the app); merge ffaa144/80ebde1 to main with the owner's yes.
