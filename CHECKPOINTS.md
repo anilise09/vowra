@@ -1,5 +1,28 @@
 # Checkpoints
 
+## Device - The owner's Samsung: public app, age check, photos, a relay-only call (2026-10-03)
+
+- The public Android prototype (checksum-identical to the website download, signed with the Vawra
+  key) installed and ran on the Samsung: onboarding and Discover with synthetic profiles, the screen
+  the emulator's software graphics could not draw.
+- Test builds are now com.vawra.app.dev, "Vawra Test", beside the public app instead of over it.
+- Age check, end to end on the phone: "Confirm my age" opened the stand-in check in Chrome; Pass
+  reached the server (webhook 200); closing the tab opened Discover; the confirmed age replaced the
+  typed one.
+- Photos: a synthetic test photo (put on the phone for the test, deleted afterwards and removed from
+  the gallery index; no screenshots while the picker showed the owner's gallery) uploaded and was
+  approved through the real moderator routes. Found: an approval did not show until the app was
+  restarted. Fixed (a 'photo' nudge, and the card reloads on it); on the phone the second photo then
+  changed from "Waiting for review" to approved about 3 s after the decision, without a restart.
+- A relay-only video call between the phone (the app, through QuietWall's full-TUN lab VPN) and a
+  headless browser, through a local TURN relay on the laptop's Wi-Fi address: ringing screen with
+  Accept / Decline / Answer without video, connected about 1 s after Accept, relay to relay; the
+  browser received 613 frames (5.4 MB) and audio from the phone and sent 1.4 MB back; the relay
+  carried 7.4 MB. The camera closed when the call ended. The screenshot taken during the call (live
+  camera) was deleted unopened.
+- The phone was kept awake with phone_awake.py (the company policy caps the timeout at 60 s, so it
+  used its key pokes) and restored to 30 s afterwards.
+
 ## SEC-2 - Security review 2: sign-in guessing, an account-existence leak, logs, links (2026-10-02)
 
 - A full review of app, backend, website and dev tools (details in `docs/SECURITY_REVIEW.md`,
