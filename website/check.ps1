@@ -3,7 +3,7 @@ $site = $PSScriptRoot
 $css = Get-Content -LiteralPath (Join-Path $site 'styles.css') -Raw
 $script = Get-Content -LiteralPath (Join-Path $site 'script.js') -Raw
 
-$pages = @('index.html', 'safety.html', 'privacy.html')
+$pages = @('index.html', 'safety.html', 'privacy.html', 'get-the-app.html')
 $html = @{}
 foreach ($page in $pages) {
   $path = Join-Path $site $page
@@ -30,7 +30,7 @@ foreach ($page in $pages) {
   }
   if ($text -match '<form\b|https?://') { throw "$page has a form or an external request" }
   # Only the site's own files may load, and nothing inline that the policy would block.
-  $policy = '<meta http-equiv="Content-Security-Policy" content="default-src ''none''; script-src ''self''; style-src ''self''; img-src ''self''; font-src ''self''; base-uri ''none''; form-action ''none''">'
+  $policy = '<meta http-equiv="Content-Security-Policy" content="default-src ''none''; script-src ''self''; style-src ''self''; img-src ''self''; font-src ''self''; media-src ''self''; base-uri ''none''; form-action ''none''">'
   if (-not $text.Contains($policy)) { throw "$page lacks the content security policy" }
   if ($text -match '\sstyle="|\son[a-z]+="|<script>') { throw "$page has inline code the policy would block" }
   # Every page says plainly that Vawra is not launched.
@@ -49,8 +49,13 @@ foreach ($screen in @('discover','explore','openers','chat')) {
   if (-not (Test-Path -LiteralPath (Join-Path $site "assets/screens/$screen.webp"))) { throw "Screen asset missing: $screen" }
 }
 # Every image the page loads stays light: WebP screens, nothing over 200 KB.
-foreach ($file in Get-ChildItem -LiteralPath (Join-Path $site 'assets') -Recurse -File -Include *.png,*.webp,*.jpg) {
+$assets = Get-ChildItem -LiteralPath (Join-Path $site 'assets') -Recurse -File
+foreach ($file in $assets | Where-Object { $_.Extension -in '.png', '.webp', '.jpg' }) {
   if ($file.Length -gt 200KB) { throw "Image too heavy for the web: $($file.Name) ($([int]($file.Length / 1KB)) KB)" }
+}
+# A video loads only when someone presses play, but stays small enough for a phone connection.
+foreach ($file in $assets | Where-Object { $_.Extension -in '.mp4', '.webm' }) {
+  if ($file.Length -gt 8MB) { throw "Video too heavy for the web: $($file.Name) ($([int]($file.Length / 1MB)) MB)" }
 }
 if ($index + $script -match 'screens/raw/|\.png"\s+alt="[^"]*screen') { throw 'Page still points at unconverted screens' }
 # The fonts the design names are served from this site, with their licences.
@@ -72,6 +77,12 @@ foreach ($page in $pages) {
 foreach ($required in @('prototype', 'synthetic', 'not a public dating service', 'Block and report are always free')) {
   if ($index -notmatch [regex]::Escape($required)) { throw "Missing disclosure: $required" }
 }
+# The owner decided (2026-10-02) the install buttons stay off until testing opens: both disabled,
+# and no app file, store or TestFlight link on the page.
+$app = $html['get-the-app.html']
+if (([regex]::Matches($app, 'aria-disabled="true"')).Count -ne 2) { throw 'get-the-app.html: both install buttons must stay disabled' }
+if ($app -match '(?i)\.apk|\.ipa|apps\.apple|play\.google|testflight\.apple') { throw 'get-the-app.html links to an app file or store before testing opens' }
+if (-not (Test-Path -LiteralPath (Join-Path $site 'assets/video/setup-android.vtt'))) { throw 'The setup video has no captions' }
 # The privacy page is honest about its status until a lawyer has reviewed it.
 if ($html['privacy.html'] -notmatch 'not yet its legal privacy policy') { throw 'Privacy page lacks its draft status' }
 foreach ($breakpoint in @('max-width:1050px','max-width:720px','max-width:380px','prefers-reduced-motion:reduce')) {
