@@ -1,5 +1,21 @@
 # Checkpoints
 
+## Device - The Samsung, part 2: chat, a voice call, report and block; a lost-message fix (2026-10-03)
+
+- With a fresh synthetic member (Lena): the chat offered two openers from shared interests; a
+  message sent from the phone reached Lena; her reply showed on the phone within the first screen
+  read (about 2.7 s including the read); a voice call started on the phone rang in her browser and
+  carried audio both ways; a private report reached the moderator with only the reported message
+  as evidence; blocking closed the chat on the phone and removed the conversation from Lena's side.
+- Found: when a send failed (here the phone's USB link to the laptop server had reset and lost its
+  port forwarding), the app showed "Can't reach Vawra" but also cleared the typed text, so the
+  message was lost. Now the text goes back into the box (unless something new was typed), ready to
+  retry. A test makes a send fail, checks the text is kept, then retries; switching the restore off
+  fails it.
+- The Samsung's USB connection reset at least three times overnight (00:16, 05:13, 06:53), each
+  dropping adb port forwarding; a watcher now re-adds Vawra's ports while testing.
+- App 239 tests pass (1 existing skip), backend 227 (2 PostgreSQL-only skips).
+
 ## Device - The owner's Samsung: public app, age check, photos, a relay-only call (2026-10-03)
 
 - The public Android prototype (checksum-identical to the website download, signed with the Vawra

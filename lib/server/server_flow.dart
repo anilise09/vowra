@@ -2082,14 +2082,16 @@ class _ServerThreadPageState extends State<ServerThreadPage> {
     }
   }
 
-  Future<void> _send(String text) async {
+  Future<bool> _send(String text) async {
     try {
       final sent = await widget.api.send(widget.match.matchId, text);
       if (mounted) setState(() => messages = [...messages, _message(sent)]);
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       if (e is ApiException && e.code == 'conversation_closed') _closed();
       _toast(context, describeApiError(e));
+      return false;
     }
   }
 

@@ -2891,7 +2891,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             ? const []
             : messageRepository.list(connection!.matchId),
         report: safetyReport,
-        onSend: _sendMessage,
+        onSend: (text) {
+          _sendMessage(text);
+          return true;
+        },
         onCallReadinessChanged: (value) => setState(
           () => connection = matchRepository.update(
             (match) => match.setCurrentUserCallReady(value),

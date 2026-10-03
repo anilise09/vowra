@@ -79,6 +79,9 @@ class FakeVawraServer {
 
   bool verified = false;
 
+  /// The next message send fails, as when the phone loses its connection.
+  bool refuseNextMessage = false;
+
   /// Where an unconfirmed account's age check stands.
   String unverifiedAgeState = 'assurance_required';
 
@@ -836,6 +839,10 @@ class FakeVawraServer {
         return _error(409, 'conversation_closed');
       }
       if (method == 'POST') {
+        if (refuseNextMessage) {
+          refuseNextMessage = false;
+          return _error(503, 'unavailable');
+        }
         final message = {
           'id': _id(),
           'mine': true,

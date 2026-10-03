@@ -196,6 +196,28 @@ void main() {
     final matchId = server.matches.keys.single;
     expect(server.messages[matchId]?.single['text'], 'Hi Maya!');
 
+    // A send that fails keeps what was typed, ready to try again.
+    server.refuseNextMessage = true;
+    await tester.enterText(find.byKey(const Key('message-composer')), 'Are you around?');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('send-message')));
+    await _settle(tester);
+    expect(server.messages[matchId], hasLength(1));
+    expect(
+      tester.widget<TextField>(find.byKey(const Key('message-composer'))).controller!.text,
+      'Are you around?',
+    );
+    // The error notice fades, then a retry sends it.
+    await tester.pump(const Duration(seconds: 5));
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('send-message')));
+    await _settle(tester);
+    expect(server.messages[matchId]?.last['text'], 'Are you around?');
+    expect(
+      tester.widget<TextField>(find.byKey(const Key('message-composer'))).controller!.text,
+      isEmpty,
+    );
+
     // The reply arrives with the next refresh.
     server.peerSays(matchId, 'Hello Alex, how is your week?');
     await tester.pump(const Duration(seconds: 3));

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -411,7 +412,9 @@ class ChatTab extends StatefulWidget {
   final MatchConnection? connection;
   final List<ChatMessage> messages;
   final SafetyReport? report;
-  final ValueChanged<String> onSend;
+  /// Sends a message. Answering false means it was not sent: the text goes
+  /// back into the box so nothing typed is lost.
+  final FutureOr<bool?> Function(String text) onSend;
   final ValueChanged<bool> onCallReadinessChanged;
   final ValueChanged<SafetyReport> onReport;
   final VoidCallback onUnmatch;
@@ -605,9 +608,15 @@ class _ChatTabState extends State<ChatTab> {
       );
       if (send != true) return;
     }
-    widget.onSend(text);
     composer.clear();
     setState(() {});
+    final sent = await widget.onSend(text);
+    // A failed send puts the text back, unless something new was typed since.
+    if (sent == false && mounted && composer.text.isEmpty) {
+      composer.text = text;
+      composer.selection = TextSelection.collapsed(offset: text.length);
+      setState(() {});
+    }
   }
 
   @override
