@@ -85,6 +85,25 @@ void main() {
     );
   });
 
+  testWidgets('an approval shows at once, from its live update', (
+    tester,
+  ) async {
+    final bytes = Uint8List.fromList(FakeVawraServer.pixel);
+    pickPhoto = () async => PickedPhoto(bytes, 'image/png');
+    final server = _server();
+    await _signIn(tester, server);
+    await _openProfile(tester);
+    await tester.tap(find.byKey(const Key('photo-add')));
+    await _settle(tester);
+    expect(find.text('Waiting for review'), findsOneWidget);
+    // A moderator approves it; the server tells the app.
+    server.myPhotos.single['state'] = 'approved';
+    server.nudge('photo');
+    await _settle(tester);
+    expect(find.text('Waiting for review'), findsNothing);
+    expect(find.text('Main'), findsOneWidget);
+  });
+
   testWidgets('cancelling the picker uploads nothing', (tester) async {
     pickPhoto = () async => null;
     final server = _server();

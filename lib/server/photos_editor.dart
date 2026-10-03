@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../data/api/nudges.dart';
 import '../data/api/server_photo.dart';
 import '../data/api/vawra_api.dart';
 import '../features/profile/photo_tips.dart';
@@ -62,9 +64,13 @@ String _uploadError(Object e) => switch (e) {
 /// Your photos on the server: up to 6, each checked by a person before
 /// anyone else sees it. The first approved one is your main photo.
 class ServerPhotosCard extends StatefulWidget {
-  const ServerPhotosCard({super.key, required this.api});
+  const ServerPhotosCard({super.key, required this.api, this.nudges});
 
   final VawraApi api;
+
+  /// Live updates: a reviewed photo (or a reconnect) reloads the list, so an
+  /// approval shows without restarting the app.
+  final Stream<Nudge>? nudges;
 
   @override
   State<ServerPhotosCard> createState() => _ServerPhotosCardState();
@@ -75,10 +81,21 @@ class _ServerPhotosCardState extends State<ServerPhotosCard> {
   bool busy = false;
   String? message;
 
+  StreamSubscription<Nudge>? _updates;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _updates = widget.nudges?.listen((nudge) {
+      if (nudge.kind == 'photo' || nudge.isCatchUp) _load();
+    });
+  }
+
+  @override
+  void dispose() {
+    _updates?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {

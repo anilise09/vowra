@@ -1038,7 +1038,7 @@ class _ServerHomeState extends State<ServerHome> {
       return;
     }
     // Typing is only for an open chat; everything else can change the list.
-    if (nudge.kind != 'typing') _refreshMatches();
+    if (nudge.kind != 'typing' && nudge.kind != 'photo') _refreshMatches();
   }
 
   /// Calls already looked at, so the setup messages that follow a ring do
@@ -1571,7 +1571,7 @@ class _ServerHomeState extends State<ServerHome> {
           child: ProfileEditor(
             initialProfile: profile,
             prototypeMode: false,
-            photosCard: ServerPhotosCard(api: api),
+            photosCard: ServerPhotosCard(api: api, nudges: _nudges.stream),
             onSaved: (updated) async {
               final messenger = ScaffoldMessenger.of(context);
               try {

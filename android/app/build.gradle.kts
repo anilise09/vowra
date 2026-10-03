@@ -55,6 +55,12 @@ android {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
+    // Test builds (debug and profile) install beside the public app, never over it.
+    buildTypes.configureEach {
+        val test = name != "release"
+        if (test) applicationIdSuffix = ".dev"
+        manifestPlaceholders["appName"] = if (test) "Vawra Test" else "Vawra"
+    }
 }
 
 kotlin {

@@ -4,7 +4,8 @@
  * text, names or photos, so nothing private travels through the push path.
  */
 export interface Nudge {
-  kind: 'message' | 'match' | 'like' | 'read' | 'typing' | 'call';
+  /** 'photo': one of your profile photos was approved or rejected. */
+  kind: 'message' | 'match' | 'like' | 'read' | 'typing' | 'call' | 'photo';
   match_id?: string;
   /** For 'call': which call changed; the app fetches its state and setup messages. */
   call_id?: string;

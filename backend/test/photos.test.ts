@@ -79,11 +79,16 @@ describe('profile photos', () => {
     expect(stored.includes(Buffer.from('Secret Model'))).toBe(false);
 
     const mod = await moderator('Mo');
+    const told: unknown[] = [];
+    const stop = h.nudges.subscribe(ana.accountId, (n) => told.push(n));
     const [queued] = (await call(mod, 'GET', '/v1/mod/photos')).json().photos;
     expect(queued.photo_id).toBe(id);
     expect((await fetch(queued.url)).headers['content-type']).toBe('image/webp');
     const decided = await call(mod, 'POST', `/v1/mod/photos/${id}/decision`, { outcome: 'approved' });
     expect(decided.json()).toEqual({ state: 'approved' });
+    // The owner's app is told, so it shows the new state without a restart.
+    stop();
+    expect(told).toEqual([{ kind: 'photo' }]);
 
     const seen = await photosSeenBy(ben, ana);
     expect(seen).toHaveLength(1);

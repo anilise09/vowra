@@ -463,10 +463,12 @@ export function mediaRoutes(app: FastifyInstance, services: Services) {
       await audit(tx, mod.id, `mod_photo_${outcome}`, now);
     });
     if (outcome === 'rejected') await services.media.delete(id.data!);
-    services.nudges.publish(row.owner, {
-      kind: row.match_id ? 'message' : 'match',
-      match_id: row.match_id ?? undefined,
-    });
+    // A profile photo's owner learns it was decided (the app reloads its photos);
+    // a chat photo shows up in the conversation.
+    services.nudges.publish(
+      row.owner,
+      row.match_id ? { kind: 'message', match_id: row.match_id } : { kind: 'photo' },
+    );
     if (peer) services.nudges.publish(peer, { kind: 'message', match_id: row.match_id! });
     return { state: outcome };
   });
