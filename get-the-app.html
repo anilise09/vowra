@@ -30,7 +30,7 @@
   <main id="main" class="doc shell">
     <span class="kicker">GET THE APP</span>
     <h1>Vawra on your phone.<br><em>Almost there.</em></h1>
-    <p class="doc-lede">Vawra is an 18+ dating app in development and in private testing. When the app opens to testers, the buttons below switch on. Until then, here is exactly how installing will work on each phone, and a short recording of the real app being installed.</p>
+    <p class="doc-lede">Vawra is an 18+ dating app in development. The Android prototype is ready to try: it shows how Vawra works with synthetic test profiles, needs no account and sends nothing anywhere. The iPhone version follows once Apple’s TestFlight is set up. Below are the steps for each phone and a short recording of the real app being installed.</p>
 
     <nav class="doc-toc" aria-label="On this page">
       <a href="#android">Android</a><a href="#iphone">iPhone</a><a href="#video">Watch the setup</a><a href="#questions">Questions</a>
@@ -40,10 +40,10 @@
       <section id="android" class="app-card" aria-labelledby="android-title">
         <div class="app-card-head">
           <h2 id="android-title">Android</h2>
-          <span class="app-status">Not available yet</span>
+          <span class="app-status app-status-on">Prototype</span>
         </div>
-        <p class="app-needs">Needs Android 7.0 or later.</p>
-        <span class="button button-primary app-button" role="link" aria-disabled="true">Android app <span class="app-button-note">not available yet</span></span>
+        <p class="app-needs">Needs Android 7.0 or later on a 64-bit phone (almost every phone from 2017 on). 80 MB.</p>
+        <a class="button button-primary app-button-on" href="vawra-android.apk" download>Android app <span class="app-button-note">prototype</span></a>
         <ol class="app-steps">
           <li><strong>Open this page on your Android phone</strong> and tap the Android button. Your browser saves the Vawra app file.</li>
           <li><strong>Open the file.</strong> Android asks before it installs an app that does not come from an app store. If it does, allow your browser: <em>Settings › Apps › Special app access › Install unknown apps</em>, choose your browser, and turn on <em>Allow</em>. The names differ a little between phones.</li>
@@ -52,6 +52,7 @@
           <li><strong>Create your profile:</strong> your name, your age, who you would like to meet, what you are looking for and a few interests. Photos, habits and prompts can wait.</li>
         </ol>
         <p class="doc-note">Once Vawra is installed, you can turn <em>Install unknown apps</em> off again for your browser. Only install Vawra from this page.</p>
+        <details class="app-check"><summary>Check the file</summary><p>The file is signed by Vawra. Its SHA-256 checksum is <code>d4067b9694559d04545658c8423973fb5916316b9594968413fef3f736365d88</code>, and the signing certificate’s SHA-256 fingerprint is <code>34706bcd44320df1604fbd4c938b2287f27427db7c2915306f1b8ce37d4254c5</code>. Every Vawra update carries the same certificate.</p></details>
       </section>
 
       <section id="iphone" class="app-card" aria-labelledby="iphone-title">
@@ -87,8 +88,9 @@
     <section id="questions" class="faq" aria-labelledby="questions-title">
       <h2 id="questions-title">Questions</h2>
       <div class="faq-list">
-        <details><summary>Why can’t I install it yet?</summary><p>Vawra is still being tested. Age checks, moderation and an independent security review have to be in place before anyone outside the team can use it. When testing opens, the buttons on this page switch on.</p></details>
-        <details><summary>Is it a real dating service?</summary><p>Not yet. Vawra is not a live dating service, and the profiles in the preview and the recording are synthetic test profiles.</p></details>
+        <details><summary>What is in the Android prototype?</summary><p>The whole Vawra experience with synthetic test profiles: onboarding, Discover, matches, chat with suggested openers, safety tools and settings. It works without an account, stores your answers only on your phone and sends nothing anywhere. Signing in, real members and calls come later, after age checks, moderation and an independent security review are in place.</p></details>
+        <details><summary>Why is the iPhone version not available yet?</summary><p>Before launch, Apple allows apps to be shared only through TestFlight invitations, and TestFlight is not set up for Vawra yet. When it is, the iPhone button on this page switches on.</p></details>
+        <details><summary>Is it a real dating service?</summary><p>Not yet. Vawra is not a live dating service, and the profiles in the prototype and the recording are synthetic test profiles.</p></details>
         <details><summary>How do I remove it?</summary><p>On Android, touch and hold the Vawra icon and choose <em>Uninstall</em>. On iPhone, touch and hold the icon and choose <em>Remove App</em>. Deleting your account is separate: it is in the app under Settings.</p></details>
       </div>
     </section>
