@@ -77,11 +77,20 @@ foreach ($page in $pages) {
 foreach ($required in @('prototype', 'synthetic', 'not a public dating service', 'Block and report are always free')) {
   if ($index -notmatch [regex]::Escape($required)) { throw "Missing disclosure: $required" }
 }
-# The owner decided (2026-10-02) the install buttons stay off until testing opens: both disabled,
-# and no app file, store or TestFlight link on the page.
+# The owner turned on the Android prototype (2026-10-03); iPhone stays off until TestFlight exists.
+# Exactly one app file, the signed prototype served from this site, with its checksum on the page.
 $app = $html['get-the-app.html']
-if (([regex]::Matches($app, 'aria-disabled="true"')).Count -ne 2) { throw 'get-the-app.html: both install buttons must stay disabled' }
-if ($app -match '(?i)\.apk|\.ipa|apps\.apple|play\.google|testflight\.apple') { throw 'get-the-app.html links to an app file or store before testing opens' }
+if (([regex]::Matches($app, 'aria-disabled="true"')).Count -ne 1) { throw 'get-the-app.html: the iPhone button must stay disabled' }
+if (([regex]::Matches($app, '(?i)\.apk\b')).Count -ne 1 -or -not $app.Contains('href="vawra-android.apk"')) { throw 'get-the-app.html must link only to vawra-android.apk' }
+if ($app -match '(?i)\.ipa\b|apps\.apple|play\.google|testflight\.apple') { throw 'get-the-app.html links to an iPhone file or a store' }
+if ($app -notmatch '[0-9a-f]{64}') { throw 'get-the-app.html lacks the app file checksum' }
+# The app file itself lives only on the published site (gh-pages), so main stays small; where it
+# is present, the page must show its real checksum.
+$apk = Join-Path $site 'vawra-android.apk'
+if (Test-Path -LiteralPath $apk) {
+  $hash = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant()
+  if (-not $app.Contains($hash)) { throw "get-the-app.html shows a checksum that is not the app file's ($hash)" }
+}
 if (-not (Test-Path -LiteralPath (Join-Path $site 'assets/video/setup-android.vtt'))) { throw 'The setup video has no captions' }
 # The privacy page is honest about its status until a lawyer has reviewed it.
 if ($html['privacy.html'] -notmatch 'not yet its legal privacy policy') { throw 'Privacy page lacks its draft status' }
