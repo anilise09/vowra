@@ -18,6 +18,16 @@ npm run typecheck
 
 ```
 npm run build
+node ../tools/dev/init_local_backend_env.mjs
+# Load backend/.data/dev.env into the shell, then:
+npm start                               # http://127.0.0.1:8797
+```
+
+The generated file is git-ignored, mode `0600`, and is never replaced once it
+exists. The equivalent manual environment is:
+
+```
+npm run build
 set VAWRA_SERVER_ENABLED=1
 set VAWRA_DEV_OUTBOX=1                 # development only: sign-in proofs go to .data/outbox.log
 set VAWRA_DATA_KEY=<32 random bytes, base64>
@@ -50,6 +60,24 @@ adb reverse tcp:8797 tcp:8797          # per device; phones and emulators reach 
 Debug and profile builds allow plain HTTP only to 127.0.0.1, localhost and 10.0.2.2
 (`android/app/src/{debug,profile}/res/xml/network_security_config.xml`); release builds stay
 HTTPS-only. Without `VAWRA_API` the app is the offline prototype.
+
+### Server-connected iOS simulator smoke test
+
+The iOS test signs a single synthetic `.test` account into the real local
+backend, loads the labelled synthetic discovery deck, opens account settings,
+and signs out. It does not like or message any profile. Start the backend with
+the development outbox, create and locally age-assure the test account, seed
+the demo deck, then start the loopback-only code bridge:
+
+```
+VAWRA_OUTBOX_EMAIL=ios.simulator@vawra.test node tools/dev/outbox_bridge.mjs
+```
+
+Run `integration_test/ios_server_smoke_test.dart` with these Dart defines:
+`VAWRA_TEST_API=http://127.0.0.1:8797`,
+`VAWRA_TEST_CODE_BRIDGE=http://127.0.0.1:8798`, and
+`VAWRA_TEST_EMAIL=ios.simulator@vawra.test`. The bridge refuses real email
+addresses, binds only to loopback, and ignores codes issued before it started.
 
 ## What exists (BE-1)
 

@@ -83,12 +83,28 @@ phones are currently reserved by another session).
   chat send, Profile and Settings through the destructive-account row.
 - The same full flow also passes on an iPhone 17 Pro Max simulator at Apple's maximum accessibility
   text size with Reduce Motion enabled. The test explicitly proves the text scale reached Flutter
-  and checks UIKit's Reduce Motion state through a simulator-only channel. Physical iPhone/iPad,
-  connected accounts and real calls are still not validated on Apple hardware.
+  and checks UIKit's Reduce Motion state through a simulator-only channel. Physical iPhone/iPad
+  and real calls are still not validated on Apple hardware.
 - Flutter analysis is clean. All non-golden host tests pass (218;
   one expected live-server skip). The 14 pixel baselines were authored on Windows and show only
   0.43-1.60% text/vector-edge rasterization differences on macOS, so they were inspected and left
   unchanged.
+
+## Since the handover: server-connected iOS Simulator flow (2026-10-03)
+
+- `integration_test/ios_server_smoke_test.dart` passes on an iOS 26.5 iPhone 17 Pro Max Simulator
+  against the real local Fastify/PGlite server. It signs in a synthetic `.test` account through
+  the normal PKCE and six-digit-code routes, loads the labelled synthetic discovery deck, opens
+  Profile and Settings and signs out through the server. It sends no likes or messages.
+- `tools/dev/outbox_bridge.mjs` lets only that device test read newly issued codes for one
+  configured `.test` address. It binds to `127.0.0.1`, refuses real addresses and old codes and is
+  not linked into the app or server. `tools/dev/init_local_backend_env.mjs` creates git-ignored,
+  mode-`0600` local keys without replacing an existing set.
+- Build the test target with the three `VAWRA_TEST_*` Dart defines documented in
+  `backend/README.md`, install it directly, then drive the prebuilt app. Use a dedicated simulator:
+  a concurrent QuietWall UI test on another simulator can otherwise disrupt install/launch timing.
+- This closes connected-account coverage on the Simulator only. A hosted provider-connected
+  backend, physical Apple devices and real iOS calls still need validation.
 
 ## Since the handover: the backend made ready for production (2026-09-30)
 
@@ -246,8 +262,8 @@ git push origin $NEW:refs/heads/gh-pages
    Also untracked and of unknown origin: `.agents/`, `skills-lock.json`,
    `assets/branding/vawra_company_mark_trimmed.png`. Do not commit or delete them without asking.
 2. Physical iPhone/iPad access for Apple-hardware testing. The iPhone 17e critical flow and the
-   iPhone 17 Pro Max maximum-text/Reduce-Motion flow pass in the simulator; physical Apple hardware
-   remains open.
+   iPhone 17 Pro Max maximum-text/Reduce-Motion and server-connected account flows pass in the
+   simulator; physical Apple hardware remains open.
 3. Providers, each needing the owner's account or money: email for sign-in codes, hosting with
    PostgreSQL, an object store plus malware scanning and automated photo classification (photos
    work today with a local disk store and human review), push notifications (Firebase and an

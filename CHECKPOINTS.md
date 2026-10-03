@@ -1,5 +1,25 @@
 # Checkpoints
 
+## Device - Server-connected iOS account flow (2026-10-03)
+
+- Added a reusable iOS Simulator smoke test against the real local Fastify/PGlite backend. A
+  synthetic `ios.simulator@vawra.test` member signs in with the production PKCE/code exchange,
+  loads the server's labelled synthetic discovery deck, opens Profile and account Settings, then
+  signs out through `DELETE /v1/session`. The test deliberately creates no likes, matches or
+  messages.
+- Added a loopback-only development bridge for that one configured `.test` address. It refuses
+  real addresses, ignores every outbox code written before it starts, returns no other member's
+  code and is never part of the app or backend. A separate helper creates persistent local backend
+  keys in git-ignored `backend/.data/dev.env` with mode `0600` and never replaces existing keys.
+- Evidence: the real server-connected flow passed before and after rebasing onto the latest
+  `main`; the fresh iOS 26.5 iPhone 17 Pro Max Simulator run completed in 85 seconds. Backend logs
+  confirmed the auth request/exchange, profile, discovery, settings and sign-out requests. The
+  iOS simulator build, backend TypeScript build, helper syntax checks and `flutter analyze` pass.
+  The earlier 218-test non-golden host run had one expected live-server skip; the separately
+  embedded data-export golden still has its known 1.27% Windows-to-macOS rasterization difference
+  and was not overwritten.
+- Physical iPhone/iPad, a hosted provider-connected backend and real iOS calls remain unvalidated.
+
 ## SEC-2 - Security review 2: sign-in guessing, an account-existence leak, logs, links (2026-10-02)
 
 - A full review of app, backend, website and dev tools (details in `docs/SECURITY_REVIEW.md`,
@@ -67,7 +87,6 @@
   onboarding to the age screen; "Confirm my age" opened the stand-in in a Chrome Custom Tab;
   "Needs a closer look" and back to Vawra showed "Your age check is being reviewed". The pass on
   the phone waits for the Asus to be reconnected.
-
 ## Device - Large iPhone, maximum text and Reduce Motion (2026-10-01)
 
 - Re-ran the real iOS critical flow on an iPhone 17 Pro Max simulator with Dynamic Type set to
